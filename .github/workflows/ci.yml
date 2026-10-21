@@ -69,6 +69,15 @@ jobs:
           PGUSER: manaus
           PGPASSWORD: teste
           PGDATABASE: manaus_teste
+      # Screens (mapa.html) on a phone and a desktop. Headless shell only: no screenshot comparison here.
+      - id: playwright
+        run: echo "version=$(npx playwright --version | sed -n 's/^Version //p')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - run: npx playwright install --only-shell chromium
+      - run: npm run test:e2e
       - run: docker build -t manaus:ci .
       - run: scripts/ci-testar-imagem.sh manaus:ci
       - id: arvore

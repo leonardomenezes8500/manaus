@@ -7,3 +7,6 @@ plano
 CLAUDE.local.md
 coverage
 dist
+e2e
+playwright-report
+test-results

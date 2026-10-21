@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 const CACHE_DIAS = 7;
@@ -60,10 +60,10 @@ const ehPrecondicao = (e: any) => e?.name === 'PreconditionFailed' || e?.$metada
 
 /**
  * Envia um arquivo local ao R2 sem sobrescrever (`If-None-Match: *`): se a chave existe, dá erro.
- * `sobrescrever` só vale em `estado/` (a foto atual).
+ * `sobrescrever` só vale em `estado/` (a foto atual) e `produtos/` (derivado, refeito a partir do banco); nunca em `bruto/`.
  */
 export async function enviar(caminhoLocal: string, chave: string, opcoes: { sobrescrever?: boolean; sha256?: string } = {}): Promise<void> {
-  if (opcoes.sobrescrever && !chave.startsWith('estado/')) throw new Error(`sobrescrever só é permitido em estado/: ${chave}`);
+  if (opcoes.sobrescrever && !/^(estado|produtos)\//.test(chave)) throw new Error(`sobrescrever só é permitido em estado/ e produtos/: ${chave}`);
   await new Upload({
     client: s3(),
     params: {
@@ -110,7 +110,8 @@ export async function enviarPendentes(): Promise<void> {
         await rename(join(dir, a), buffer('cache', a)).catch((e) => { if (e.code !== 'ENOENT') throw e; });
       }
     } catch (e) {
-      erros.push(e);
+      // Another process (two crons at once) sent it and moved it to the cache in the meantime: not an error.
+      if (await stat(join(dir, chave)).then(() => true, () => false)) erros.push(e);
     }
   }
   if (erros.length) throw new AggregateError(erros, `${erros.length} arquivo(s) continuam em pendente/`);
@@ -134,12 +135,14 @@ export type Download = {
   headers?: Record<string, string>;
 };
 
+export type Baixado = { chave: string; caminho: string; sha256: string; bytes: number; fonte: string; baixado_em: string };
+
 /**
  * Baixa `url` para `bruto/<fonte>/AAAA/MM/DD/<HHMMSS>Z_<nome>` no R2, com `<arquivo>.meta.json` ao lado.
  * HTTP não 2xx: não grava nada. Falha no R2: o arquivo fica em `pendente/` e sobe no próximo `baixar()`.
  * Devolve o caminho local no cache (válido por 7 dias).
  */
-export async function baixar(d: Download, agora = new Date()): Promise<{ chave: string; caminho: string; sha256: string; bytes: number }> {
+export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
   for (const [campo, v] of [['fonte', d.fonte], ['nome', d.nome]]) {
     if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
   }
@@ -185,5 +188,32 @@ export async function baixar(d: Download, agora = new Date()): Promise<{ chave: 
 
   await enviarPendentes();
   await limparCache();
-  return { chave, caminho: buffer('cache', chave), sha256, bytes };
+  return { chave, caminho: buffer('cache', chave), sha256, bytes, fonte: d.fonte, baixado_em: iso };
+}
+
+/** Every key under `prefix` in R2 (all pages), with size and last-modified time. */
+export async function listKeys(prefix: string): Promise<{ key: string; size: number; modified: Date }[]> {
+  const out = [];
+  let ContinuationToken: string | undefined;
+  do {
+    const r = await s3().send(new ListObjectsV2Command({ Bucket: env('R2_BUCKET'), Prefix: prefix, ContinuationToken }));
+    for (const o of r.Contents ?? []) out.push({ key: o.Key!, size: o.Size ?? 0, modified: o.LastModified! });
+    ContinuationToken = r.IsTruncated ? r.NextContinuationToken : undefined;
+  } while (ContinuationToken);
+  return out;
+}
+
+/** Opens a raw file as a stream: from the local cache when it is there, otherwise from R2. */
+export async function openRaw(key: string): Promise<Readable> {
+  const cached = buffer('cache', key);
+  if (await stat(cached).then((s) => s.isFile(), () => false)) return createReadStream(cached);
+  const r = await s3().send(new GetObjectCommand({ Bucket: env('R2_BUCKET'), Key: key }));
+  return r.Body as Readable;
+}
+
+/** Reads a whole (small) raw file as text. */
+export async function readRaw(key: string): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const c of await openRaw(key)) chunks.push(Buffer.from(c));
+  return Buffer.concat(chunks).toString('utf8');
 }

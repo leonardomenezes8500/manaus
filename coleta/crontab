@@ -1,8 +1,29 @@
 # Toda coleta periódica roda aqui, no container coletor da slice (supercronic, horário de Manaus). Nunca schedule: no Actions.
-# Formato: min hora dia mês dia-da-semana coleta/rodar.sh <script>   (roda coleta/<script>.ts)
+# Formato: min hora dia mês dia-da-semana coleta/rodar.sh <script> [args]   (roda coleta/<script>.ts [args]; analise/... roda analise/...)
+# A carga no banco (#15, #16) roda logo depois da coleta, na mesma linha (o "; " deixa a carga rodar mesmo se a coleta falhar).
 
-# Teste da #4: remover depois de 1 h funcionando (6 execuções ok) e apagar bruto/_teste/ no R2 à mão.
-*/10 * * * * coleta/rodar.sh teste-r2
+# Focos NASA FIRMS (#9): 4 sensores, últimos 2 dias.
+0 */3 * * * coleta/rodar.sh firms; coleta/rodar.sh carga/focos
+
+# OpenAQ (#10): sensor do Centro de hora em hora; locations da região 1 vez por dia (avisa sensor novo).
+15 * * * * coleta/rodar.sh openaq; coleta/rodar.sh carga/ar-vento openaq
+40 6 * * * coleta/rodar.sh openaq --locations
+
+# METAR SBEG/SBMN (#11), de hora em hora (últimas 3 h).
+10 * * * * coleta/rodar.sh metar; coleta/rodar.sh carga/ar-vento metar-aviationweather iem-asos
+
+# Open-Meteo (#12): vento em altitude + CAMS (modelo), 4x/dia.
+5 1,7,13,19 * * * coleta/rodar.sh open-meteo; coleta/rodar.sh carga/ar-vento open-meteo-previsao open-meteo-qualidade-ar
+
+# INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior. O INPE fecha o arquivo do dia D por volta das 12:05 UTC de D+1.
+30 9 * * * coleta/rodar.sh inpe-queimadas; coleta/rodar.sh carga/focos
+
+# Relatório da fumaça (#17, #18): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
+0 8 * * * coleta/rodar.sh analise/fumaca/relatorio --ontem
+0 17 * * * coleta/rodar.sh analise/fumaca/relatorio --hoje
+
+# Saúde da coleta (#19) → estado/saude.md.
+20 */6 * * * coleta/rodar.sh saude
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg

@@ -17,6 +17,9 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - OSM é baixado **toda semana**, porque o próprio OSM guarda o histórico. Fonte que perde histórico se não for salva tem coleta frequente.
 - A atribuição v0 da fumaça é uma heurística (vento local em linha reta). Retrotrajetória de verdade só no M3, e o relatório tem que dizer isso.
 
+## Em aberto (decisão do usuário)
+- **(2026-10-21) Língua do código.** Código novo (identificadores e comentários) é em inglês; docs, issues e PRs em pt-BR. Renomear o código que já existe (`coleta/`, `db/migracoes/`, scripts `migrar`/`tipos`, funções e tabelas em português) espera o usuário. Até lá, nada existente é renomeado, e tabela nova segue o nome em português que a issue já fixou, para não misturar dentro do mesmo esquema.
+
 ## Pendências do usuário
 - **R2:** criar o bucket e um token **só de leitura e escrita de objetos, só nesse bucket**; no bucket, a regra de ciclo de vida "apagar `backup/pg/` com mais de 14 dias" (o código nunca apaga nada no R2). Depois pôr `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` no `.env` local e no GitHub com `gh secret set <NOME>` (o valor é digitado no prompt, nunca colado no chat). Bloqueia a [#3](https://github.com/leonardomenezes8500/manaus/issues/3) e o resto do M0.
 - Renovar o token NASA Earthdata **até 2026-12-10**, porque ele expira em 2026-12-20 ([#7](https://github.com/leonardomenezes8500/manaus/issues/7)).
@@ -57,6 +60,9 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
   - [#18](https://github.com/leonardomenezes8500/manaus/issues/18) Relatório diário + mapa + temporada 2026
   - [#19](https://github.com/leonardomenezes8500/manaus/issues/19) Saúde da coleta (`estado/saude.md`)
   - [#20](https://github.com/leonardomenezes8500/manaus/issues/20) Formato de `pesquisa/` + primeiros problemas
+
+## [M1.5](https://github.com/leonardomenezes8500/manaus/milestone/9) — Normalização do projeto (depois do M1, antes do M2)
+- [#39](https://github.com/leonardomenezes8500/manaus/issues/39) `.editorconfig`, `.nvmrc`, eslint, prettier, `.env.example`, `compose.yaml` de dev e um `npm run check` só (pre-commit e CI)
 
 ## [M2](https://github.com/leonardomenezes8500/manaus/milestone/3) — Base territorial, fusão e API v0 (3 sprints)
 **Objetivo:** Manaus no PostGIS com várias fontes lado a lado, a 3ª camada (entidades com proveniência) e a primeira API local.
