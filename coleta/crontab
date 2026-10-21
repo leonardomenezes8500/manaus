@@ -14,6 +14,9 @@
 # Open-Meteo (#12): vento em altitude + CAMS (modelo), 4x/dia.
 5 1,7,13,19 * * * coleta/rodar.sh open-meteo
 
+# INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior.
+30 6 * * * coleta/rodar.sh inpe-queimadas
+
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg
 

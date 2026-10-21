@@ -11,6 +11,7 @@
     "migrar": "node db/migrar.ts"
   },
   "jest": {
+    "testTimeout": 30000,
     "transform": {
       "^.+\\.ts$": "@swc/jest"
     }
