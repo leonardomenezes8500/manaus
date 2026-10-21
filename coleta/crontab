@@ -6,3 +6,6 @@
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg
+
+# Verificador de chaves (#6): segunda, 07h → estado/chaves.md no R2.
+0 7 * * 1 coleta/rodar.sh verificar-chaves
