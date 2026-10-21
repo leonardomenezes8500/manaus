@@ -1,8 +1,9 @@
 # Toda coleta periódica roda aqui, no container coletor da slice (supercronic, horário de Manaus). Nunca schedule: no Actions.
 # Formato: min hora dia mês dia-da-semana coleta/rodar.sh <script> [args]   (roda coleta/<script>.ts [args])
+# A carga no banco (#15, #16) roda logo depois da coleta, na mesma linha (o "; " deixa a carga rodar mesmo se a coleta falhar).
 
 # Focos NASA FIRMS (#9): 4 sensores, últimos 2 dias.
-0 */3 * * * coleta/rodar.sh firms
+0 */3 * * * coleta/rodar.sh firms; coleta/rodar.sh carga/focos
 
 # OpenAQ (#10): sensor do Centro de hora em hora; locations da região 1 vez por dia (avisa sensor novo).
 15 * * * * coleta/rodar.sh openaq
@@ -14,8 +15,8 @@
 # Open-Meteo (#12): vento em altitude + CAMS (modelo), 4x/dia.
 5 1,7,13,19 * * * coleta/rodar.sh open-meteo
 
-# INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior.
-30 6 * * * coleta/rodar.sh inpe-queimadas
+# INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior. O INPE fecha o arquivo do dia D por volta das 12:05 UTC de D+1.
+30 9 * * * coleta/rodar.sh inpe-queimadas; coleta/rodar.sh carga/focos
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg

@@ -42,6 +42,11 @@ try {
 
   console.log('municípios carregados:', await carregarMunicipios(db, malhas, nomes));
   for (const a of arquivos) await marcarCarregado(db, a, 'ibge.municipio');
+  // Spots loaded before the municipalities existed (or outside an old boundary) get theirs now.
+  for (const t of ['firms.foco', 'inpe.foco']) {
+    const r = await db.query(`UPDATE ${t} f SET municipio = m.codigo FROM ibge.municipio m WHERE f.municipio IS NULL AND ST_Contains(m.geom, f.geom)`);
+    console.log(t, r.rowCount, 'spots got a municipality');
+  }
 } finally {
   await db.end();
 }

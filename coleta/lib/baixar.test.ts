@@ -3,14 +3,16 @@ import { createServer, type Server } from 'node:http';
 import { mkdtemp, readdir, rm, utimes, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { Readable } from 'node:stream';
 import { mockClient } from 'aws-sdk-client-mock';
-import { baixar, enviar, limparCache, urlSemChaves } from './baixar.ts';
+import { baixar, enviar, enviarPendentes, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
 
 // S3 de mentira: guarda em memória e respeita If-None-Match: *
 const s3 = mockClient(S3Client);
 let r2: Map<string, { corpo: Buffer; metadata?: Record<string, string> }>;
 let redeCaiNoProximo = false;
+let atrasoNoProximo = 0; // ms: holds one upload so another process can overtake it
 
 async function corpo(b: any): Promise<Buffer> {
   if (Buffer.isBuffer(b) || b instanceof Uint8Array) return Buffer.from(b);
@@ -48,11 +50,25 @@ beforeEach(async () => {
       redeCaiNoProximo = false;
       throw new Error('ECONNRESET');
     }
+    if (atrasoNoProximo) {
+      const ms = atrasoNoProximo;
+      atrasoNoProximo = 0;
+      await new Promise((ok) => setTimeout(ok, ms));
+    }
     if (i.IfNoneMatch === '*' && r2.has(i.Key)) throw Object.assign(new Error('existe'), { name: 'PreconditionFailed', $metadata: { httpStatusCode: 412 } });
     r2.set(i.Key, { corpo: await corpo(i.Body), metadata: i.Metadata });
     return { ETag: '"x"' };
   });
   s3.on(HeadObjectCommand).callsFake(async (i) => ({ Metadata: r2.get(i.Key)?.metadata }));
+  s3.on(GetObjectCommand).callsFake(async (i) => ({ Body: Readable.from([r2.get(i.Key)!.corpo]) }));
+  // Pages of 2 keys, to exercise the continuation token.
+  s3.on(ListObjectsV2Command).callsFake(async (i) => {
+    const keys = [...r2.keys()].filter((k) => k.startsWith(i.Prefix)).sort();
+    const start = Number(i.ContinuationToken ?? 0);
+    const page = keys.slice(start, start + 2);
+    const more = start + 2 < keys.length;
+    return { Contents: page.map((Key) => ({ Key, Size: r2.get(Key)!.corpo.length, LastModified: quando })), IsTruncated: more, NextContinuationToken: more ? String(start + 2) : undefined };
+  });
 });
 afterEach(() => rm(dir, { recursive: true, force: true }));
 
@@ -77,9 +93,21 @@ test('não sobrescreve: segunda escrita na mesma chave é recusada', async () =>
   const outro = join(dir, 'outro');
   await writeFile(outro, 'diferente');
   await expect(enviar(outro, 'bruto/ibge-malhas/2026/10/21/150405Z_manaus.json')).rejects.toMatchObject({ name: 'PreconditionFailed' });
-  await expect(enviar(outro, 'bruto/x', { sobrescrever: true })).rejects.toThrow('só é permitido em estado/');
+  await expect(enviar(outro, 'bruto/x', { sobrescrever: true })).rejects.toThrow('só é permitido em estado/ e produtos/');
   await enviar(outro, 'estado/saude.md');
   await expect(enviar(outro, 'estado/saude.md', { sobrescrever: true })).resolves.toBeUndefined();
+  await enviar(outro, 'produtos/fumaca/2026-10-21/relatorio.md');
+  await expect(enviar(outro, 'produtos/fumaca/2026-10-21/relatorio.md', { sobrescrever: true })).resolves.toBeUndefined();
+});
+
+test('listKeys walks every page; readRaw reads from the cache or, without it, from R2', async () => {
+  const a = await baixar(malha(), quando);
+  await baixar(malha(), new Date(quando.getTime() + 1000));
+  const keys = (await listKeys('bruto/ibge-malhas/')).map((k) => k.key);
+  expect(keys).toHaveLength(4); // 2 files + 2 metas, in 2 pages
+  expect(await readRaw(a.chave)).toBe('malha /malha?formato=geojson');
+  await rm(join(dir, 'cache'), { recursive: true });
+  expect(await readRaw(a.chave)).toBe('malha /malha?formato=geojson');
 });
 
 test('a chave some do meta (query e caminho)', async () => {
@@ -129,4 +157,16 @@ test('cache com mais de 7 dias sai do buffer', async () => {
   await utimes(join(dir, 'cache/bruto/f/velho'), oitoDias, oitoDias);
   await limparCache();
   expect(await readdir(join(dir, 'cache/bruto/f'))).toEqual(['novo']);
+});
+
+test('two processes sending the same pending file at once: both finish without error, the file goes up once', async () => {
+  redeCaiNoProximo = true;
+  await expect(baixar(malha(), quando)).rejects.toThrow('pendente/');
+  atrasoNoProximo = 100; // process A stalls on its first upload; B sends everything and moves the files to the cache
+  const a = enviarPendentes();
+  await new Promise((ok) => setTimeout(ok, 20));
+  await enviarPendentes();
+  await a; // A finds its files gone: someone else sent them, not an error
+  expect([...r2.keys()].sort()).toEqual(['bruto/ibge-malhas/2026/10/21/150405Z_manaus.json', 'bruto/ibge-malhas/2026/10/21/150405Z_manaus.json.meta.json']);
+  expect(await readdir(join(dir, 'pendente/bruto/ibge-malhas/2026/10/21'))).toEqual([]);
 });

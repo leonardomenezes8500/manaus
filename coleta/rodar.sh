@@ -4,7 +4,7 @@
 set -uo pipefail
 nome=${1:-}
 shift || true
-if ! [[ $nome =~ ^[a-z0-9-]+$ ]]; then
+if ! [[ $nome =~ ^[a-z0-9-]+(/[a-z0-9-]+)*$ ]]; then
   echo "uso: coleta/rodar.sh <script> (roda coleta/<script>.ts)" >&2
   exit 2
 fi
@@ -12,7 +12,7 @@ cd "$(dirname "$0")/.."
 logs=${MANAUS_LOGS:-/dados/logs}
 mkdir -p "$logs"
 find "$logs" -name '*.log' -mtime +30 -delete
-log="$logs/$nome-$(date +%F).log"
+log="$logs/${nome//\//-}-$(date +%F).log"
 
 echo "== $(date -Is) início" >> "$log"
 node "coleta/$nome.ts" "$@" >> "$log" 2>&1
