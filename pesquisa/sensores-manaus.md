@@ -2,7 +2,7 @@
 
 Pesquisa de 2026-10-21. "Testado" = fiz uma requisição real hoje.
 
-**Resumo:** Manaus não tem rede oficial de estações. Há **uma** estação de referência (Fiocruz/MMA, no MonitorAr desde jul/2026) e uma rede de **~34 sensores baratos PurpleAir** (UEA, Sema-AM, MPAM e outros), que aparece no SELVA. O resto (IQAir, imprensa, Defesa Civil) repassa esses mesmos sensores.
+Resumo: Manaus não tem rede oficial de estações. Há uma estação de referência (Fiocruz/MMA, no MonitorAr desde jul/2026) e uma rede de ~34 sensores baratos PurpleAir (UEA, Sema-AM, MPAM e outros), que aparece no SELVA. O resto (IQAir, imprensa, Defesa Civil) repassa esses mesmos sensores.
 
 | Candidato | Achou? | Mede | Acesso | Card |
 |---|---|---|---|---|

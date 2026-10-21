@@ -23,12 +23,18 @@ export function lerFrontMatter(texto: string): Card {
   return card;
 }
 
-export function validar(card: Card, arquivo: string): string[] {
-  const erros = OBRIGATORIOS.filter((c) => !card[c]).map((c) => `falta ${c}`);
-  if (card.id && card.id !== arquivo.replace(/\.md$/, '')) erros.push(`id "${card.id}" ≠ nome do arquivo`);
-  for (const [campo, ok] of Object.entries(VALORES)) {
-    if (card[campo] && !ok.includes(card[campo])) erros.push(`${campo} inválido: ${card[campo]}`);
+/** Required fields, id = file name and allowed values: the shared rule for fontes/ and pesquisa/ (#20). */
+export function checkFields(doc: Card, file: string, required: string[], allowed: Record<string, string[]>): string[] {
+  const erros = required.filter((c) => !doc[c]).map((c) => `falta ${c}`);
+  if (doc.id && doc.id !== file.replace(/\.md$/, '')) erros.push(`id "${doc.id}" ≠ nome do arquivo`);
+  for (const [campo, ok] of Object.entries(allowed)) {
+    if (doc[campo] && !ok.includes(doc[campo])) erros.push(`${campo} inválido: ${doc[campo]}`);
   }
+  return erros;
+}
+
+export function validar(card: Card, arquivo: string): string[] {
+  const erros = checkFields(card, arquivo, OBRIGATORIOS, VALORES);
   if (['verificada', 'coletando'].includes(card.status)) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(card.verificado_em ?? '')) erros.push('falta verificado_em (AAAA-MM-DD)');
     if (!card.teste) erros.push('falta teste');
@@ -37,7 +43,7 @@ export function validar(card: Card, arquivo: string): string[] {
   return erros;
 }
 
-/** Cards de `fontes/` (arquivos com `_` na frente, como o modelo, ficam de fora). */
+/** Cards de `fontes/` (arquivos com `_` na frente, como o modelo, ficam de fora). Serve para qualquer pasta de .md. */
 export function lerCatalogo(dir = import.meta.dirname): { arquivo: string; card: Card }[] {
   return readdirSync(dir)
     .filter((a) => a.endsWith('.md') && !a.startsWith('_'))
