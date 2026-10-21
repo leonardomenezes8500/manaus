@@ -9,15 +9,21 @@
     "test": "jest --runInBand",
     "tipos": "tsc --noEmit",
     "migrar": "node db/migrar.ts",
-    "fumaca": "node analise/fumaca/atribuir.ts"
+    "fumaca": "node analise/fumaca/atribuir.ts",
+    "test:e2e": "playwright test"
   },
   "jest": {
     "testTimeout": 30000,
     "transform": {
       "^.+\\.ts$": "@swc/jest"
-    }
+    },
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/e2e/"
+    ]
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",

@@ -3,6 +3,7 @@ import { registrar } from '../../coleta/carga/lib.ts';
 import { carregarMunicipios } from '../../coleta/carga/municipios.ts';
 import { bancoNovo, comBanco } from '../../db/teste.ts';
 import { attributeDay, dayBounds, NOTE } from './atribuir.ts';
+import { seasonRows } from './relatorio.ts';
 
 test('a Manaus day is 04:00Z to 04:00Z', () => {
   expect(dayBounds('2026-10-21')).toEqual({ start: new Date('2026-10-21T04:00:00Z'), end: new Date('2026-10-22T04:00:00Z') });
@@ -43,5 +44,6 @@ comBanco('atribuição v0 no banco', () => {
     expect(row[0].pm25_medido_media).toBeCloseTo(40);
     expect(row[0].pm25_cams_media).toBeCloseTo(30);
     expect((await db.query('SELECT count(*)::int AS n FROM analise.fumaca_foco')).rows[0].n).toBe(1);
+    expect((await seasonRows(db, '2026-08-01', '2026-10-21')).map((r) => r.dia)).toEqual(['2026-10-21']);
   });
 });
