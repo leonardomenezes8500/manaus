@@ -8,7 +8,8 @@
   "scripts": {
     "test": "jest --runInBand",
     "tipos": "tsc --noEmit",
-    "migrar": "node db/migrar.ts"
+    "migrar": "node db/migrar.ts",
+    "fumaca": "node analise/fumaca/atribuir.ts"
   },
   "jest": {
     "testTimeout": 30000,
