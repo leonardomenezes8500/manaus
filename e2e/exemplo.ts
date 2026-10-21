@@ -2,12 +2,24 @@
 import type { DayRow, SpotOut } from '../analise/fumaca/relatorio.ts';
 
 export const row: DayRow = {
-  dia: '2026-10-21', pm25_medido_media: 35.5, pm25_medido_max: 39.7, pm25_medido_horas: 17,
-  pm25_cams_media: 28.1, pm25_cams_max: 41, horas_fu_hz: 6, visibilidade_min_m: 4000,
+  dia: '2026-10-21',
+  pm25_medido_media: 35.5,
+  pm25_medido_max: 39.7,
+  pm25_medido_horas: 17,
+  pm25_cams_media: 28.1,
+  pm25_cams_max: 41,
+  horas_fu_hz: 6,
+  visibilidade_min_m: 4000,
   vento: { de_graus: 80, velocidade_kmh: 22, constancia: 0.9, horas_com_dado: 24 },
   focos_contados: 3,
-  ranking: { municipios: [{ nome: 'Autazes', uf: 'AM', parcela: 0.6, focos: 2 }, { nome: 'Itacoatiara', uf: 'AM', parcela: 0.4, focos: 1 }] },
-  confianca: 'media', sinais: { steadyWind: true, spotsInSector: false, measuredAndModelAgree: true },
+  ranking: {
+    municipios: [
+      { nome: 'Autazes', uf: 'AM', parcela: 0.6, focos: 2 },
+      { nome: 'Itacoatiara', uf: 'AM', parcela: 0.4, focos: 1 },
+    ],
+  },
+  confianca: 'media',
+  sinais: { steadyWind: true, spotsInSector: false, measuredAndModelAgree: true },
 };
 
 export const spots: SpotOut[] = [

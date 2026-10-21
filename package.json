@@ -10,7 +10,11 @@
     "tipos": "tsc --noEmit",
     "migrar": "node db/migrar.ts",
     "fumaca": "node analise/fumaca/atribuir.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "check": "npm run lint && prettier --check . && npm run tipos && npm test",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "jest": {
     "testTimeout": 30000,
@@ -23,6 +27,7 @@
     ]
   },
   "devDependencies": {
+    "@eslint/js": "9.39.5",
     "@playwright/test": "1.64.1",
     "@swc/core": "^1.16.18",
     "@swc/jest": "^0.2.39",
@@ -30,8 +35,11 @@
     "@types/node": "^26.6.5",
     "@types/pg": "^8.23.1",
     "aws-sdk-client-mock": "^4.1.0",
+    "eslint": "9.39.5",
     "jest": "^30.5.2",
-    "typescript": "^7.0.2"
+    "prettier": "3.9.9",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1155.0",

@@ -1,16 +1,42 @@
 import { buildGeojson, buildMap, buildReport, buildSeason, compass, sector, type DayRow } from './relatorio.ts';
 
 const row: DayRow = {
-  dia: '2026-10-21', pm25_medido_media: 35.5, pm25_medido_max: 60.2, pm25_medido_horas: 24, pm25_cams_media: 28.1, pm25_cams_max: 41,
-  horas_fu_hz: 6, visibilidade_min_m: 4000,
+  dia: '2026-10-21',
+  pm25_medido_media: 35.5,
+  pm25_medido_max: 60.2,
+  pm25_medido_horas: 24,
+  pm25_cams_media: 28.1,
+  pm25_cams_max: 41,
+  horas_fu_hz: 6,
+  visibilidade_min_m: 4000,
   vento: { de_graus: 100, velocidade_kmh: 22, constancia: 0.9, horas_com_dado: 24 },
   focos_contados: 321,
-  ranking: { municipios: [{ nome: 'Autazes', uf: 'AM', parcela: 0.41, focos: 30 }, { nome: 'Careiro', uf: 'AM', parcela: 0.2, focos: 12 }, { nome: 'fora do Brasil', uf: null, parcela: 0.1, focos: 3 }, { nome: 'Manaquiri', uf: 'AM', parcela: 0.05, focos: 2 }] },
-  confianca: 'alta', sinais: { steadyWind: true, spotsInSector: true, measuredAndModelAgree: true },
+  ranking: {
+    municipios: [
+      { nome: 'Autazes', uf: 'AM', parcela: 0.41, focos: 30 },
+      { nome: 'Careiro', uf: 'AM', parcela: 0.2, focos: 12 },
+      { nome: 'fora do Brasil', uf: null, parcela: 0.1, focos: 3 },
+      { nome: 'Manaquiri', uf: 'AM', parcela: 0.05, focos: 2 },
+    ],
+  },
+  confianca: 'alta',
+  sinais: { steadyWind: true, spotsInSector: true, measuredAndModelAgree: true },
 };
 
 test('compass in Portuguese', () => {
-  expect([0, 44, 46, 90, 135, 180, 225, 270, 315, 359, -10].map(compass)).toEqual(['norte', 'nordeste', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste', 'norte', 'norte']);
+  expect([0, 44, 46, 90, 135, 180, 225, 270, 315, 359, -10].map(compass)).toEqual([
+    'norte',
+    'nordeste',
+    'nordeste',
+    'leste',
+    'sudeste',
+    'sul',
+    'sudoeste',
+    'oeste',
+    'noroeste',
+    'norte',
+    'norte',
+  ]);
 });
 
 test('report: at most 15 lines, says measured vs model, top 3 and that it is v0', () => {

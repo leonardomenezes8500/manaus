@@ -15,7 +15,8 @@ export function hoursOf(freq: string): number {
 }
 
 /** OK while the newest file is younger than twice the expected interval. */
-export const status = (ageHours: number | null, expectedHours: number) => (ageHours !== null && ageHours <= 2 * expectedHours ? 'OK' : 'ATRASADO');
+export const status = (ageHours: number | null, expectedHours: number) =>
+  ageHours !== null && ageHours <= 2 * expectedHours ? 'OK' : 'ATRASADO';
 
 /** Newest raw data key of a source: looks at the last few daily prefixes first, then the whole source. */
 async function newest(fonte: string, expectedHours: number, now: Date): Promise<{ key: string; modified: Date } | undefined> {
@@ -44,10 +45,14 @@ async function recentErrors(logs: string, now: Date): Promise<string[]> {
 }
 
 async function folderBytes(dir: string): Promise<{ bytes: number; files: number }> {
-  let bytes = 0, files = 0;
+  let bytes = 0,
+    files = 0;
   for (const f of await readdir(dir, { recursive: true }).catch(() => [] as string[])) {
     const s = await stat(join(dir, f)).catch(() => undefined);
-    if (s?.isFile()) bytes += s.size, files++;
+    if (s?.isFile()) {
+      bytes += s.size;
+      files++;
+    }
   }
   return { bytes, files };
 }
@@ -58,7 +63,9 @@ async function main() {
   const now = new Date();
   const rows: string[] = [];
   let late = 0;
-  for (const { card } of lerCatalogo().filter((c) => c.card.status === 'coletando').sort((a, b) => a.card.id.localeCompare(b.card.id))) {
+  for (const { card } of lerCatalogo()
+    .filter((c) => c.card.status === 'coletando')
+    .sort((a, b) => a.card.id.localeCompare(b.card.id))) {
     const expected = hoursOf(card.coleta);
     const last = await newest(card.id, expected, now);
     const age = last ? (now.getTime() - last.modified.getTime()) / 3600_000 : null;
@@ -68,8 +75,14 @@ async function main() {
   }
   const buffer = process.env.MANAUS_BUFFER || join(tmpdir(), 'manaus-buffer');
   const [all, pending] = await Promise.all([folderBytes(buffer), folderBytes(join(buffer, 'pendente'))]);
-  const memory = await readFile('/sys/fs/cgroup/memory.current', 'utf8').then((v) => mb(Number(v)), () => '—');
-  const limit = await readFile('/sys/fs/cgroup/memory.max', 'utf8').then((v) => (v.trim() === 'max' ? 'sem limite' : mb(Number(v))), () => '—');
+  const memory = await readFile('/sys/fs/cgroup/memory.current', 'utf8').then(
+    (v) => mb(Number(v)),
+    () => '—',
+  );
+  const limit = await readFile('/sys/fs/cgroup/memory.max', 'utf8').then(
+    (v) => (v.trim() === 'max' ? 'sem limite' : mb(Number(v))),
+    () => '—',
+  );
   const errors = await recentErrors(process.env.MANAUS_LOGS || '/dados/logs', now);
   const md = [
     '# Saúde da coleta',
@@ -97,7 +110,8 @@ async function main() {
   if (late) process.exitCode = 1;
 }
 
-if (import.meta.main) main().catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main().catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

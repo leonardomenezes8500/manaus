@@ -3,7 +3,20 @@ import { join } from 'node:path';
 
 export type Card = Record<string, string>;
 
-const OBRIGATORIOS = ['id', 'nome', 'publicador', 'url', 'acesso', 'chave', 'atualizacao', 'cobertura', 'licenca', 'tipo', 'confiabilidade', 'status'];
+const OBRIGATORIOS = [
+  'id',
+  'nome',
+  'publicador',
+  'url',
+  'acesso',
+  'chave',
+  'atualizacao',
+  'cobertura',
+  'licenca',
+  'tipo',
+  'confiabilidade',
+  'status',
+];
 
 const VALORES: Record<string, string[]> = {
   acesso: ['api', 'download', 'pagina'],

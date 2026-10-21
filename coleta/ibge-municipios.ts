@@ -20,11 +20,17 @@ try {
   const arquivos: number[] = [];
   for (const uf of UFS) {
     const malha = await baixar({
-      fonte: 'ibge-malhas', coletor, nome: `municipios-${uf}.geojson`, parametros: { uf, qualidade: 'intermediaria' },
+      fonte: 'ibge-malhas',
+      coletor,
+      nome: `municipios-${uf}.geojson`,
+      parametros: { uf, qualidade: 'intermediaria' },
       url: `${MALHAS}/estados/${uf}?intrarregiao=municipio&qualidade=intermediaria&${GEOJSON}`,
     });
     const lista = await baixar({
-      fonte: 'ibge-localidades', coletor, nome: `municipios-${uf}.json`, parametros: { uf },
+      fonte: 'ibge-localidades',
+      coletor,
+      nome: `municipios-${uf}.json`,
+      parametros: { uf },
       url: `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`,
     });
     for (const m of await json(lista.caminho)) nomes.set(m.id, m.nome);
@@ -33,7 +39,10 @@ try {
     malhas.push({ arquivo: id, uf, geojson: await json(malha.caminho) });
   }
   const manaus = await baixar({
-    fonte: 'ibge-malhas', coletor, nome: 'manaus-maxima.geojson', parametros: { municipio: MANAUS.codigo, qualidade: 'maxima' },
+    fonte: 'ibge-malhas',
+    coletor,
+    nome: 'manaus-maxima.geojson',
+    parametros: { municipio: MANAUS.codigo, qualidade: 'maxima' },
     url: `${MALHAS}/municipios/${MANAUS.codigo}?qualidade=maxima&${GEOJSON}`,
   });
   const idManaus = await registrar(db, manaus);
@@ -44,7 +53,9 @@ try {
   for (const a of arquivos) await marcarCarregado(db, a, 'ibge.municipio');
   // Spots loaded before the municipalities existed (or outside an old boundary) get theirs now.
   for (const t of ['firms.foco', 'inpe.foco']) {
-    const r = await db.query(`UPDATE ${t} f SET municipio = m.codigo FROM ibge.municipio m WHERE f.municipio IS NULL AND ST_Contains(m.geom, f.geom)`);
+    const r = await db.query(
+      `UPDATE ${t} f SET municipio = m.codigo FROM ibge.municipio m WHERE f.municipio IS NULL AND ST_Contains(m.geom, f.geom)`,
+    );
     console.log(t, r.rowCount, 'spots got a municipality');
   }
 } finally {

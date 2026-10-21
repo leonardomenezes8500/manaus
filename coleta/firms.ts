@@ -27,7 +27,9 @@ const url = (sensor: string, dias: number, data?: string) =>
 
 async function pedir(sensor: string, dias: number, data?: string): Promise<void> {
   const r = await baixar({
-    fonte: 'nasa-firms', coletor: 'firms', url: url(sensor, dias, data),
+    fonte: 'nasa-firms',
+    coletor: 'firms',
+    url: url(sensor, dias, data),
     nome: data ? `${sensor}_${data}_${dias}d.csv` : `${sensor}.csv`,
     parametros: { sensor, bbox: bboxTexto(), dias, ...(data ? { data } : {}) },
   });
@@ -58,7 +60,8 @@ async function principal(args: string[]) {
   if (falhas) throw new Error(`${falhas} de ${pedidos.length} pedidos falharam`);
 }
 
-if (import.meta.main) principal(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  principal(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

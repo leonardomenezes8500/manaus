@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 const CACHE_DIAS = 7;
@@ -50,7 +50,9 @@ export function urlSemChaves(url: string): string {
 function commit(): string {
   if (process.env.GIT_COMMIT) return process.env.GIT_COMMIT;
   try {
-    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
   } catch {
     return 'desconhecido';
   }
@@ -63,7 +65,8 @@ const ehPrecondicao = (e: any) => e?.name === 'PreconditionFailed' || e?.$metada
  * `sobrescrever` só vale em `estado/` (a foto atual) e `produtos/` (derivado, refeito a partir do banco); nunca em `bruto/`.
  */
 export async function enviar(caminhoLocal: string, chave: string, opcoes: { sobrescrever?: boolean; sha256?: string } = {}): Promise<void> {
-  if (opcoes.sobrescrever && !/^(estado|produtos)\//.test(chave)) throw new Error(`sobrescrever só é permitido em estado/ e produtos/: ${chave}`);
+  if (opcoes.sobrescrever && !/^(estado|produtos)\//.test(chave))
+    throw new Error(`sobrescrever só é permitido em estado/ e produtos/: ${chave}`);
   await new Upload({
     client: s3(),
     params: {
@@ -107,11 +110,19 @@ export async function enviarPendentes(): Promise<void> {
       await mkdir(dirname(buffer('cache', chave)), { recursive: true });
       for (const a of [chave, chave + '.meta.json']) {
         // ENOENT: outro processo já enviou e moveu
-        await rename(join(dir, a), buffer('cache', a)).catch((e) => { if (e.code !== 'ENOENT') throw e; });
+        await rename(join(dir, a), buffer('cache', a)).catch((e) => {
+          if (e.code !== 'ENOENT') throw e;
+        });
       }
     } catch (e) {
       // Another process (two crons at once) sent it and moved it to the cache in the meantime: not an error.
-      if (await stat(join(dir, chave)).then(() => true, () => false)) erros.push(e);
+      if (
+        await stat(join(dir, chave)).then(
+          () => true,
+          () => false,
+        )
+      )
+        erros.push(e);
     }
   }
   if (erros.length) throw new AggregateError(erros, `${erros.length} arquivo(s) continuam em pendente/`);
@@ -143,7 +154,10 @@ export type Baixado = { chave: string; caminho: string; sha256: string; bytes: n
  * Devolve o caminho local no cache (válido por 7 dias).
  */
 export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
-  for (const [campo, v] of [['fonte', d.fonte], ['nome', d.nome]]) {
+  for (const [campo, v] of [
+    ['fonte', d.fonte],
+    ['nome', d.nome],
+  ]) {
     if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
   }
   await enviarPendentes().catch(() => {}); // rede ainda fora: tenta de novo no fim
@@ -163,7 +177,13 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
   try {
     await pipeline(
       Readable.fromWeb(res.body as any),
-      new Transform({ transform(parte, _, cb) { hash.update(parte); bytes += parte.length; cb(null, parte); } }),
+      new Transform({
+        transform(parte, _, cb) {
+          hash.update(parte);
+          bytes += parte.length;
+          cb(null, parte);
+        },
+      }),
       createWriteStream(tmp),
     );
   } catch (e) {
@@ -206,7 +226,13 @@ export async function listKeys(prefix: string): Promise<{ key: string; size: num
 /** Opens a raw file as a stream: from the local cache when it is there, otherwise from R2. */
 export async function openRaw(key: string): Promise<Readable> {
   const cached = buffer('cache', key);
-  if (await stat(cached).then((s) => s.isFile(), () => false)) return createReadStream(cached);
+  if (
+    await stat(cached).then(
+      (s) => s.isFile(),
+      () => false,
+    )
+  )
+    return createReadStream(cached);
   const r = await s3().send(new GetObjectCommand({ Bucket: env('R2_BUCKET'), Key: key }));
   return r.Body as Readable;
 }

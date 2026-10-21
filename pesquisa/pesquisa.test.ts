@@ -14,10 +14,11 @@ const RULES = {
 
 for (const [folder, rule] of Object.entries(RULES)) {
   const docs = lerCatalogo(join(import.meta.dirname, folder));
-  if (docs.length) test.each(docs.map((d) => [`${folder}/${d.arquivo}`, d] as const))('%s has the required fields', (_, d) => {
-    expect(checkFields(d.card, d.arquivo, rule.required, rule.allowed)).toEqual([]);
-    if (d.card.atualizado_em) expect(d.card.atualizado_em).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-  });
+  if (docs.length)
+    test.each(docs.map((d) => [`${folder}/${d.arquivo}`, d] as const))('%s has the required fields', (_, d) => {
+      expect(checkFields(d.card, d.arquivo, rule.required, rule.allowed)).toEqual([]);
+      if (d.card.atualizado_em) expect(d.card.atualizado_em).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    });
 }
 
 test('the models themselves pass the rule (empty classificacao is allowed)', () => {
@@ -28,6 +29,20 @@ test('the models themselves pass the rule (empty classificacao is allowed)', () 
 });
 
 test('a problem without status or with an unknown one fails', () => {
-  expect(checkFields({ id: 'x', titulo: 't', tema: 'fumaca', atualizado_em: '2026-10-21' }, 'x.md', RULES.problemas.required, RULES.problemas.allowed)).toEqual(['falta status']);
-  expect(checkFields({ id: 'x', titulo: 't', tema: 'f', status: 'pronto', atualizado_em: '2026-10-21' }, 'x.md', RULES.problemas.required, RULES.problemas.allowed)).toEqual(['status inválido: pronto']);
+  expect(
+    checkFields(
+      { id: 'x', titulo: 't', tema: 'fumaca', atualizado_em: '2026-10-21' },
+      'x.md',
+      RULES.problemas.required,
+      RULES.problemas.allowed,
+    ),
+  ).toEqual(['falta status']);
+  expect(
+    checkFields(
+      { id: 'x', titulo: 't', tema: 'f', status: 'pronto', atualizado_em: '2026-10-21' },
+      'x.md',
+      RULES.problemas.required,
+      RULES.problemas.allowed,
+    ),
+  ).toEqual(['status inválido: pronto']);
 });

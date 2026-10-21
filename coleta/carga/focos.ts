@@ -13,33 +13,68 @@ const num = (v: string | undefined) => (v === undefined || v === '' ? null : Num
 const inBox = (lat: number, lon: number) => lon >= BBOX.oeste && lon <= BBOX.leste && lat >= BBOX.sul && lat <= BBOX.norte;
 
 export type FirmsRow = {
-  satelite: string; instrumento: string; adquirido_em: string; lat: number; lon: number;
-  frp: number | null; confianca: string; dia_noite: string; brilho: number | null; versao: string;
+  satelite: string;
+  instrumento: string;
+  adquirido_em: string;
+  lat: number;
+  lon: number;
+  frp: number | null;
+  confianca: string;
+  dia_noite: string;
+  brilho: number | null;
+  versao: string;
 };
 
 /** One FIRMS CSV record (VIIRS or MODIS columns) → row. acq_time is HHMM without leading zeros. */
 export function firmsRow(r: Record<string, string>): FirmsRow {
   const hhmm = r.acq_time.padStart(4, '0');
   return {
-    satelite: r.satellite, instrumento: r.instrument,
+    satelite: r.satellite,
+    instrumento: r.instrument,
     adquirido_em: `${r.acq_date}T${hhmm.slice(0, 2)}:${hhmm.slice(2)}:00Z`,
-    lat: Number(r.latitude), lon: Number(r.longitude), frp: num(r.frp), confianca: r.confidence, dia_noite: r.daynight,
-    brilho: num(r.bright_ti4 ?? r.brightness), versao: r.version,
+    lat: Number(r.latitude),
+    lon: Number(r.longitude),
+    frp: num(r.frp),
+    confianca: r.confidence,
+    dia_noite: r.daynight,
+    brilho: num(r.bright_ti4 ?? r.brightness),
+    versao: r.version,
   };
 }
 
 export type InpeRow = {
-  id: string; data_hora: string; satelite: string; lat: number; lon: number; municipio_inpe: string; estado: string; pais: string;
-  municipio_id: number | null; numero_dias_sem_chuva: number | null; precipitacao: number | null; risco_fogo: number | null;
-  bioma: string; frp: number | null;
+  id: string;
+  data_hora: string;
+  satelite: string;
+  lat: number;
+  lon: number;
+  municipio_inpe: string;
+  estado: string;
+  pais: string;
+  municipio_id: number | null;
+  numero_dias_sem_chuva: number | null;
+  precipitacao: number | null;
+  risco_fogo: number | null;
+  bioma: string;
+  frp: number | null;
 };
 
 export function inpeRow(r: Record<string, string>): InpeRow {
   return {
-    id: r.id, data_hora: r.data_hora_gmt.replace(' ', 'T') + 'Z', satelite: r.satelite, lat: Number(r.lat), lon: Number(r.lon),
-    municipio_inpe: r.municipio, estado: r.estado, pais: r.pais, municipio_id: num(r.municipio_id),
-    numero_dias_sem_chuva: num(r.numero_dias_sem_chuva), precipitacao: num(r.precipitacao), risco_fogo: num(r.risco_fogo),
-    bioma: r.bioma, frp: num(r.frp),
+    id: r.id,
+    data_hora: r.data_hora_gmt.replace(' ', 'T') + 'Z',
+    satelite: r.satelite,
+    lat: Number(r.lat),
+    lon: Number(r.lon),
+    municipio_inpe: r.municipio,
+    estado: r.estado,
+    pais: r.pais,
+    municipio_id: num(r.municipio_id),
+    numero_dias_sem_chuva: num(r.numero_dias_sem_chuva),
+    precipitacao: num(r.precipitacao),
+    risco_fogo: num(r.risco_fogo),
+    bioma: r.bioma,
+    frp: num(r.frp),
   };
 }
 
@@ -53,7 +88,19 @@ async function insertFirms(db: pg.ClientBase, arquivo: number, rows: FirmsRow[])
      FROM unnest($1::text[], $2::text[], $3::timestamptz[], $4::float8[], $5::float8[], $6::real[], $7::text[], $8::text[], $9::real[], $10::text[])
        AS u(s, i, t, la, lo, f, c, d, b, v)
      ON CONFLICT DO NOTHING`,
-    [c('satelite'), c('instrumento'), c('adquirido_em'), c('lat'), c('lon'), c('frp'), c('confianca'), c('dia_noite'), c('brilho'), c('versao'), arquivo],
+    [
+      c('satelite'),
+      c('instrumento'),
+      c('adquirido_em'),
+      c('lat'),
+      c('lon'),
+      c('frp'),
+      c('confianca'),
+      c('dia_noite'),
+      c('brilho'),
+      c('versao'),
+      arquivo,
+    ],
   );
 }
 
@@ -67,8 +114,23 @@ async function insertInpe(db: pg.ClientBase, arquivo: number, rows: InpeRow[]) {
                  $9::int[], $10::real[], $11::real[], $12::real[], $13::text[], $14::real[])
        AS u(id, t, s, la, lo, mu, e, p, mi, nd, pr, rf, b, f)
      ON CONFLICT DO NOTHING`,
-    [c('id'), c('data_hora'), c('satelite'), c('lat'), c('lon'), c('municipio_inpe'), c('estado'), c('pais'), c('municipio_id'),
-      c('numero_dias_sem_chuva'), c('precipitacao'), c('risco_fogo'), c('bioma'), c('frp'), arquivo],
+    [
+      c('id'),
+      c('data_hora'),
+      c('satelite'),
+      c('lat'),
+      c('lon'),
+      c('municipio_inpe'),
+      c('estado'),
+      c('pais'),
+      c('municipio_id'),
+      c('numero_dias_sem_chuva'),
+      c('precipitacao'),
+      c('risco_fogo'),
+      c('bioma'),
+      c('frp'),
+      arquivo,
+    ],
   );
 }
 
@@ -92,16 +154,26 @@ export function loadLines(db: pg.ClientBase, arquivo: number, table: Table, line
       console.error(`arquivo ${arquivo}: not the expected CSV, skipped`);
       return 0;
     }
-    const all = (async function* () { yield first.value; yield* { [Symbol.asyncIterator]: () => iterator }; })();
+    const all = (async function* () {
+      yield first.value;
+      yield* { [Symbol.asyncIterator]: () => iterator };
+    })();
     let n = 0;
     let batch: any[] = [];
     for await (const rec of records(all)) {
       const row = t.parse(rec);
       if (!inBox(row.lat, row.lon)) continue;
       batch.push(row);
-      if (batch.length === BATCH) await t.insert(db, arquivo, batch), (n += batch.length), (batch = []);
+      if (batch.length === BATCH) {
+        await t.insert(db, arquivo, batch);
+        n += batch.length;
+        batch = [];
+      }
     }
-    if (batch.length) await t.insert(db, arquivo, batch), (n += batch.length);
+    if (batch.length) {
+      await t.insert(db, arquivo, batch);
+      n += batch.length;
+    }
     await db.query(
       `UPDATE ${table} f SET municipio = m.codigo FROM ibge.municipio m
        WHERE f.arquivo = $1 AND f.municipio IS NULL AND ST_Contains(m.geom, f.geom)`,
@@ -132,7 +204,8 @@ async function main() {
   }
 }
 
-if (import.meta.main) main().catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main().catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

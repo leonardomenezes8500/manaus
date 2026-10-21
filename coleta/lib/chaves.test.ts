@@ -1,7 +1,6 @@
 import { expiraEm, situacao, tabela } from './chaves.ts';
 
-const jwt = (payload: object) =>
-  ['cabecalho', Buffer.from(JSON.stringify(payload)).toString('base64url'), 'assinatura'].join('.');
+const jwt = (payload: object) => ['cabecalho', Buffer.from(JSON.stringify(payload)).toString('base64url'), 'assinatura'].join('.');
 
 const agora = new Date('2026-10-21T12:00:00Z');
 
