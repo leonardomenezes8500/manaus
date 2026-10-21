@@ -19,7 +19,12 @@
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.6.5",
+    "aws-sdk-client-mock": "^4.1.0",
     "jest": "^30.5.2",
     "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1155.0",
+    "@aws-sdk/lib-storage": "^3.1155.0"
   }
 }
