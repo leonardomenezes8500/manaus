@@ -8,6 +8,9 @@
 15 * * * * coleta/rodar.sh openaq
 40 6 * * * coleta/rodar.sh openaq --locations
 
+# METAR SBEG/SBMN (#11), de hora em hora (últimas 3 h).
+10 * * * * coleta/rodar.sh metar
+
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg
 
