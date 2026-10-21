@@ -46,6 +46,16 @@ jobs:
     if: ${{ !cancelled() && needs.gate.outputs.testado != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Banco de teste para db/migrar.test.ts (mesma imagem da slice).
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: manaus
+          POSTGRES_PASSWORD: teste
+          POSTGRES_DB: manaus_teste
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U manaus" --health-interval 5s --health-timeout 3s --health-retries 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -55,6 +65,11 @@ jobs:
       - run: npm ci
       - run: npm run tipos
       - run: npm test
+        env:
+          PGHOST: localhost
+          PGUSER: manaus
+          PGPASSWORD: teste
+          PGDATABASE: manaus_teste
       - run: docker build -t manaus:ci .
       - name: Imagem roda sem root, sem .env, com crontab válido, supercronic, gdal e pg_dump
         run: |

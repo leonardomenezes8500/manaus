@@ -7,6 +7,9 @@ services:
     env_file: .env
     environment:
       TZ: America/Manaus # horário do cron; o banco continua em UTC
+      PGHOST: db
+      PGUSER: manaus
+      PGDATABASE: manaus
     command: [supercronic, coleta/crontab]
     cpus: 0.5
     mem_limit: 512m
@@ -14,12 +17,44 @@ services:
     volumes:
       - buffer:/dados/buffer
       - logs:/dados/logs
-    logging:
+    logging: &logging
       driver: json-file
       options:
         max-size: 10m
         max-file: "3"
 
+  # Camadas 2 e 3, análises e API (#5). Configurado para caber em 1 GB; porta só no 127.0.0.1 (acesso por túnel ssh).
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: manaus
+      POSTGRES_DB: manaus
+      POSTGRES_PASSWORD: ${PGPASSWORD:?}
+    command: [postgres, -c, shared_buffers=256MB, -c, effective_cache_size=512MB, -c, work_mem=16MB, -c, max_connections=20]
+    ports:
+      - 127.0.0.1:5432:5432
+    cpus: 0.5
+    mem_limit: 1g
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, pg_isready, -U, manaus, -d, manaus]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    configs:
+      - source: banco_teste
+        target: /docker-entrypoint-initdb.d/20_manaus_teste.sql
+    logging: *logging
+
+# Só roda na primeira subida (volume pgdata vazio).
+configs:
+  banco_teste:
+    content: CREATE DATABASE manaus_teste OWNER manaus;
+
 volumes:
   buffer:
   logs:
+  pgdata:

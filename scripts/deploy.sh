@@ -2,7 +2,8 @@
 # Roda na slice, na pasta do projeto, como único comando da chave de deploy (#4). Linha no authorized_keys:
 #   command="<pasta>/deploy.sh",restrict ssh-ed25519 <chave pública só de deploy> manaus-deploy
 # O job deploy do CI chama:  printf 'NOME=valor\n'... | ssh <user>@<host> "<sha do commit> <sha256 de compose.prod.yaml + deploy.sh>"
-# Reescreve o .env (600) com os secrets do stdin + APP_TAG, faz pull e sobe; se não ficar saudável, volta a tag anterior.
+# Reescreve o .env (600) com os secrets do stdin + APP_TAG, faz pull, sobe o banco, migra e sobe o resto; se algo falhar,
+# volta a tag anterior.
 #
 # A chave só roda o deploy.sh instalado, então o job não atualiza este arquivo nem o compose (se pudesse, valeria tanto
 # quanto root). Quando um dos dois muda, reinstalar à mão antes do merge, com a versão exata do commit:
@@ -41,7 +42,9 @@ mv "$novo" .env
 compose() { docker compose -f compose.prod.yaml "$@"; }
 log() { echo "$(date -Is) $tag $*" >> deploys.log; }
 
-if compose pull -q && compose up -d --wait --wait-timeout 120; then
+# Migrações com a imagem nova antes de trocar o coletor; se falharem, a versão antiga continua (migração só acrescenta).
+if compose pull -q && compose up -d --wait --wait-timeout 120 db && compose run --rm -T coletor node db/migrar.ts \
+  && compose up -d --wait --wait-timeout 120; then
   log ok
   exit 0
 fi

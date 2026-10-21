@@ -3,3 +3,6 @@
 
 # Teste da #4: remover depois de 1 h funcionando (6 execuções ok) e apagar bruto/_teste/ no R2 à mão.
 */10 * * * * coleta/rodar.sh teste-r2
+
+# Backup diário do banco (#5).
+30 3 * * * coleta/rodar.sh backup-pg
