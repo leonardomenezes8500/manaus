@@ -1,0 +1,127 @@
+# Um workflow só (#4): CI em todo PR e push na main; na main, imagem no GHCR e deploy por SSH na slice.
+# Nada de schedule: aqui. A coleta periódica é o cron do container coletor (coleta/crontab).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'plano/**']
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'plano/**']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Run da main nunca é cancelado: pode estar no meio de um deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash # com pipefail
+
+jobs:
+  # No push da main, pula o ci se esta mesma árvore já passou no PR (artefato tested-<árvore>, 14 dias).
+  gate:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      testado: ${{ steps.ver.outputs.testado }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: ver
+        run: scripts/ci-gate.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARVORE: ${{ github.event.head_commit.tree_id }}
+
+  ci:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.testado != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Banco de teste para db/migrar.test.ts (mesma imagem da slice).
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: manaus
+          POSTGRES_PASSWORD: teste
+          POSTGRES_DB: manaus_teste
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U manaus" --health-interval 5s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run tipos
+      - run: npm test
+        env:
+          PGHOST: localhost
+          PGUSER: manaus
+          PGPASSWORD: teste
+          PGDATABASE: manaus_teste
+      - run: docker build -t manaus:ci .
+      - run: scripts/ci-testar-imagem.sh manaus:ci
+      - id: arvore
+        run: echo "arvore=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: tested-${{ steps.arvore.outputs.arvore }}
+          path: package.json
+          if-no-files-found: error
+          retention-days: 14
+          overwrite: true
+
+  image:
+    needs: [gate, ci]
+    if: ${{ !cancelled() && !failure() && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - run: scripts/ci-imagem.sh
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # A chave de deploy só roda o deploy.sh da slice (ver o topo de scripts/deploy.sh). Host e usuário são secrets
+  # (não variables) porque o log do Actions de repo público é público. Nenhum passo aqui roda código de pacote npm.
+  # Shell só em scripts/ci-*.sh: shell inline com ssh/login/segredos faz o GitHub segurar o run como "may be malicious".
+  deploy:
+    needs: image
+    if: ${{ !cancelled() && needs.image.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      # Secret novo da aplicação: uma linha SEGREDO_<NOME> aqui (vira NOME=valor no .env da slice).
+      - run: scripts/ci-deploy.sh
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DESTINO: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+          SEGREDO_EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
+          SEGREDO_ECMWF_KEY: ${{ secrets.ECMWF_KEY }}
+          SEGREDO_ECMWF_URL: ${{ secrets.ECMWF_URL }}
+          SEGREDO_FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          SEGREDO_OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}
+          SEGREDO_PGPASSWORD: ${{ secrets.PGPASSWORD }}
+          SEGREDO_TRANSPARENCIA_API_KEY: ${{ secrets.TRANSPARENCIA_API_KEY }}
+          SEGREDO_R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          SEGREDO_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          SEGREDO_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          SEGREDO_R2_BUCKET: ${{ secrets.R2_BUCKET }}
