@@ -33,13 +33,12 @@ jobs:
     outputs:
       testado: ${{ steps.ver.outputs.testado }}
     steps:
+      - uses: actions/checkout@v5
       - id: ver
+        run: scripts/ci-gate.sh
         env:
           GH_TOKEN: ${{ github.token }}
           ARVORE: ${{ github.event.head_commit.tree_id }}
-        run: |
-          n=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=tested-$ARVORE" --jq '[.artifacts[] | select(.expired | not)] | length' || echo 0)
-          echo "testado=$([[ $n -gt 0 ]] && echo true || echo false)" | tee -a "$GITHUB_OUTPUT"
 
   ci:
     needs: gate
@@ -71,10 +70,7 @@ jobs:
           PGPASSWORD: teste
           PGDATABASE: manaus_teste
       - run: docker build -t manaus:ci .
-      - name: Imagem roda sem root, sem .env, com crontab válido, supercronic, gdal e pg_dump
-        run: |
-          test "$(docker run --rm manaus:ci id -u)" != 0
-          docker run --rm manaus:ci sh -c 'test ! -e .env && supercronic -test coleta/crontab && ogr2ogr --version && pg_dump --version && node --version'
+      - run: scripts/ci-testar-imagem.sh manaus:ci
       - id: arvore
         run: echo "arvore=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v5
@@ -95,14 +91,13 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v5
-      - env:
-          TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: printf '%s' "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-      - run: docker build --build-arg GIT_COMMIT=${{ github.sha }} -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
-      - run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+      - run: scripts/ci-imagem.sh
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # A chave de deploy só roda o deploy.sh da slice (ver o topo de scripts/deploy.sh). Host e usuário são secrets
   # (não variables) porque o log do Actions de repo público é público. Nenhum passo aqui roda código de pacote npm.
+  # Shell só em scripts/ci-*.sh: shell inline com ssh/login/segredos faz o GitHub segurar o run como "may be malicious".
   deploy:
     needs: image
     if: ${{ !cancelled() && needs.image.result == 'success' }}
@@ -113,18 +108,20 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v5
-      - name: Deploy por SSH (pull, sobe, espera healthy; senão volta a tag anterior)
+      # Secret novo da aplicação: uma linha SEGREDO_<NOME> aqui (vira NOME=valor no .env da slice).
+      - run: scripts/ci-deploy.sh
         env:
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           DESTINO: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
-          SEGREDOS: ${{ toJSON(secrets) }}
-        run: |
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy
-          chmod 600 ~/.ssh/deploy
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-          arquivos=$(cat compose.prod.yaml scripts/deploy.sh | sha256sum | cut -d' ' -f1)
-          # Secrets da aplicação pelo stdin, um NOME=valor por linha; fora os de deploy e o token do Actions.
-          jq -r 'to_entries[] | select(.key | test("^(DEPLOY_|github_token$)") | not) | "\(.key)=\(.value)"' <<< "$SEGREDOS" |
-            ssh -i ~/.ssh/deploy "$DESTINO" "${{ github.sha }} $arquivos"
+          SEGREDO_EARTHDATA_TOKEN: ${{ secrets.EARTHDATA_TOKEN }}
+          SEGREDO_ECMWF_KEY: ${{ secrets.ECMWF_KEY }}
+          SEGREDO_ECMWF_URL: ${{ secrets.ECMWF_URL }}
+          SEGREDO_FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          SEGREDO_OPENAQ_API_KEY: ${{ secrets.OPENAQ_API_KEY }}
+          SEGREDO_PGPASSWORD: ${{ secrets.PGPASSWORD }}
+          SEGREDO_TRANSPARENCIA_API_KEY: ${{ secrets.TRANSPARENCIA_API_KEY }}
+          SEGREDO_R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          SEGREDO_R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          SEGREDO_R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          SEGREDO_R2_BUCKET: ${{ secrets.R2_BUCKET }}

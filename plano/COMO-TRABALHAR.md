@@ -17,7 +17,7 @@
 - Trabalho pesado e ocasional: neste PC, sob demanda, lendo e gravando no R2 (e no banco pelo túnel). Nunca nada contínuo aqui.
 - Banco: container `db` (PostGIS 17-3.5) na slice, só em 127.0.0.1:5432, bancos `manaus` e `manaus_teste`, papel `manaus` (senha `PGPASSWORD` no `.env` e nos secrets). Daqui, pelo túnel `ssh -fNL 5433:127.0.0.1:5432 slice` (o `.env` local já aponta para a 5433). Subir na mão, na pasta do projeto na slice: `APP_TAG=$(sed -n 's/^APP_TAG=//p' .env) docker compose -f compose.prod.yaml up -d --wait db` (o `APP_TAG` só precisa existir; antes do primeiro deploy, qualquer valor). Migrações: `npm run migrar` (o deploy já roda antes de trocar a versão); migração só acrescenta. Backup: `coleta/backup-pg.ts` todo dia às 03:30 de Manaus → `backup/pg/AAAA-MM-DD.dump` no R2.
 - Slice compartilhada: só o projeto compose `manaus`. Todo container com `cpus` e `mem_limit`. Nunca tocar em container, volume, rede ou proxy de outro projeto.
-- Chaves: `.env` local (fora do git) e secrets do GitHub. Chave nova ou trocada: pôr no `.env` local e `gh secret set NOME` (valor pelo stdin); o próximo deploy reescreve o `.env` da slice. Nunca imprimir, logar, colar em arquivo, issue ou chat, pôr na imagem ou mandar para o R2.
+- Chaves: `.env` local (fora do git) e secrets do GitHub. Chave nova ou trocada: pôr no `.env` local e `gh secret set NOME` (valor pelo stdin) e, se a slice precisa dela, uma linha `SEGREDO_NOME` no job `deploy` do `ci.yml`; o próximo deploy reescreve o `.env` da slice. Nunca imprimir, logar, colar em arquivo, issue ou chat, pôr na imagem ou mandar para o R2.
 
 ## Actions (gasto)
 O repo é público, então o Actions é grátis. Mesmo assim, CI enxuto sempre:
