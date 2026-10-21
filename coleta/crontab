@@ -1,8 +1,12 @@
 # Toda coleta periódica roda aqui, no container coletor da slice (supercronic, horário de Manaus). Nunca schedule: no Actions.
-# Formato: min hora dia mês dia-da-semana coleta/rodar.sh <script>   (roda coleta/<script>.ts)
+# Formato: min hora dia mês dia-da-semana coleta/rodar.sh <script> [args]   (roda coleta/<script>.ts [args])
 
 # Focos NASA FIRMS (#9): 4 sensores, últimos 2 dias.
 0 */3 * * * coleta/rodar.sh firms
+
+# OpenAQ (#10): sensor do Centro de hora em hora; locations da região 1 vez por dia (avisa sensor novo).
+15 * * * * coleta/rodar.sh openaq
+40 6 * * * coleta/rodar.sh openaq --locations
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg

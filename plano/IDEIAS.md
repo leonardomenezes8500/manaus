@@ -14,6 +14,7 @@ A linha triada sai da caixa de entrada e vai para "Triadas", com o destino escri
 - [2026-10-21] Apps de transporte (Uber, 99, inDrive): preço e tempo de espera por região.
 - [2026-10-21] Licitações: quais empresas ganham em cada setor e como isso muda com o tempo (PNCP, TCE-AM, Prefeitura, Estado).
 - [2026-10-21] (do planejamento) Instalar sensores de PM2.5 baratos em pontos escolhidos (depende do resultado da 015).
+- [2026-10-21] (#10) OpenAQ: há AirGradient em Porto Velho (5616182) e Lábrea (5616694), no caminho da fumaça que vem do sul. Coletar junto com o de Manaus para ver a pluma chegando.
 
 ## Triadas
 - [2026-10-21] Alerta diário de fumaça para a população → M5 / S5.2
