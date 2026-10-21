@@ -2,9 +2,11 @@
 
 ## Ciclo
 1. **Próxima issue:** em `ROADMAP.md`, veja o "Sprint atual" e pegue, no GitHub, a issue aberta de menor número com a label desse sprint (`gh issue list --label S0.1`) cujas dependências (os `#N` no corpo) estejam todas fechadas.
-2. **Começar:** label `em andamento` na issue e uma branch a partir da `main` atualizada: `N-assunto-curto` (ex.: `3-bruto-r2`).
+2. **Começar:** label `em andamento` na issue. **Uma branch por milestone** (não por issue), a partir da `main` atualizada: `mN-assunto-curto` (ex.: `m1-fumaca-v0`). Se a branch do milestone já existe, continue nela.
 3. **Durante:** achados e desvios viram comentário na issue, em 1 a 3 linhas. O repo é público: nada de chave, IP, host, usuário ou caminho da VPS em issue, comentário ou commit. Ideia nova no meio do trabalho: uma linha no `IDEIAS.md` e volte ao que estava fazendo.
-4. **Fechar:** marque os itens de "Pronto quando" no corpo da issue (só com todos [x] ela fecha). Commits em português, como no resto do repo (`#N: o que mudou`). Abra o PR com `Closes #N` no corpo, espere o CI e faça o merge você mesmo: `gh pr checks <pr> --watch --fail-fast && gh pr merge <pr> --merge --delete-branch`. PR só de `.md`/`plano/` não tem check: confira `gh pr diff <pr> --name-only` e faça o merge com `--admin`. Nunca merge com CI vermelho.
+4. **Fechar a issue:** marque os itens de "Pronto quando" no corpo da issue. Antes do commit, rode aqui tudo que o CI roda (`npm run tipos`, `npm test`, `docker build` e os testes da imagem). **Um commit por issue**, em português (`#N: o que mudou`, com `Closes #N` no corpo). Sem push ainda: cada push num PR aberto roda o CI de novo, então nada de pushes de conserto.
+   - **Milestone pronto:** push da branch e **um PR único** com um resumo por issue, os riscos e o que "só roda no CI". Espere o CI ficar verde (`gh pr checks <pr> --watch`) e **pare: nunca faça o merge**. Quem aprova e faz o merge é o usuário. Nunca merge com CI vermelho.
+   - Decisão de produto em aberto: registre como **Em aberto** (na issue e no PR) e siga com a opção mais simples; não pare por isso.
 5. **Fim de sprint:** triagem do `IDEIAS.md`, atualizar o "Sprint atual" e contar ao usuário em 3 linhas o que ficou pronto.
 
 ## Onde fica cada coisa
