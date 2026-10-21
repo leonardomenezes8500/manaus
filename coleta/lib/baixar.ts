@@ -134,12 +134,14 @@ export type Download = {
   headers?: Record<string, string>;
 };
 
+export type Baixado = { chave: string; caminho: string; sha256: string; bytes: number; fonte: string; baixado_em: string };
+
 /**
  * Baixa `url` para `bruto/<fonte>/AAAA/MM/DD/<HHMMSS>Z_<nome>` no R2, com `<arquivo>.meta.json` ao lado.
  * HTTP não 2xx: não grava nada. Falha no R2: o arquivo fica em `pendente/` e sobe no próximo `baixar()`.
  * Devolve o caminho local no cache (válido por 7 dias).
  */
-export async function baixar(d: Download, agora = new Date()): Promise<{ chave: string; caminho: string; sha256: string; bytes: number }> {
+export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
   for (const [campo, v] of [['fonte', d.fonte], ['nome', d.nome]]) {
     if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
   }
@@ -185,5 +187,5 @@ export async function baixar(d: Download, agora = new Date()): Promise<{ chave: 
 
   await enviarPendentes();
   await limparCache();
-  return { chave, caminho: buffer('cache', chave), sha256, bytes };
+  return { chave, caminho: buffer('cache', chave), sha256, bytes, fonte: d.fonte, baixado_em: iso };
 }
