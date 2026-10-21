@@ -1,0 +1,9 @@
+.env
+.envrc
+.git
+.github
+node_modules
+plano
+CLAUDE.local.md
+coverage
+dist

@@ -1,0 +1,115 @@
+# Um workflow só (#4): CI em todo PR e push na main; na main, imagem no GHCR e deploy por SSH na slice.
+# Nada de schedule: aqui. A coleta periódica é o cron do container coletor (coleta/crontab).
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'plano/**']
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'plano/**']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Run da main nunca é cancelado: pode estar no meio de um deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash # com pipefail
+
+jobs:
+  # No push da main, pula o ci se esta mesma árvore já passou no PR (artefato tested-<árvore>, 14 dias).
+  gate:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      testado: ${{ steps.ver.outputs.testado }}
+    steps:
+      - id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARVORE: ${{ github.event.head_commit.tree_id }}
+        run: |
+          n=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=tested-$ARVORE" --jq '[.artifacts[] | select(.expired | not)] | length' || echo 0)
+          echo "testado=$([[ $n -gt 0 ]] && echo true || echo false)" | tee -a "$GITHUB_OUTPUT"
+
+  ci:
+    needs: gate
+    if: ${{ !cancelled() && needs.gate.outputs.testado != 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run tipos
+      - run: npm test
+      - run: docker build -t manaus:ci .
+      - name: Imagem roda sem root, sem .env, com crontab válido, supercronic, gdal e pg_dump
+        run: |
+          test "$(docker run --rm manaus:ci id -u)" != 0
+          docker run --rm manaus:ci sh -c 'test ! -e .env && supercronic -test coleta/crontab && ogr2ogr --version && pg_dump --version && node --version'
+      - id: arvore
+        run: echo "arvore=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: tested-${{ steps.arvore.outputs.arvore }}
+          path: package.json
+          if-no-files-found: error
+          retention-days: 14
+          overwrite: true
+
+  image:
+    needs: [gate, ci]
+    if: ${{ !cancelled() && !failure() && github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: printf '%s' "$TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - run: docker build --build-arg GIT_COMMIT=${{ github.sha }} -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+      - run: docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+  # A chave de deploy só roda o deploy.sh da slice (ver o topo de scripts/deploy.sh). Host e usuário são secrets
+  # (não variables) porque o log do Actions de repo público é público. Nenhum passo aqui roda código de pacote npm.
+  deploy:
+    needs: image
+    if: ${{ !cancelled() && needs.image.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - name: Deploy por SSH (pull, sobe, espera healthy; senão volta a tag anterior)
+        env:
+          SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DESTINO: ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}
+          SEGREDOS: ${{ toJSON(secrets) }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy
+          chmod 600 ~/.ssh/deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          arquivos=$(cat compose.prod.yaml scripts/deploy.sh | sha256sum | cut -d' ' -f1)
+          # Secrets da aplicação pelo stdin, um NOME=valor por linha; fora os de deploy e o token do Actions.
+          jq -r 'to_entries[] | select(.key | test("^(DEPLOY_|github_token$)") | not) | "\(.key)=\(.value)"' <<< "$SEGREDOS" |
+            ssh -i ~/.ssh/deploy "$DESTINO" "${{ github.sha }} $arquivos"
