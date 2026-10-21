@@ -11,6 +11,9 @@
 # METAR SBEG/SBMN (#11), de hora em hora (últimas 3 h).
 10 * * * * coleta/rodar.sh metar
 
+# Open-Meteo (#12): vento em altitude + CAMS (modelo), 4x/dia.
+5 1,7,13,19 * * * coleta/rodar.sh open-meteo
+
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg
 
