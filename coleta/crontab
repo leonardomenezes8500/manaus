@@ -6,14 +6,14 @@
 0 */3 * * * coleta/rodar.sh firms; coleta/rodar.sh carga/focos
 
 # OpenAQ (#10): sensor do Centro de hora em hora; locations da região 1 vez por dia (avisa sensor novo).
-15 * * * * coleta/rodar.sh openaq
+15 * * * * coleta/rodar.sh openaq; coleta/rodar.sh carga/ar-vento openaq
 40 6 * * * coleta/rodar.sh openaq --locations
 
 # METAR SBEG/SBMN (#11), de hora em hora (últimas 3 h).
-10 * * * * coleta/rodar.sh metar
+10 * * * * coleta/rodar.sh metar; coleta/rodar.sh carga/ar-vento metar-aviationweather iem-asos
 
 # Open-Meteo (#12): vento em altitude + CAMS (modelo), 4x/dia.
-5 1,7,13,19 * * * coleta/rodar.sh open-meteo
+5 1,7,13,19 * * * coleta/rodar.sh open-meteo; coleta/rodar.sh carga/ar-vento open-meteo-previsao open-meteo-qualidade-ar
 
 # INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior. O INPE fecha o arquivo do dia D por volta das 12:05 UTC de D+1.
 30 9 * * * coleta/rodar.sh inpe-queimadas; coleta/rodar.sh carga/focos
