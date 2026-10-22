@@ -142,4 +142,22 @@ comBanco('API v0 no banco', () => {
       VALUES ('2026-09-10', 'v1', 20, 6, '{}', 80, 40.1, '[]', 'alta', '{}', 'v1', 'era5')`);
     expect((await app.inject('/fumaca/2026-09-10')).json()).toMatchObject({ versao: 'v1', meteo: 'era5', focos_contados: 80 });
   });
+
+  test('/bairros/:id: people by age band from the census tracts of the IBGE bairro', async () => {
+    const a = (await db.query('SELECT min(id) AS id FROM bruto.arquivo')).rows[0].id;
+    await db.query(`UPDATE ibge.setor SET bairro = '1302603005001', bairro_nome = 'Centro' WHERE codigo = '130260305000001'`);
+    await db.query(`INSERT INTO ibge.variavel (tabela, variavel, descricao, grupo) VALUES
+      ('demografia', 'v01031', '0 a 4 anos', 'idade:0-4'), ('demografia', 'v01040', '60 a 69 anos', 'idade:60+')`);
+    await db.query(
+      `INSERT INTO ibge.setor_agregado (setor, tabela, variavel, valor, arquivo) VALUES
+       ('130260305000001', 'demografia', 'v01031', 12, $1), ('130260305000001', 'demografia', 'v01040', 30, $1)`,
+      [a],
+    );
+    const id = (await app.inject('/bairros')).json()[0].id;
+    expect((await app.inject(`/bairros/${id}`)).json().properties.populacao).toMatchObject({
+      setores: 1,
+      idade_0_4: 12,
+      idade_60_mais: 30,
+    });
+  });
 });

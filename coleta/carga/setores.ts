@@ -1,5 +1,7 @@
 // Census tract load (#21): the tract mesh comes through ogr2ogr (GeoPackage → staging table), the aggregates
 // from the IBGE CSV (latin1, ";" separated, decimal comma) in long format.
+import { spawn } from 'node:child_process';
+import { createInterface } from 'node:readline';
 import type pg from 'pg';
 import { loadOnce, stageGpkg } from './lib.ts';
 
@@ -13,17 +15,60 @@ export function ibgeNumber(v: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-/** One CSV line of an aggregates file → its variables (vNNNN columns) for one tract, for the UF asked. */
-export function aggregatesOf(header: string[], line: string, uf: string): Aggregate[] {
+/** One CSV line of an aggregates file → its variables (vNNNN or VNNNNN columns) for one tract, for the UF asked; `keep` = only these. */
+export function aggregatesOf(header: string[], line: string, uf: string, keep?: Set<string>): Aggregate[] {
   const cells = line.split(';').map((c) => c.replace(/^"(.*)"$/, '$1'));
-  const get = (name: string) => cells[header.indexOf(name)];
-  if (get('CD_UF') !== uf) return [];
-  const setor = get('CD_SETOR');
+  const setor = cells[header.findIndex((h) => h.toUpperCase() === 'CD_SETOR')];
+  if (setor?.slice(0, 2) !== uf) return []; // the tract code starts with the UF code (not every file has CD_UF)
   return header.flatMap((h, i) => {
-    if (!/^v\d{4}$/i.test(h)) return [];
+    const variavel = h.toLowerCase();
+    if (!/^v\d{4,5}$/.test(variavel) || (keep && !keep.has(variavel))) return [];
     const valor = ibgeNumber(cells[i] ?? '');
-    return valor === null ? [] : [{ setor, variavel: h.toLowerCase(), valor }];
+    return valor === null ? [] : [{ setor, variavel, valor }];
   });
+}
+
+const IDADE: [number, string][] = [
+  [0, '0-4'],
+  [5, '5-14'],
+  [15, '15-59'],
+  [60, '60+'],
+];
+
+/**
+ * The group of a dictionary variable, from its text (#63): 'total', 'idade:0-4' … 'idade:60+', 'sexo:…', 'cor:…',
+ * 'alfabetizados:15+' or 'nao_alfabetizados:15+'. Crossed variables (sex × age, age × race) have none: the views sum one group at a time.
+ */
+export function grupoDe(tabela: string, descricao: string): string | null {
+  const d = descricao.trim();
+  const idade = d.match(/^(\d+) (a \d+ anos|anos ou mais)$/);
+  if (tabela === 'demografia') {
+    if (d === 'Quantidade de moradores') return 'total';
+    const sexo = d.match(/^Sexo (masculino|feminino)$/);
+    if (sexo) return `sexo:${sexo[1]}`;
+    if (idade) return `idade:${IDADE.findLast(([de]) => Number(idade[1]) >= de)![1]}`;
+  }
+  if (tabela === 'cor_ou_raca') {
+    const cor = d.match(/^Cor ou raça é (\S+)$/);
+    if (cor) return `cor:${cor[1]}`;
+  }
+  if (tabela === 'alfabetizacao' && d === '15 anos ou mais, Morador sabe ler e escrever') return 'alfabetizados:15+';
+  if (tabela === 'alfabetizacao' && d === '15 anos ou mais, Morador não sabe ler e escrever') return 'nao_alfabetizados:15+';
+  return null;
+}
+
+/** The aggregates of one UF from an IBGE zip (one Brazil CSV inside, latin1), streamed through unzip. */
+export async function readAggregates(zip: string, uf: string, keep?: Set<string>): Promise<Aggregate[]> {
+  const unzip = spawn('unzip', ['-p', zip], { stdio: ['ignore', 'pipe', 'inherit'] });
+  unzip.stdout.setEncoding('latin1');
+  const lines = createInterface({ input: unzip.stdout, crlfDelay: Infinity });
+  let header: string[] | undefined;
+  const out: Aggregate[] = [];
+  for await (const line of lines) {
+    if (!header) header = line.split(';').map((h) => h.replace(/^"(.*)"$/, '$1'));
+    else out.push(...aggregatesOf(header, line, uf, keep));
+  }
+  return out;
 }
 
 /** Loads the aggregates of one table for one file (replacing that table's rows of these tracts). */

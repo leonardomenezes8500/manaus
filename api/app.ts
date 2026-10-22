@@ -93,7 +93,15 @@ export function criarApp(deps: Dependencias): FastifyInstance {
   });
   app.get<{ Params: { id: string } }>('/bairros/:id', async (req, rep) => {
     if (!/^\d+$/.test(req.params.id)) return rep.code(400).send({ erro: 'id é um número' });
-    return (await entidade(db, 'bairro', 'id', Number(req.params.id))) ?? rep.code(404).send({ erro: 'bairro não encontrado' });
+    const b = await entidade(db, 'bairro', 'id', Number(req.params.id));
+    if (!b) return rep.code(404).send({ erro: 'bairro não encontrado' });
+    // Census 2022 by age, sex, race and literacy (#63), from the tracts of the IBGE bairro of this entity.
+    const pop = await db.query(
+      `SELECT p.* FROM contexto.populacao_bairro p
+       WHERE p.bairro = (SELECT registro_id FROM entidade.valor WHERE entidade_id = $1 AND fonte = 'ibge' LIMIT 1)`,
+      [b.id],
+    );
+    return { ...b, properties: { ...b.properties, populacao: pop.rows[0] ?? null } };
   });
 
   app.get<{ Querystring: { lat?: string; lon?: string } }>('/onde', async (req, rep) => {
