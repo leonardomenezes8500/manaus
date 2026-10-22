@@ -11,5 +11,8 @@ export const MANAUS = { lat: -3.1, lon: -60.02, codigo: 1302603 } as const;
 /** Município de Manaus (malha do IBGE: -60.80 -3.18 -59.15 -1.91) com folga de ~5 km: recorte do OSM e das edificações. */
 export const MANAUS_BBOX = { oeste: -60.85, sul: -3.24, leste: -59.1, norte: -1.86 } as const;
 
+/** Região Metropolitana de Manaus (13 municípios, malha do IBGE: -63.96 -4.42 -57.85 0.04) arredondada para fora: recorte dos rasters. */
+export const RMM_BBOX = { oeste: -64, sul: -4.5, leste: -57.8, norte: 0.1 } as const;
+
 /** Estados com malha municipal na base (os focos caem neles). */
 export const UFS = ['AM', 'RO', 'AC', 'PA', 'RR', 'MT'] as const;
