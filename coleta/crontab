@@ -43,3 +43,6 @@
 
 # MonitorAr / FioAres (#40): a única estação de referência de Manaus; o app só guarda 24 h.
 25 * * * * coleta/rodar.sh monitorar
+
+# AERONET (#53): AOD diária do ATTO (fotômetro), últimos 7 dias, níveis 1.5 e 2.0.
+0 6 * * * coleta/rodar.sh aeronet
