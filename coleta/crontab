@@ -26,7 +26,8 @@
 20 */6 * * * coleta/rodar.sh saude
 
 # OSM (#23): extrato Geofabrik "norte" toda semana (domingo, 03h); a carga troca osm.ponto/linha/poligono pelo snapshot novo.
-0 3 * * 0 coleta/rodar.sh osm-norte
+# Depois, a fusão de municípios e bairros (#32) e o relatório de divergências em produtos/territorio/.
+0 3 * * 0 coleta/rodar.sh osm-norte; coleta/rodar.sh analise/fusao/fundir
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg
