@@ -18,12 +18,19 @@
 # INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior. O INPE fecha o arquivo do dia D por volta das 12:05 UTC de D+1.
 30 9 * * * coleta/rodar.sh inpe-queimadas; coleta/rodar.sh carga/focos
 
+# Cota do Rio Negro em Manaus (#29): telemetria da ANA dos últimos 3 dias, 1 vez por dia.
+40 7 * * * coleta/rodar.sh ana
+
 # Relatório da fumaça (#17, #18): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
 0 8 * * * coleta/rodar.sh analise/fumaca/relatorio --ontem
 0 17 * * * coleta/rodar.sh analise/fumaca/relatorio --hoje
 
 # Saúde da coleta (#19) → estado/saude.md.
 20 */6 * * * coleta/rodar.sh saude
+
+# OSM (#23): extrato Geofabrik "norte" toda semana (domingo, 03h); a carga troca osm.ponto/linha/poligono pelo snapshot novo.
+# Depois, a fusão de municípios e bairros (#32) e o relatório de divergências em produtos/territorio/.
+0 3 * * 0 coleta/rodar.sh osm-norte; coleta/rodar.sh analise/fusao/fundir
 
 # Backup diário do banco (#5).
 30 3 * * * coleta/rodar.sh backup-pg

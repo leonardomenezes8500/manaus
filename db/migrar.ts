@@ -44,7 +44,8 @@ async function principal() {
   }
 }
 
-if (import.meta.main) principal().catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  principal().catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

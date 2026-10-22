@@ -1,0 +1,13 @@
+# Prettier formats code only. Not here:
+# prose, written by hand in pt-BR
+*.md
+# the slice checks these by sha256 before a deploy (scripts/deploy.sh); the workflow too
+compose*.yaml
+.github/
+# real raw samples used by the tests: kept byte for byte as they came
+coleta/carga/__fixtures__/
+# generated
+package-lock.json
+test-results/
+playwright-report/
+node_modules/

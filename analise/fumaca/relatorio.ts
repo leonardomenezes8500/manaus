@@ -23,17 +23,28 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 const br = (dia: string) => dia.split('-').reverse().join('/');
 
 export type DayRow = {
-  dia: string; pm25_medido_media: number | null; pm25_medido_max: number | null; pm25_medido_horas: number;
-  pm25_cams_media: number | null; pm25_cams_max: number | null; horas_fu_hz: number; visibilidade_min_m: number | null;
+  dia: string;
+  pm25_medido_media: number | null;
+  pm25_medido_max: number | null;
+  pm25_medido_horas: number;
+  pm25_cams_media: number | null;
+  pm25_cams_max: number | null;
+  horas_fu_hz: number;
+  visibilidade_min_m: number | null;
   vento: { de_graus: number; velocidade_kmh: number; constancia: number; horas_com_dado: number };
-  focos_contados: number; ranking: { municipios: { nome: string | null; uf: string | null; parcela: number; focos: number }[] };
-  confianca: string; sinais: Record<string, boolean>;
+  focos_contados: number;
+  ranking: { municipios: { nome: string | null; uf: string | null; parcela: number; focos: number }[] };
+  confianca: string;
+  sinais: Record<string, boolean>;
 };
 
 /** The report, at most 15 lines. `partial` = the day is not over yet. */
 export function buildReport(r: DayRow, partial: boolean): string {
-  const who = r.pm25_medido_media === null ? '' : `, ${n1(r.pm25_medido_media / WHO_DAILY_PM25)}× a diretriz diária da OMS (${WHO_DAILY_PM25} µg/m³)`;
-  const top = r.ranking.municipios.slice(0, 3).map((m, i) => `${i + 1}. ${m.nome ?? '?'}${m.uf ? '/' + m.uf : ''}: ${pct(m.parcela)} (${m.focos} focos)`);
+  const who =
+    r.pm25_medido_media === null ? '' : `, ${n1(r.pm25_medido_media / WHO_DAILY_PM25)}× a diretriz diária da OMS (${WHO_DAILY_PM25} µg/m³)`;
+  const top = r.ranking.municipios
+    .slice(0, 3)
+    .map((m, i) => `${i + 1}. ${m.nome ?? '?'}${m.uf ? '/' + m.uf : ''}: ${pct(m.parcela)} (${m.focos} focos)`);
   const signals = [
     r.sinais.steadyWind ? 'vento constante' : 'vento mudou no dia',
     r.sinais.spotsInSector ? 'há focos no setor do vento' : 'poucos focos no setor',
@@ -76,7 +87,12 @@ export function sector(fromDeg: number): [number, number][] {
 
 /** Self-contained Leaflet page (no build), data embedded. Spot times are ISO UTC; the page shows them in Manaus time. */
 export function buildMap(r: DayRow, spots: SpotOut[]): string {
-  const data = JSON.stringify({ manaus: MANAUS, sector: sector(r.vento.de_graus), spots, r: { dia: r.dia, medido: r.pm25_medido_media, cams: r.pm25_cams_media } }).replaceAll('<', '\\u003c');
+  const data = JSON.stringify({
+    manaus: MANAUS,
+    sector: sector(r.vento.de_graus),
+    spots,
+    r: { dia: r.dia, medido: r.pm25_medido_media, cams: r.pm25_cams_media },
+  }).replaceAll('<', '\\u003c');
   return `<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fumaça em Manaus ${br(r.dia)}</title>
@@ -124,7 +140,15 @@ nota.addTo(mapa);
 
 /** temporada-2026.md: one line per day. */
 export function buildSeason(rows: DayRow[]): string {
-  const lines = rows.map((r) => `| ${r.dia} | ${n1(r.pm25_medido_media)} | ${n1(r.pm25_cams_media)} | ${r.horas_fu_hz} | ${r.ranking.municipios.slice(0, 3).map((m) => `${m.nome ?? '?'}${m.uf ? '/' + m.uf : ''} ${pct(m.parcela)}`).join(', ') || '—'} |`);
+  const lines = rows.map(
+    (r) =>
+      `| ${r.dia} | ${n1(r.pm25_medido_media)} | ${n1(r.pm25_cams_media)} | ${r.horas_fu_hz} | ${
+        r.ranking.municipios
+          .slice(0, 3)
+          .map((m) => `${m.nome ?? '?'}${m.uf ? '/' + m.uf : ''} ${pct(m.parcela)}`)
+          .join(', ') || '—'
+      } |`,
+  );
   return [
     '# Fumaça em Manaus: temporada 2026',
     '',
@@ -139,23 +163,31 @@ export function buildSeason(rows: DayRow[]): string {
 
 /** Stored days between two dates, oldest first, with `dia` as text (YYYY-MM-DD). */
 export async function seasonRows(db: pg.ClientBase, first: string, last: string): Promise<DayRow[]> {
-  return (await db.query(
-    `SELECT f.*, to_char(f.dia, 'YYYY-MM-DD') AS dia FROM analise.fumaca_dia f WHERE f.versao = $1 AND f.dia BETWEEN $2 AND $3 ORDER BY f.dia`,
-    [VERSION, first, last],
-  )).rows;
+  return (
+    await db.query(
+      `SELECT f.*, to_char(f.dia, 'YYYY-MM-DD') AS dia FROM analise.fumaca_dia f WHERE f.versao = $1 AND f.dia BETWEEN $2 AND $3 ORDER BY f.dia`,
+      [VERSION, first, last],
+    )
+  ).rows;
 }
 
 async function readDay(db: pg.ClientBase, dia: string): Promise<DayRow> {
-  const r = (await db.query(`SELECT *, to_char(dia, 'YYYY-MM-DD') AS dia FROM analise.fumaca_dia WHERE dia = $1 AND versao = $2`, [dia, VERSION])).rows[0];
+  const r = (
+    await db.query(`SELECT *, to_char(dia, 'YYYY-MM-DD') AS dia FROM analise.fumaca_dia WHERE dia = $1 AND versao = $2`, [dia, VERSION])
+  ).rows[0];
   return r;
 }
 
 async function readSpots(db: pg.ClientBase, dia: string): Promise<SpotOut[]> {
-  return (await db.query(
-    `SELECT f.lat, f.lon, ff.peso, coalesce(f.frp, 0) AS frp, to_char(f.adquirido_em AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS em,
+  return (
+    await db.query(
+      `SELECT f.lat, f.lon, ff.peso, coalesce(f.frp, 0) AS frp, to_char(f.adquirido_em AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS em,
             m.nome || '/' || m.uf AS municipio, ff.distancia_km
      FROM analise.fumaca_foco ff JOIN firms.foco f ON f.id = ff.foco LEFT JOIN ibge.municipio m ON m.codigo = f.municipio
-     WHERE ff.dia = $1 AND ff.versao = $2 ORDER BY ff.peso DESC`, [dia, VERSION])).rows;
+     WHERE ff.dia = $1 AND ff.versao = $2 ORDER BY ff.peso DESC`,
+      [dia, VERSION],
+    )
+  ).rows;
 }
 
 async function publish(files: Record<string, string>, prefix: string) {
@@ -174,12 +206,15 @@ export async function reportDay(db: pg.ClientBase, dia: string, partial: boolean
   await attributeDay(db, dia);
   const row = await readDay(db, dia);
   const spots = await readSpots(db, dia);
-  await publish({
-    'relatorio.md': buildReport(row, partial) + '\n',
-    'atribuicao.json': JSON.stringify({ ...row, parcial: partial, parametros: PARAMS }, null, 1),
-    'focos.geojson': JSON.stringify(buildGeojson(spots)),
-    'mapa.html': buildMap(row, spots),
-  }, `produtos/fumaca/${dia}`);
+  await publish(
+    {
+      'relatorio.md': buildReport(row, partial) + '\n',
+      'atribuicao.json': JSON.stringify({ ...row, parcial: partial, parametros: PARAMS }, null, 1),
+      'focos.geojson': JSON.stringify(buildGeojson(spots)),
+      'mapa.html': buildMap(row, spots),
+    },
+    `produtos/fumaca/${dia}`,
+  );
   console.log(`produtos/fumaca/${dia}/`, row.confianca, spots.length, 'focos');
 }
 
@@ -192,7 +227,9 @@ async function main(args: string[]) {
       const first = args[1] ?? '2026-08-01';
       const last = diaDeManaus(new Date(now.getTime() - 86_400_000));
       // --resumo: only the season table, from the days already stored.
-      if (args[0] === '--temporada') for (let t = Date.parse(first); t <= Date.parse(last); t += 86_400_000) await reportDay(db, new Date(t).toISOString().slice(0, 10), false);
+      if (args[0] === '--temporada')
+        for (let t = Date.parse(first); t <= Date.parse(last); t += 86_400_000)
+          await reportDay(db, new Date(t).toISOString().slice(0, 10), false);
       const rows = await seasonRows(db, first, last);
       await publish({ [`temporada-${first.slice(0, 4)}.md`]: buildSeason(rows) }, 'produtos/fumaca');
       return console.log(`produtos/fumaca/temporada-${first.slice(0, 4)}.md`, rows.length, 'dias');
@@ -206,7 +243,8 @@ async function main(args: string[]) {
   }
 }
 
-if (import.meta.main) main(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

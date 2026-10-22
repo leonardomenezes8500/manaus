@@ -42,7 +42,10 @@ async function sensors(): Promise<Sensor[]> {
 
 async function measurements(s: Sensor, from: string, to: string, name: string) {
   const r = await baixar({
-    fonte: 'openaq', coletor: 'openaq', nome: name, headers: headers(),
+    fonte: 'openaq',
+    coletor: 'openaq',
+    nome: name,
+    headers: headers(),
     url: `${API}/sensors/${s.id}/measurements?datetime_from=${from}&datetime_to=${to}&limit=1000`,
     parametros: { location: LOCATION, sensor: s.id, parameter: s.parameter, from, to },
   });
@@ -53,8 +56,12 @@ async function measurements(s: Sensor, from: string, to: string, name: string) {
 
 async function locations() {
   const r = await baixar({
-    fonte: 'openaq', coletor: 'openaq', nome: 'locations-regiao.json', headers: headers(),
-    url: `${API}/locations?bbox=${bboxTexto()}&limit=1000`, parametros: { bbox: bboxTexto() },
+    fonte: 'openaq',
+    coletor: 'openaq',
+    nome: 'locations-regiao.json',
+    headers: headers(),
+    url: `${API}/locations?bbox=${bboxTexto()}&limit=1000`,
+    parametros: { bbox: bboxTexto() },
   });
   const ids: number[] = JSON.parse(await readFile(r.caminho, 'utf8')).results.map((l: any) => l.id);
   // Previous list lives in the buffer volume (survives restarts); the first run only saves it.
@@ -85,7 +92,8 @@ async function main(args: string[]) {
   for (const s of list) await measurements(s, iso(from), iso(to), `sensor-${s.id}-${s.parameter}.json`);
 }
 
-if (import.meta.main) main(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

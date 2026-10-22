@@ -1,4 +1,5 @@
 // Controle de carga (camada 2): que arquivo do bruto existe (bruto.arquivo) e para que tabela já foi lido (bruto.carga).
+import { execFileSync } from 'node:child_process';
 import type pg from 'pg';
 
 export type Arquivo = { chave: string; fonte: string; sha256: string; baixado_em: string };
@@ -18,7 +19,12 @@ export async function marcarCarregado(db: pg.ClientBase, arquivo: number, tabela
 }
 
 /** Registered raw files of a source not yet loaded into `tabela`, oldest first. `suffix` filters by file extension. */
-export async function pendingFiles(db: pg.ClientBase, fonte: string, tabela: string, suffix = ''): Promise<{ id: number; chave: string; baixado_em: Date }[]> {
+export async function pendingFiles(
+  db: pg.ClientBase,
+  fonte: string,
+  tabela: string,
+  suffix = '',
+): Promise<{ id: number; chave: string; baixado_em: Date }[]> {
   const r = await db.query(
     `SELECT a.id, a.chave, a.baixado_em FROM bruto.arquivo a
      WHERE a.fonte = $1 AND a.chave LIKE $3
@@ -41,4 +47,17 @@ export async function loadOnce(db: pg.ClientBase, arquivo: number, tabela: strin
     await db.query('ROLLBACK');
     throw e;
   }
+}
+
+/** GeoPackage or FlatGeobuf → staging `table` (replaced every time) in EPSG:4326, polygons as multi, with ogr2ogr. Connection from the PG* variables. */
+export function stageGpkg(gpkg: string, table: string, select: string, extra: string[] = []): void {
+  execFileSync(
+    'ogr2ogr',
+    [
+      ...['-f', 'PostgreSQL', 'PG:', gpkg, '-nln', table, '-overwrite', '-t_srs', 'EPSG:4326', '-nlt', 'PROMOTE_TO_MULTI'],
+      ...['-lco', 'GEOMETRY_NAME=geom', '-lco', 'SPATIAL_INDEX=NONE', '-select', select],
+      ...extra,
+    ],
+    { stdio: 'inherit' },
+  );
 }

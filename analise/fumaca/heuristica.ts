@@ -39,7 +39,9 @@ export type Wind = { speedKmh: number; fromDeg: number };
 /** Vector mean of winds given as (speed, direction it blows FROM). `steadiness` = 1 when all agree, 0 when they cancel. */
 export function meanWind(winds: Wind[]): Wind & { steadiness: number } {
   if (!winds.length) return { speedKmh: 0, fromDeg: 0, steadiness: 0 };
-  let u = 0, v = 0, s = 0;
+  let u = 0,
+    v = 0,
+    s = 0;
   for (const w of winds) {
     u += w.speedKmh * Math.sin(rad(w.fromDeg));
     v += w.speedKmh * Math.cos(rad(w.fromDeg));
@@ -72,7 +74,8 @@ export function weighSpots(origin: { lat: number; lon: number }, hours: Hour[], 
       const arrival = s.at.getTime() + travelH * 3600_000; // when the smoke would reach Manaus
       if (Math.abs(arrival - h.start.getTime()) <= p.windowH * 3600_000) counted++;
     }
-    if (counted) out.push({ ...s, distanceKm: d, bearingDeg: b, hours: counted, weight: s.frp * (1 / (1 + d / p.decayKm)) * (counted / 24) });
+    if (counted)
+      out.push({ ...s, distanceKm: d, bearingDeg: b, hours: counted, weight: s.frp * (1 / (1 + d / p.decayKm)) * (counted / 24) });
   }
   return out.sort((a, b) => b.weight - a.weight);
 }
@@ -97,7 +100,8 @@ export function confidence(s: { steadiness: number; spotsInSector: number; measu
   const signals = {
     steadyWind: s.steadiness >= 0.7,
     spotsInSector: s.spotsInSector >= 5,
-    measuredAndModelAgree: s.measuredPm25 !== null && s.modelPm25 !== null && (s.measuredPm25 > WHO_DAILY_PM25) === (s.modelPm25 > WHO_DAILY_PM25),
+    measuredAndModelAgree:
+      s.measuredPm25 !== null && s.modelPm25 !== null && s.measuredPm25 > WHO_DAILY_PM25 === s.modelPm25 > WHO_DAILY_PM25,
   };
   const yes = Object.values(signals).filter(Boolean).length;
   return { level: yes === 3 ? 'alta' : yes === 2 ? 'media' : 'baixa', signals };

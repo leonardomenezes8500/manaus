@@ -7,8 +7,16 @@ import { loadOnce, pendingFiles } from './lib.ts';
 import { parseMetar, reportTime, type Metar } from './metar.ts';
 import { registerSource } from './registrar.ts';
 
-const json = (text: string) => { try { return JSON.parse(text); } catch { return undefined; } };
-async function* lines(text: string) { yield* text.split('\n'); }
+const json = (text: string) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+};
+async function* lines(text: string) {
+  yield* text.split('\n');
+}
 
 /** OpenAQ measurements file (sensor id comes from the file name: ..._sensor-<id>-<parameter>[_<month>].json). */
 export async function loadOpenaq(db: pg.ClientBase, arquivo: number, chave: string, text: string): Promise<number> {
@@ -20,8 +28,15 @@ export async function loadOpenaq(db: pg.ClientBase, arquivo: number, chave: stri
     `INSERT INTO openaq.medicao (sensor, parametro, inicio, fim, valor, unidade, arquivo)
      SELECT $1, p, i, f, v, u, $7 FROM unnest($2::text[], $3::timestamptz[], $4::timestamptz[], $5::real[], $6::text[]) AS x(p, i, f, v, u)
      ON CONFLICT DO NOTHING`,
-    [sensor, rows.map((r: any) => r.parameter.name), rows.map((r: any) => r.period.datetimeFrom.utc), rows.map((r: any) => r.period.datetimeTo.utc),
-      rows.map((r: any) => r.value), rows.map((r: any) => r.parameter.units), arquivo],
+    [
+      sensor,
+      rows.map((r: any) => r.parameter.name),
+      rows.map((r: any) => r.period.datetimeFrom.utc),
+      rows.map((r: any) => r.period.datetimeTo.utc),
+      rows.map((r: any) => r.value),
+      rows.map((r: any) => r.parameter.units),
+      arquivo,
+    ],
   );
   return rows.length;
 }
@@ -34,15 +49,31 @@ async function insertMetar(db: pg.ClientBase, arquivo: number, rows: (Metar & { 
      FROM unnest($1::text[], $2::timestamptz[], $3::text[], $4::int[], $5::int[], $6::int[], $7::int[], $8::text[], $9::real[], $10::real[])
        AS x(e, o, t, vd, vk, rk, vm, tp, te, ov)
      ON CONFLICT DO NOTHING`,
-    [c('estacao'), c('observado_em'), c('texto'), c('vento_dir'), c('vento_kt'), c('rajada_kt'), c('visibilidade_m'),
-      rows.map((r) => r.tempo.join(' ')), c('temperatura'), c('orvalho'), arquivo],
+    [
+      c('estacao'),
+      c('observado_em'),
+      c('texto'),
+      c('vento_dir'),
+      c('vento_kt'),
+      c('rajada_kt'),
+      c('visibilidade_m'),
+      rows.map((r) => r.tempo.join(' ')),
+      c('temperatura'),
+      c('orvalho'),
+      arquivo,
+    ],
   );
 }
 
 /** aviationweather raw text: one report per line, time from the ddhhmmZ group (month/year from the download time). */
 export async function loadMetarRaw(db: pg.ClientBase, arquivo: number, text: string, downloaded: Date): Promise<number> {
-  const rows = text.split('\n').filter((l) => /^(METAR|SPECI)?\s*SB[A-Z]{2} \d{6}Z/.test(l.trim()))
-    .map((l) => { const m = parseMetar(l); return { ...m, observado_em: reportTime(m.texto, downloaded).toISOString() }; });
+  const rows = text
+    .split('\n')
+    .filter((l) => /^(METAR|SPECI)?\s*SB[A-Z]{2} \d{6}Z/.test(l.trim()))
+    .map((l) => {
+      const m = parseMetar(l);
+      return { ...m, observado_em: reportTime(m.texto, downloaded).toISOString() };
+    });
   if (rows.length) await insertMetar(db, arquivo, rows);
   return rows.length;
 }
@@ -55,18 +86,42 @@ export async function loadMetarIem(db: pg.ClientBase, arquivo: number, text: str
   for await (const r of records(lines(text))) {
     if (!r.metar || r.metar === 'M') continue;
     batch.push({ ...parseMetar(r.metar), observado_em: r.valid.replace(' ', 'T') + ':00Z' });
-    if (batch.length === 2000) await insertMetar(db, arquivo, batch), (n += batch.length), (batch = []);
+    if (batch.length === 2000) {
+      await insertMetar(db, arquivo, batch);
+      n += batch.length;
+      batch = [];
+    }
   }
-  if (batch.length) await insertMetar(db, arquivo, batch), (n += batch.length);
+  if (batch.length) {
+    await insertMetar(db, arquivo, batch);
+    n += batch.length;
+  }
   return n;
 }
 
-export const WEATHER_COLUMNS = ['wind_speed_10m', 'wind_direction_10m', 'wind_speed_925hPa', 'wind_direction_925hPa', 'wind_speed_850hPa',
-  'wind_direction_850hPa', 'wind_speed_700hPa', 'wind_direction_700hPa', 'boundary_layer_height', 'relative_humidity_2m', 'precipitation'];
+export const WEATHER_COLUMNS = [
+  'wind_speed_10m',
+  'wind_direction_10m',
+  'wind_speed_925hPa',
+  'wind_direction_925hPa',
+  'wind_speed_850hPa',
+  'wind_direction_850hPa',
+  'wind_speed_700hPa',
+  'wind_direction_700hPa',
+  'boundary_layer_height',
+  'relative_humidity_2m',
+  'precipitation',
+];
 export const AIR_COLUMNS = ['pm2_5', 'pm10', 'aerosol_optical_depth', 'carbon_monoxide'];
 
 /** Open-Meteo hourly JSON → one row per hour; columns are the API names in lowercase. */
-export async function loadOpenMeteo(db: pg.ClientBase, arquivo: number, table: 'openmeteo.tempo_hora' | 'openmeteo.ar_hora', text: string, downloaded: Date): Promise<number> {
+export async function loadOpenMeteo(
+  db: pg.ClientBase,
+  arquivo: number,
+  table: 'openmeteo.tempo_hora' | 'openmeteo.ar_hora',
+  text: string,
+  downloaded: Date,
+): Promise<number> {
   const hourly = json(text)?.hourly;
   if (!hourly?.time?.length) return 0;
   const vars = table === 'openmeteo.tempo_hora' ? WEATHER_COLUMNS : AIR_COLUMNS;
@@ -81,13 +136,25 @@ export async function loadOpenMeteo(db: pg.ClientBase, arquivo: number, table: '
   return hourly.time.length;
 }
 
-type Job = { fonte: string; tabela: string; load: (db: pg.ClientBase, f: { id: number; chave: string; baixado_em: Date }, text: string) => Promise<number> };
+type Job = {
+  fonte: string;
+  tabela: string;
+  load: (db: pg.ClientBase, f: { id: number; chave: string; baixado_em: Date }, text: string) => Promise<number>;
+};
 export const JOBS: Job[] = [
   { fonte: 'openaq', tabela: 'openaq.medicao', load: (db, f, t) => loadOpenaq(db, f.id, f.chave, t) },
   { fonte: 'metar-aviationweather', tabela: 'metar.observacao', load: (db, f, t) => loadMetarRaw(db, f.id, t, f.baixado_em) },
   { fonte: 'iem-asos', tabela: 'metar.observacao', load: (db, f, t) => loadMetarIem(db, f.id, t) },
-  { fonte: 'open-meteo-previsao', tabela: 'openmeteo.tempo_hora', load: (db, f, t) => loadOpenMeteo(db, f.id, 'openmeteo.tempo_hora', t, f.baixado_em) },
-  { fonte: 'open-meteo-qualidade-ar', tabela: 'openmeteo.ar_hora', load: (db, f, t) => loadOpenMeteo(db, f.id, 'openmeteo.ar_hora', t, f.baixado_em) },
+  {
+    fonte: 'open-meteo-previsao',
+    tabela: 'openmeteo.tempo_hora',
+    load: (db, f, t) => loadOpenMeteo(db, f.id, 'openmeteo.tempo_hora', t, f.baixado_em),
+  },
+  {
+    fonte: 'open-meteo-qualidade-ar',
+    tabela: 'openmeteo.ar_hora',
+    load: (db, f, t) => loadOpenMeteo(db, f.id, 'openmeteo.ar_hora', t, f.baixado_em),
+  },
 ];
 
 async function main(only: string[]) {
@@ -106,7 +173,8 @@ async function main(only: string[]) {
   }
 }
 
-if (import.meta.main) main(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

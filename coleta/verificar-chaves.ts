@@ -22,29 +22,42 @@ async function pedir(url: string, headers: Record<string, string>, esperado = 20
   return r;
 }
 
-const ecmwf = (host: string) => () =>
-  pedir(`https://${host}/api/retrieve/v1/jobs?limit=1`, { 'PRIVATE-TOKEN': env('ECMWF_KEY') });
+const ecmwf = (host: string) => () => pedir(`https://${host}/api/retrieve/v1/jobs?limit=1`, { 'PRIVATE-TOKEN': env('ECMWF_KEY') });
 
 const verificacoes: [string, () => Promise<unknown>][] = [
-  ['FIRMS_MAP_KEY', async () => {
-    // Chave inválida dá 403; válida devolve o JSON de cota.
-    const r = await pedir(`https://firms.modaps.eosdis.nasa.gov/mapserver/mapkey_status/?MAP_KEY=${env('FIRMS_MAP_KEY')}`, {});
-    if (!('transaction_limit' in (await r.json()))) throw new Error('resposta sem transaction_limit');
-  }],
+  [
+    'FIRMS_MAP_KEY',
+    async () => {
+      // Chave inválida dá 403; válida devolve o JSON de cota.
+      const r = await pedir(`https://firms.modaps.eosdis.nasa.gov/mapserver/mapkey_status/?MAP_KEY=${env('FIRMS_MAP_KEY')}`, {});
+      if (!('transaction_limit' in (await r.json()))) throw new Error('resposta sem transaction_limit');
+    },
+  ],
   ['OPENAQ_API_KEY', () => pedir('https://api.openaq.org/v3/locations/5040030', { 'X-API-Key': env('OPENAQ_API_KEY') })],
-  ['EARTHDATA_TOKEN', async () => {
-    const auth = { Authorization: `Bearer ${env('EARTHDATA_TOKEN')}` };
-    const busca = await pedir('https://cmr.earthdata.nasa.gov/search/granules.json?short_name=MCD19A2&page_size=1&sort_key=-start_date', auth);
-    const links: { href: string }[] = (await busca.json()).feed?.entry?.[0]?.links ?? [];
-    const arquivo = links.find((l) => l.href.startsWith('https://') && l.href.endsWith('.hdf'))?.href;
-    if (!arquivo) throw new Error('CMR sem arquivo MCD19A2');
-    // HEAD no LP DAAC passa até sem token; só o GET exige login, então 100 bytes.
-    await (await pedir(arquivo, { ...auth, Range: 'bytes=0-99' }, 206)).arrayBuffer();
-  }],
+  [
+    'EARTHDATA_TOKEN',
+    async () => {
+      const auth = { Authorization: `Bearer ${env('EARTHDATA_TOKEN')}` };
+      const busca = await pedir(
+        'https://cmr.earthdata.nasa.gov/search/granules.json?short_name=MCD19A2&page_size=1&sort_key=-start_date',
+        auth,
+      );
+      const links: { href: string }[] = (await busca.json()).feed?.entry?.[0]?.links ?? [];
+      const arquivo = links.find((l) => l.href.startsWith('https://') && l.href.endsWith('.hdf'))?.href;
+      if (!arquivo) throw new Error('CMR sem arquivo MCD19A2');
+      // HEAD no LP DAAC passa até sem token; só o GET exige login, então 100 bytes.
+      await (await pedir(arquivo, { ...auth, Range: 'bytes=0-99' }, 206)).arrayBuffer();
+    },
+  ],
   ['ECMWF_KEY (CDS)', ecmwf('cds.climate.copernicus.eu')],
   ['ECMWF_KEY (ADS)', ecmwf('ads.atmosphere.copernicus.eu')],
-  ['TRANSPARENCIA_API_KEY', () =>
-    pedir('https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siafi?pagina=1', { 'chave-api-dados': env('TRANSPARENCIA_API_KEY') })],
+  [
+    'TRANSPARENCIA_API_KEY',
+    () =>
+      pedir('https://api.portaldatransparencia.gov.br/api-de-dados/orgaos-siafi?pagina=1', {
+        'chave-api-dados': env('TRANSPARENCIA_API_KEY'),
+      }),
+  ],
 ];
 
 const agora = new Date();

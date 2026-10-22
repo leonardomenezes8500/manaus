@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
 const CACHE_DIAS = 7;
@@ -50,7 +50,9 @@ export function urlSemChaves(url: string): string {
 function commit(): string {
   if (process.env.GIT_COMMIT) return process.env.GIT_COMMIT;
   try {
-    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] })
+      .toString()
+      .trim();
   } catch {
     return 'desconhecido';
   }
@@ -63,7 +65,8 @@ const ehPrecondicao = (e: any) => e?.name === 'PreconditionFailed' || e?.$metada
  * `sobrescrever` só vale em `estado/` (a foto atual) e `produtos/` (derivado, refeito a partir do banco); nunca em `bruto/`.
  */
 export async function enviar(caminhoLocal: string, chave: string, opcoes: { sobrescrever?: boolean; sha256?: string } = {}): Promise<void> {
-  if (opcoes.sobrescrever && !/^(estado|produtos)\//.test(chave)) throw new Error(`sobrescrever só é permitido em estado/ e produtos/: ${chave}`);
+  if (opcoes.sobrescrever && !/^(estado|produtos)\//.test(chave))
+    throw new Error(`sobrescrever só é permitido em estado/ e produtos/: ${chave}`);
   await new Upload({
     client: s3(),
     params: {
@@ -107,11 +110,19 @@ export async function enviarPendentes(): Promise<void> {
       await mkdir(dirname(buffer('cache', chave)), { recursive: true });
       for (const a of [chave, chave + '.meta.json']) {
         // ENOENT: outro processo já enviou e moveu
-        await rename(join(dir, a), buffer('cache', a)).catch((e) => { if (e.code !== 'ENOENT') throw e; });
+        await rename(join(dir, a), buffer('cache', a)).catch((e) => {
+          if (e.code !== 'ENOENT') throw e;
+        });
       }
     } catch (e) {
       // Another process (two crons at once) sent it and moved it to the cache in the meantime: not an error.
-      if (await stat(join(dir, chave)).then(() => true, () => false)) erros.push(e);
+      if (
+        await stat(join(dir, chave)).then(
+          () => true,
+          () => false,
+        )
+      )
+        erros.push(e);
     }
   }
   if (erros.length) throw new AggregateError(erros, `${erros.length} arquivo(s) continuam em pendente/`);
@@ -143,16 +154,7 @@ export type Baixado = { chave: string; caminho: string; sha256: string; bytes: n
  * Devolve o caminho local no cache (válido por 7 dias).
  */
 export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
-  for (const [campo, v] of [['fonte', d.fonte], ['nome', d.nome]]) {
-    if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
-  }
-  await enviarPendentes().catch(() => {}); // rede ainda fora: tenta de novo no fim
-
-  const iso = agora.toISOString();
-  const chave = `bruto/${d.fonte}/${iso.slice(0, 4)}/${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(11, 19).replaceAll(':', '')}Z_${d.nome}`;
-  const tmp = buffer('tmp', `${process.pid}-${Date.now()}-${d.nome}`);
-  await mkdir(dirname(tmp), { recursive: true });
-
+  const { chave, iso, tmp } = await novoBruto(d, agora);
   const res = await fetch(d.url, { headers: d.headers });
   if (!res.ok || !res.body) {
     await res.body?.cancel();
@@ -163,7 +165,13 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
   try {
     await pipeline(
       Readable.fromWeb(res.body as any),
-      new Transform({ transform(parte, _, cb) { hash.update(parte); bytes += parte.length; cb(null, parte); } }),
+      new Transform({
+        transform(parte, _, cb) {
+          hash.update(parte);
+          bytes += parte.length;
+          cb(null, parte);
+        },
+      }),
       createWriteStream(tmp),
     );
   } catch (e) {
@@ -171,16 +179,47 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
     throw e;
   }
   const sha256 = hash.digest('hex');
-  const meta = {
-    url: urlSemChaves(d.url),
-    baixado_em: iso,
-    http_status: res.status,
-    bytes,
-    sha256,
-    coletor: { nome: d.coletor, commit: commit() },
-    parametros: d.parametros ?? {},
-  };
+  const meta = { url: urlSemChaves(d.url), baixado_em: iso, http_status: res.status, bytes, sha256 };
+  return paraOBruto(d, tmp, chave, meta);
+}
 
+/** Like baixar(), for a file made on this machine (e.g. a clip read straight from a remote GeoParquet): `origem` goes to meta.url. */
+export async function guardar(
+  caminhoLocal: string,
+  d: Omit<Download, 'url' | 'headers'> & { origem: string },
+  agora = new Date(),
+): Promise<Baixado> {
+  const { chave, iso, tmp } = await novoBruto(d, agora);
+  await copyFile(caminhoLocal, tmp);
+  const hash = createHash('sha256');
+  for await (const parte of createReadStream(tmp)) hash.update(parte);
+  const meta = { url: urlSemChaves(d.origem), baixado_em: iso, bytes: (await stat(tmp)).size, sha256: hash.digest('hex') };
+  return paraOBruto(d, tmp, chave, meta);
+}
+
+async function novoBruto(d: { fonte: string; nome: string }, agora: Date): Promise<{ chave: string; iso: string; tmp: string }> {
+  for (const [campo, v] of [
+    ['fonte', d.fonte],
+    ['nome', d.nome],
+  ]) {
+    if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
+  }
+  await enviarPendentes().catch(() => {}); // rede ainda fora: tenta de novo no fim
+  const iso = agora.toISOString();
+  const chave = `bruto/${d.fonte}/${iso.slice(0, 4)}/${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(11, 19).replaceAll(':', '')}Z_${d.nome}`;
+  const tmp = buffer('tmp', `${process.pid}-${Date.now()}-${d.nome}`);
+  await mkdir(dirname(tmp), { recursive: true });
+  return { chave, iso, tmp };
+}
+
+/** tmp file + meta → pendente/ → R2 → cache. */
+async function paraOBruto(
+  d: { fonte: string; coletor: string; parametros?: Record<string, unknown> },
+  tmp: string,
+  chave: string,
+  base: { url: string; baixado_em: string; bytes: number; sha256: string; http_status?: number },
+): Promise<Baixado> {
+  const meta = { ...base, coletor: { nome: d.coletor, commit: commit() }, parametros: d.parametros ?? {} };
   const pendente = buffer('pendente', chave);
   await mkdir(dirname(pendente), { recursive: true });
   await writeFile(pendente + '.meta.json', semSegredos(JSON.stringify(meta, null, 2)) + '\n');
@@ -188,7 +227,7 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
 
   await enviarPendentes();
   await limparCache();
-  return { chave, caminho: buffer('cache', chave), sha256, bytes, fonte: d.fonte, baixado_em: iso };
+  return { chave, caminho: buffer('cache', chave), sha256: base.sha256, bytes: base.bytes, fonte: d.fonte, baixado_em: base.baixado_em };
 }
 
 /** Every key under `prefix` in R2 (all pages), with size and last-modified time. */
@@ -206,7 +245,13 @@ export async function listKeys(prefix: string): Promise<{ key: string; size: num
 /** Opens a raw file as a stream: from the local cache when it is there, otherwise from R2. */
 export async function openRaw(key: string): Promise<Readable> {
   const cached = buffer('cache', key);
-  if (await stat(cached).then((s) => s.isFile(), () => false)) return createReadStream(cached);
+  if (
+    await stat(cached).then(
+      (s) => s.isFile(),
+      () => false,
+    )
+  )
+    return createReadStream(cached);
   const r = await s3().send(new GetObjectCommand({ Bucket: env('R2_BUCKET'), Key: key }));
   return r.Body as Readable;
 }

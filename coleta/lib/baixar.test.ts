@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
 import { mockClient } from 'aws-sdk-client-mock';
-import { baixar, enviar, enviarPendentes, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
+import { baixar, enviar, enviarPendentes, guardar, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
 
 // S3 de mentira: guarda em memória e respeita If-None-Match: *
 const s3 = mockClient(S3Client);
@@ -39,8 +39,13 @@ let dir: string;
 beforeEach(async () => {
   dir = await mkdtemp(join(tmpdir(), 'baixar-'));
   Object.assign(process.env, {
-    MANAUS_BUFFER: dir, R2_BUCKET: 'teste', R2_ACCOUNT_ID: 'conta', R2_ACCESS_KEY_ID: 'id', R2_SECRET_ACCESS_KEY: 'segredo-do-r2',
-    FIRMS_MAP_KEY: 'chave-firms-123', GIT_COMMIT: 'abc1234',
+    MANAUS_BUFFER: dir,
+    R2_BUCKET: 'teste',
+    R2_ACCOUNT_ID: 'conta',
+    R2_ACCESS_KEY_ID: 'id',
+    R2_SECRET_ACCESS_KEY: 'segredo-do-r2',
+    FIRMS_MAP_KEY: 'chave-firms-123',
+    GIT_COMMIT: 'abc1234',
   });
   r2 = new Map();
   redeCaiNoProximo = false;
@@ -55,7 +60,8 @@ beforeEach(async () => {
       atrasoNoProximo = 0;
       await new Promise((ok) => setTimeout(ok, ms));
     }
-    if (i.IfNoneMatch === '*' && r2.has(i.Key)) throw Object.assign(new Error('existe'), { name: 'PreconditionFailed', $metadata: { httpStatusCode: 412 } });
+    if (i.IfNoneMatch === '*' && r2.has(i.Key))
+      throw Object.assign(new Error('existe'), { name: 'PreconditionFailed', $metadata: { httpStatusCode: 412 } });
     r2.set(i.Key, { corpo: await corpo(i.Body), metadata: i.Metadata });
     return { ETag: '"x"' };
   });
@@ -67,13 +73,23 @@ beforeEach(async () => {
     const start = Number(i.ContinuationToken ?? 0);
     const page = keys.slice(start, start + 2);
     const more = start + 2 < keys.length;
-    return { Contents: page.map((Key) => ({ Key, Size: r2.get(Key)!.corpo.length, LastModified: quando })), IsTruncated: more, NextContinuationToken: more ? String(start + 2) : undefined };
+    return {
+      Contents: page.map((Key) => ({ Key, Size: r2.get(Key)!.corpo.length, LastModified: quando })),
+      IsTruncated: more,
+      NextContinuationToken: more ? String(start + 2) : undefined,
+    };
   });
 });
 afterEach(() => rm(dir, { recursive: true, force: true }));
 
 const quando = new Date('2026-10-21T15:04:05Z');
-const malha = () => ({ fonte: 'ibge-malhas', url: `${base}/malha?formato=geojson`, nome: 'manaus.json', coletor: 'teste', parametros: { municipio: 1302603 } });
+const malha = () => ({
+  fonte: 'ibge-malhas',
+  url: `${base}/malha?formato=geojson`,
+  nome: 'manaus.json',
+  coletor: 'teste',
+  parametros: { municipio: 1302603 },
+});
 
 test('grava arquivo + meta na chave datada', async () => {
   const r = await baixar(malha(), quando);
@@ -81,11 +97,37 @@ test('grava arquivo + meta na chave datada', async () => {
   expect(r2.get(r.chave)!.corpo.toString()).toBe('malha /malha?formato=geojson');
   const meta = JSON.parse(r2.get(r.chave + '.meta.json')!.corpo.toString());
   expect(meta).toEqual({
-    url: `${base}/malha?formato=geojson`, baixado_em: '2026-10-21T15:04:05.000Z', http_status: 200, bytes: 28,
-    sha256: sha('malha /malha?formato=geojson'), coletor: { nome: 'teste', commit: 'abc1234' }, parametros: { municipio: 1302603 },
+    url: `${base}/malha?formato=geojson`,
+    baixado_em: '2026-10-21T15:04:05.000Z',
+    http_status: 200,
+    bytes: 28,
+    sha256: sha('malha /malha?formato=geojson'),
+    coletor: { nome: 'teste', commit: 'abc1234' },
+    parametros: { municipio: 1302603 },
   });
   expect(s3.commandCalls(PutObjectCommand).every((c) => c.args[0].input.IfNoneMatch === '*')).toBe(true);
   expect(await readdir(join(dir, 'cache/bruto/ibge-malhas/2026/10/21'))).toHaveLength(2);
+});
+
+test('guardar: a local file (e.g. a clip made here) goes to the dated key with the same meta, the origin as url', async () => {
+  const local = join(dir, 'recorte.parquet');
+  await writeFile(local, 'prédios');
+  const r = await guardar(
+    local,
+    { fonte: 'overture', nome: 'manaus.parquet', coletor: 'teste', origem: 's3://bucket/release/x', parametros: { release: 'x' } },
+    quando,
+  );
+  expect(r.chave).toBe('bruto/overture/2026/10/21/150405Z_manaus.parquet');
+  expect(r2.get(r.chave)!.corpo.toString()).toBe('prédios');
+  expect(JSON.parse(r2.get(r.chave + '.meta.json')!.corpo.toString())).toEqual({
+    url: 's3://bucket/release/x',
+    baixado_em: '2026-10-21T15:04:05.000Z',
+    bytes: Buffer.byteLength('prédios'),
+    sha256: sha('prédios'),
+    coletor: { nome: 'teste', commit: 'abc1234' },
+    parametros: { release: 'x' },
+  });
+  expect(r.caminho).toBe(join(dir, 'cache', r.chave));
 });
 
 test('não sobrescreve: segunda escrita na mesma chave é recusada', async () => {
@@ -144,7 +186,10 @@ test('reenvio de algo que já chegou (resposta perdida) não trava a fila', asyn
   redeCaiNoProximo = true;
   await expect(baixar(malha(), quando)).rejects.toThrow();
   // o arquivo chegou ao R2 com o mesmo sha256, mas o cliente não soube
-  r2.set('bruto/ibge-malhas/2026/10/21/150405Z_manaus.json', { corpo: Buffer.from(''), metadata: { sha256: sha('malha /malha?formato=geojson') } });
+  r2.set('bruto/ibge-malhas/2026/10/21/150405Z_manaus.json', {
+    corpo: Buffer.from(''),
+    metadata: { sha256: sha('malha /malha?formato=geojson') },
+  });
   await baixar(malha(), new Date('2026-10-21T16:00:00Z'));
   expect(r2.has('bruto/ibge-malhas/2026/10/21/150405Z_manaus.json.meta.json')).toBe(true);
 });
@@ -167,6 +212,9 @@ test('two processes sending the same pending file at once: both finish without e
   await new Promise((ok) => setTimeout(ok, 20));
   await enviarPendentes();
   await a; // A finds its files gone: someone else sent them, not an error
-  expect([...r2.keys()].sort()).toEqual(['bruto/ibge-malhas/2026/10/21/150405Z_manaus.json', 'bruto/ibge-malhas/2026/10/21/150405Z_manaus.json.meta.json']);
+  expect([...r2.keys()].sort()).toEqual([
+    'bruto/ibge-malhas/2026/10/21/150405Z_manaus.json',
+    'bruto/ibge-malhas/2026/10/21/150405Z_manaus.json.meta.json',
+  ]);
   expect(await readdir(join(dir, 'pendente/bruto/ibge-malhas/2026/10/21'))).toEqual([]);
 });

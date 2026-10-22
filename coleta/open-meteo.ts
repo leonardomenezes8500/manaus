@@ -8,11 +8,17 @@ import { baixar } from './lib/baixar.ts';
 import { MANAUS } from './regiao.ts';
 
 export const WEATHER = [
-  'wind_speed_10m', 'wind_direction_10m',
-  'wind_speed_925hPa', 'wind_direction_925hPa',
-  'wind_speed_850hPa', 'wind_direction_850hPa',
-  'wind_speed_700hPa', 'wind_direction_700hPa',
-  'boundary_layer_height', 'relative_humidity_2m', 'precipitation',
+  'wind_speed_10m',
+  'wind_direction_10m',
+  'wind_speed_925hPa',
+  'wind_direction_925hPa',
+  'wind_speed_850hPa',
+  'wind_direction_850hPa',
+  'wind_speed_700hPa',
+  'wind_direction_700hPa',
+  'boundary_layer_height',
+  'relative_humidity_2m',
+  'precipitation',
 ];
 export const AIR = ['pm2_5', 'pm10', 'aerosol_optical_depth', 'carbon_monoxide'];
 
@@ -55,19 +61,37 @@ async function fetchJson(fonte: string, nome: string, url: string, parametros: R
 async function main(args: string[]) {
   if (args[0] !== '--history') {
     const window = 'past_days=2&forecast_days=3';
-    await fetchJson('open-meteo-previsao', 'manaus-tempo.json', `https://api.open-meteo.com/v1/forecast?${weatherQuery}&${window}`, { window });
-    await fetchJson('open-meteo-qualidade-ar', 'manaus-ar.json', `https://air-quality-api.open-meteo.com/v1/air-quality?${airQuery}&${window}`, { window });
+    await fetchJson('open-meteo-previsao', 'manaus-tempo.json', `https://api.open-meteo.com/v1/forecast?${weatherQuery}&${window}`, {
+      window,
+    });
+    await fetchJson(
+      'open-meteo-qualidade-ar',
+      'manaus-ar.json',
+      `https://air-quality-api.open-meteo.com/v1/air-quality?${airQuery}&${window}`,
+      { window },
+    );
     return;
   }
   const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
   for (const [from, to] of monthRanges(args[1] ?? '2026-08-01', args[2] ?? yesterday)) {
     const dates = `start_date=${from}&end_date=${to}`;
-    await fetchJson('open-meteo-previsao', `manaus-tempo_${from}_${to}.json`, `https://historical-forecast-api.open-meteo.com/v1/forecast?${weatherQuery}&${dates}`, { from, to });
-    await fetchJson('open-meteo-qualidade-ar', `manaus-ar_${from}_${to}.json`, `https://air-quality-api.open-meteo.com/v1/air-quality?${airQuery}&${dates}`, { from, to });
+    await fetchJson(
+      'open-meteo-previsao',
+      `manaus-tempo_${from}_${to}.json`,
+      `https://historical-forecast-api.open-meteo.com/v1/forecast?${weatherQuery}&${dates}`,
+      { from, to },
+    );
+    await fetchJson(
+      'open-meteo-qualidade-ar',
+      `manaus-ar_${from}_${to}.json`,
+      `https://air-quality-api.open-meteo.com/v1/air-quality?${airQuery}&${dates}`,
+      { from, to },
+    );
   }
 }
 
-if (import.meta.main) main(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

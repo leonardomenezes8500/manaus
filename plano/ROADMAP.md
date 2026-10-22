@@ -1,6 +1,6 @@
 # Roadmap — REA de Manaus
 
-**Sprint atual: S0.1** (atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`)
+**Sprint atual: M2 em revisão (PR aberto).** Próximo: S3.1, cujas issues ainda vão ser criadas (atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`)
 
 Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M2 já têm issues; do M3 em diante são só linhas aqui, que viram issues quando chegar a vez.
 

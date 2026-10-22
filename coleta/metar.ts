@@ -11,8 +11,20 @@ const sleep = (ms: number) => new Promise((ok) => setTimeout(ok, ms));
 /** IEM ASOS download URL for one station and one UTC year (routine + special reports). */
 export function iemUrl(station: string, year: number): string {
   const q = new URLSearchParams({
-    station, data: 'metar', tz: 'Etc/UTC', format: 'onlycomma', latlon: 'no', missing: 'M', trace: 'T', direct: 'no',
-    year1: String(year), month1: '1', day1: '1', year2: String(year + 1), month2: '1', day2: '1',
+    station,
+    data: 'metar',
+    tz: 'Etc/UTC',
+    format: 'onlycomma',
+    latlon: 'no',
+    missing: 'M',
+    trace: 'T',
+    direct: 'no',
+    year1: String(year),
+    month1: '1',
+    day1: '1',
+    year2: String(year + 1),
+    month2: '1',
+    day2: '1',
   });
   return `https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?${q}&report_type=3&report_type=4`;
 }
@@ -25,7 +37,9 @@ export function smokeOrHaze(metar: string): boolean {
 async function main(args: string[]) {
   if (args[0] !== '--history') {
     const r = await baixar({
-      fonte: 'metar-aviationweather', coletor: 'metar', nome: 'SBEG-SBMN.txt',
+      fonte: 'metar-aviationweather',
+      coletor: 'metar',
+      nome: 'SBEG-SBMN.txt',
       url: 'https://aviationweather.gov/api/data/metar?ids=SBEG,SBMN&hours=3&format=raw',
       parametros: { ids: 'SBEG,SBMN', hours: 3 },
     });
@@ -36,7 +50,10 @@ async function main(args: string[]) {
     if (args[1] && args[1] !== station) continue;
     for (let year = Number(args[2] ?? first); year <= last; year++) {
       const r = await baixar({
-        fonte: 'iem-asos', coletor: 'metar', nome: `${station}_${year}.csv`, url: iemUrl(station, year),
+        fonte: 'iem-asos',
+        coletor: 'metar',
+        nome: `${station}_${year}.csv`,
+        url: iemUrl(station, year),
         parametros: { station, year },
       });
       console.log(r.chave, r.bytes);
@@ -45,7 +62,8 @@ async function main(args: string[]) {
   }
 }
 
-if (import.meta.main) main(process.argv.slice(2)).catch((e) => {
-  console.error(e.message);
-  process.exitCode = 1;
-});
+if (import.meta.main)
+  main(process.argv.slice(2)).catch((e) => {
+    console.error(e.message);
+    process.exitCode = 1;
+  });

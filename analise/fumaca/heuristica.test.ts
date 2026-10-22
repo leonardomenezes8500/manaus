@@ -1,4 +1,15 @@
-import { angleDiff, bearingDeg, confidence, distanceKm, meanWind, PARAMS, rankMunicipios, weighSpots, type Hour, type Spot } from './heuristica.ts';
+import {
+  angleDiff,
+  bearingDeg,
+  confidence,
+  distanceKm,
+  meanWind,
+  PARAMS,
+  rankMunicipios,
+  weighSpots,
+  type Hour,
+  type Spot,
+} from './heuristica.ts';
 
 const MANAUS = { lat: -3.1, lon: -60.02 };
 
@@ -24,22 +35,38 @@ test('the sector crosses north (350°–10°)', () => {
 });
 
 test('vector mean of winds: same direction keeps it; opposite ones cancel', () => {
-  const a = meanWind([{ speedKmh: 20, fromDeg: 350 }, { speedKmh: 20, fromDeg: 10 }]);
+  const a = meanWind([
+    { speedKmh: 20, fromDeg: 350 },
+    { speedKmh: 20, fromDeg: 10 },
+  ]);
   expect(angleDiff(a.fromDeg, 0)).toBeLessThan(1e-6);
   expect(a.speedKmh).toBeCloseTo(20 * Math.cos((10 * Math.PI) / 180), 6);
-  expect(meanWind([{ speedKmh: 10, fromDeg: 90 }, { speedKmh: 10, fromDeg: 270 }]).steadiness).toBeCloseTo(0, 6);
+  expect(
+    meanWind([
+      { speedKmh: 10, fromDeg: 90 },
+      { speedKmh: 10, fromDeg: 270 },
+    ]).steadiness,
+  ).toBeCloseTo(0, 6);
 });
 
 // A day of steady wind FROM the southeast (135°) at 20 km/h.
 const day = new Date('2026-10-21T04:00:00Z');
-const hours: Hour[] = Array.from({ length: 24 }, (_, h) => ({ start: new Date(day.getTime() + h * 3600_000), wind: { speedKmh: 20, fromDeg: 135 } }));
+const hours: Hour[] = Array.from({ length: 24 }, (_, h) => ({
+  start: new Date(day.getTime() + h * 3600_000),
+  wind: { speedKmh: 20, fromDeg: 135 },
+}));
 /** Point at `km` from Manaus on `bearing` (small-angle approximation, good enough for tests). */
 const at = (bearing: number, km: number) => ({
   lat: MANAUS.lat + (km / 111.19) * Math.cos((bearing * Math.PI) / 180),
   lon: MANAUS.lon + (km / (111.19 * Math.cos((MANAUS.lat * Math.PI) / 180))) * Math.sin((bearing * Math.PI) / 180),
 });
-const spot = (id: number, bearing: number, km: number, hoursBefore: number, municipio: number | null = 1): Spot =>
-  ({ id, ...at(bearing, km), at: new Date(day.getTime() + 12 * 3600_000 - hoursBefore * 3600_000), frp: 10, municipio });
+const spot = (id: number, bearing: number, km: number, hoursBefore: number, municipio: number | null = 1): Spot => ({
+  id,
+  ...at(bearing, km),
+  at: new Date(day.getTime() + 12 * 3600_000 - hoursBefore * 3600_000),
+  frp: 10,
+  municipio,
+});
 
 test('synthetic: with wind from SE, the spot to the SE counts and the one to the NW does not', () => {
   const se = spot(1, 135, 200, 10); // 200 km at 20 km/h = 10 h of travel: arrives at noon
@@ -65,7 +92,10 @@ test('time window, distance limits and sector edge', () => {
 test('sum by municipality with share, outside Brazil as null', () => {
   const r = weighSpots(MANAUS, hours, [spot(1, 135, 200, 10, 10), spot(2, 140, 200, 10, 10), spot(3, 130, 200, 10, null)]);
   const ranking = rankMunicipios(r);
-  expect(ranking.map((m) => [m.municipio, m.spots])).toEqual([[10, 2], [null, 1]]);
+  expect(ranking.map((m) => [m.municipio, m.spots])).toEqual([
+    [10, 2],
+    [null, 1],
+  ]);
   expect(ranking[0].share).toBeCloseTo(2 / 3, 2);
   expect(ranking.reduce((t, m) => t + m.share, 0)).toBeCloseTo(1, 6);
 });

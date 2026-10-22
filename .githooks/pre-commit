@@ -1,0 +1,5 @@
+#!/bin/sh
+# Versioned pre-commit hook (npm install turns it on: core.hooksPath). Same command as the CI.
+# Database tests only run with PGDATABASE=manaus_teste (tunnel to the slice, see plano/COMO-TRABALHAR.md).
+# Skip once with: git commit --no-verify
+exec npm run check

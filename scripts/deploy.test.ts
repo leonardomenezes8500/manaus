@@ -11,15 +11,25 @@ const ANTERIOR = 'b'.repeat(40);
 // e falha a migração (`run`) quando MIGRA_FALHA está definido.
 function pasta() {
   const dir = mkdtempSync(join(tmpdir(), 'deploy-'));
-  for (const [de, para] of [['compose.prod.yaml', 'compose.prod.yaml'], ['scripts/deploy.sh', 'deploy.sh']]) copyFileSync(de, join(dir, para));
-  writeFileSync(join(dir, 'docker'), `#!/usr/bin/env bash
+  for (const [de, para] of [
+    ['compose.prod.yaml', 'compose.prod.yaml'],
+    ['scripts/deploy.sh', 'deploy.sh'],
+  ])
+    copyFileSync(de, join(dir, para));
+  writeFileSync(
+    join(dir, 'docker'),
+    `#!/usr/bin/env bash
 echo "$* $(sed -n 's/^APP_TAG=//p' .env)" >> docker.log
 [[ $* == *" up "* && -n \${UP_FALHA:-} ]] && grep -q "^APP_TAG=$UP_FALHA" .env && exit 1
 [[ $* == *" run "* && -n \${MIGRA_FALHA:-} ]] && exit 1
 exit 0
-`);
+`,
+  );
   chmodSync(join(dir, 'docker'), 0o755);
-  const arquivos = createHash('sha256').update(readFileSync(join(dir, 'compose.prod.yaml'))).update(readFileSync(join(dir, 'deploy.sh'))).digest('hex');
+  const arquivos = createHash('sha256')
+    .update(readFileSync(join(dir, 'compose.prod.yaml')))
+    .update(readFileSync(join(dir, 'deploy.sh')))
+    .digest('hex');
   return { dir, arquivos };
 }
 
@@ -39,12 +49,12 @@ test('deploy ok: .env 600 com os secrets entre aspas simples + APP_TAG, pull, ba
   expect(r.status).toBe(0);
   expect(ler(dir, '.env')).toBe(`R2_BUCKET='manaus'\nFIRMS_MAP_KEY='a$b c'\nAPP_TAG=${SHA}\n`);
   expect(statSync(join(dir, '.env')).mode & 0o777).toBe(0o600);
-  expect(ler(dir, 'docker.log').trim().split('\n').map((l) => l.replace(/^compose -f compose.prod.yaml | \w+$/g, ''))).toEqual([
-    'pull -q',
-    'up -d --wait --wait-timeout 120 db',
-    'run --rm -T coletor node db/migrar.ts',
-    'up -d --wait --wait-timeout 120',
-  ]);
+  expect(
+    ler(dir, 'docker.log')
+      .trim()
+      .split('\n')
+      .map((l) => l.replace(/^compose -f compose.prod.yaml | \w+$/g, '')),
+  ).toEqual(['pull -q', 'up -d --wait --wait-timeout 120 db', 'run --rm -T coletor node db/migrar.ts', 'up -d --wait --wait-timeout 120']);
   expect(ler(dir, 'deploys.log')).toMatch(new RegExp(`${SHA} ok\\n$`));
 });
 

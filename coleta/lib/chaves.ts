@@ -30,7 +30,9 @@ export function tabela(resultados: Resultado[], agora: Date): string {
       r.expira ? String(diasRestantes(r.expira, agora)) : '—',
       agora.toISOString().slice(0, 16) + 'Z',
       r.detalhe ?? '',
-    ].join(' | ').replace(/ \| $/, ''),
+    ]
+      .join(' | ')
+      .replace(/ \| $/, ''),
   );
   return [
     '# Chaves',

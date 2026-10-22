@@ -23,6 +23,24 @@ services:
         max-size: 10m
         max-file: "3"
 
+  # API v0 (#34): privada, porta só no 127.0.0.1 da slice (daqui, pelo túnel ssh). Nada no Caddy até o M6.
+  api:
+    image: ghcr.io/leonardomenezes8500/manaus:${APP_TAG:?}
+    env_file: .env
+    environment:
+      PGHOST: db
+      PGUSER: manaus
+      PGDATABASE: manaus
+      API_HOST: 0.0.0.0
+      API_PORT: "3000"
+    command: [node, api/servidor.ts]
+    ports:
+      - 127.0.0.1:3010:3000
+    cpus: 0.25
+    mem_limit: 256m
+    restart: unless-stopped
+    logging: *logging
+
   # Camadas 2 e 3, análises e API (#5). Configurado para caber em 1 GB; porta só no 127.0.0.1 (acesso por túnel ssh).
   db:
     image: postgis/postgis:17-3.5

@@ -6,7 +6,9 @@ import { readdirSync } from 'node:fs';
 import { migrar } from './migrar.ts';
 import { apagarTudo, banco, comBanco } from './teste.ts';
 
-const todas = readdirSync(join(import.meta.dirname, 'migracoes')).filter((a) => a.endsWith('.sql')).sort();
+const todas = readdirSync(join(import.meta.dirname, 'migracoes'))
+  .filter((a) => a.endsWith('.sql'))
+  .sort();
 
 comBanco(`migrar (${banco})`, () => {
   const db = new pg.Client();
@@ -22,7 +24,10 @@ comBanco(`migrar (${banco})`, () => {
     expect(await migrar(db)).toEqual(todas);
     expect(await migrar(db)).toEqual([]);
     expect((await db.query('SELECT postgis_full_version() AS v')).rows[0].v).toMatch(/POSTGIS="3/);
-    expect((await db.query("SELECT to_regclass('bruto.arquivo') AS a, to_regclass('bruto.carga') AS c")).rows[0]).toEqual({ a: 'bruto.arquivo', c: 'bruto.carga' });
+    expect((await db.query("SELECT to_regclass('bruto.arquivo') AS a, to_regclass('bruto.carga') AS c")).rows[0]).toEqual({
+      a: 'bruto.arquivo',
+      c: 'bruto.carga',
+    });
   });
 
   test('migração com erro não fica pela metade nem registrada', async () => {
