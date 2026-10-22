@@ -143,6 +143,16 @@ comBanco('API v0 no banco', () => {
     expect((await app.inject('/fumaca/2026-09-10')).json()).toMatchObject({ versao: 'v1', meteo: 'era5', focos_contados: 80 });
   });
 
+  test('/contexto/:dia: the calendar of the day with the act of each event; outside 1994-2030 is 404, bad date 400', async () => {
+    await db.query(`INSERT INTO contexto.periodo (tipo, nome, inicio, fim, abrangencia, fonte, ato, url) VALUES
+      ('feriado', 'Aniversário de Manaus', '2026-10-24', '2026-10-24', 'Manaus', 'cmm-manaus', 'Lei municipal X', 'https://exemplo.gov.br/lei')`);
+    const r = (await app.inject('/contexto/2026-10-24')).json();
+    expect(r).toMatchObject({ dia: '2026-10-24', fim_de_semana: true, feriado: 'Aniversário de Manaus' });
+    expect(r.eventos[0]).toMatchObject({ nome: 'Aniversário de Manaus', ato: 'Lei municipal X', fonte: 'cmm-manaus' });
+    expect((await app.inject('/contexto/1990-01-01')).statusCode).toBe(404);
+    expect((await app.inject('/contexto/amanha')).statusCode).toBe(400);
+  });
+
   test('/bairros/:id: people by age band from the census tracts of the IBGE bairro', async () => {
     const a = (await db.query('SELECT min(id) AS id FROM bruto.arquivo')).rows[0].id;
     await db.query(`UPDATE ibge.setor SET bairro = '1302603005001', bairro_nome = 'Centro' WHERE codigo = '130260305000001'`);

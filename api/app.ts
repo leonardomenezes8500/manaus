@@ -199,5 +199,11 @@ export function criarApp(deps: Dependencias): FastifyInstance {
     return r.rows[0] ?? rep.code(404).send({ erro: 'sem atribuição para esse dia' });
   });
 
+  app.get<{ Params: { dia: string } }>('/contexto/:dia', async (req, rep) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD' });
+    const r = await db.query(`SELECT *, dia::text FROM contexto.dia WHERE dia = $1`, [req.params.dia]);
+    return r.rows[0] ?? rep.code(404).send({ erro: 'fora do calendário (1994 a 2030)' });
+  });
+
   return app;
 }
