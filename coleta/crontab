@@ -21,6 +21,9 @@
 # Cota do Rio Negro em Manaus (#29): telemetria da ANA dos últimos 3 dias, 1 vez por dia.
 40 7 * * * coleta/rodar.sh ana
 
+# ERA5 (#47): vento em níveis de pressão, os dias completos de 6 a 10 dias atrás que faltam no R2 (o ERA5T sai com ~5 dias).
+20 5 * * * coleta/rodar.sh era5
+
 # GFS 0,5° (#48): vento em níveis de pressão, f000 e f003 de cada rodada pronta dos últimos 2 dias, 4h30 depois das rodadas de 00/06/12/18 UTC.
 30 0,6,12,18 * * * coleta/rodar.sh gfs
 
