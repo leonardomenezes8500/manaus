@@ -1,8 +1,8 @@
 # Roadmap — REA de Manaus
 
-**Sprint atual: M2 em revisão (PR aberto).** Próximo: S3.1, cujas issues ainda vão ser criadas (atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`)
+**Sprint atual: S3.1** (M3; o M2 foi mergeado no PR #46). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
-Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M2 já têm issues; do M3 em diante são só linhas aqui, que viram issues quando chegar a vez.
+Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
 ## Decisões tomadas (o usuário precisa confirmar)
 - **(2026-10-21) Repo público no GitHub** (`leonardomenezes8500/manaus`), com issues e sprints lá. Público porque o Actions é grátis em repo público e o usuário já queria abrir o projeto. Nada sensível no repo (ver `CLAUDE.md`).
@@ -23,7 +23,9 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 ## Pendências do usuário
 - **R2:** criar o bucket e um token **só de leitura e escrita de objetos, só nesse bucket**; no bucket, a regra de ciclo de vida "apagar `backup/pg/` com mais de 14 dias" (o código nunca apaga nada no R2). Depois pôr `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` no `.env` local e no GitHub com `gh secret set <NOME>` (o valor é digitado no prompt, nunca colado no chat). Bloqueia a [#3](https://github.com/leonardomenezes8500/manaus/issues/3) e o resto do M0.
 - Renovar o token NASA Earthdata **até 2026-12-10**, porque ele expira em 2026-12-20 ([#7](https://github.com/leonardomenezes8500/manaus/issues/7)).
-- Criar conta no Copernicus Data Space (o site estava fora do ar). Só faz falta no M3, se o Sentinel-5P não vier pela NASA.
+- **Earthdata, usuário e senha (M3, [#54](https://github.com/leonardomenezes8500/manaus/issues/54)):** pôr `EARTHDATA_USER` e `EARTHDATA_PASSWORD` no `.env` deste PC (só aqui, não vai para a slice nem para o GitHub). O AppEEARS, que dá a série do MAIAC num CSV pequeno, não aceita o token. Sem isso, o MAIAC fica só nos dias da comparação, e a série 2012–2026 sai sem ele.
+- **PurpleAir (M3, [#41](https://github.com/leonardomenezes8500/manaus/issues/41)):** decidir entre pedir à UEA/EducAIR autorização para ler o mapa do SELVA e/ou criar uma chave da API PurpleAir (grátis no começo, depois paga por uso). Sem decisão até o fim do S3.2, a #41 sai do M3.
+- Conta no Copernicus Data Space: não faz mais falta no M3, porque o Sentinel-5P saiu dele. Fica para quando ele voltar.
 - Confirmar as decisões acima.
 
 ---
@@ -91,21 +93,37 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 **Pronto quando:** a atribuição diária usa trajetórias; v0 e v1 foram comparadas nos dias com FU no METAR; existe a série 2012–2026 de fumaça × focos × seca.
 
 - **S3.1 — Trajetórias**
-  - ERA5 (CDS): vento por nível de pressão na região. Coleta diária (atraso de ~5 dias) + histórico.
-  - GFS 0,25° (NOAA NOMADS, recortado) para o dia corrente.
-  - Retrotrajetórias saindo de Manaus (500/1000/1500 m, 72 h). Decidir entre HYSPLIT offline e um integrador próprio em TS com testes.
-  - Atribuição v1 (focos perto da trajetória, pesados por FRP e tempo) substitui a v0 no relatório.
+  - [#47](https://github.com/leonardomenezes8500/manaus/issues/47) ERA5 (CDS): vento em níveis de pressão na região, todo dia + histórico desde 29/07
+  - [#48](https://github.com/leonardomenezes8500/manaus/issues/48) GFS 0,5° (NOMADS) recortado: o vento dos últimos dias, 4x por dia
+  - [#49](https://github.com/leonardomenezes8500/manaus/issues/49) Retrotrajetórias em TS: leitor de vento, integrador e trajetórias do dia no banco
+  - [#50](https://github.com/leonardomenezes8500/manaus/issues/50) Atribuição v1: focos perto da trajetória, no relatório e no mapa
+  - [#51](https://github.com/leonardomenezes8500/manaus/issues/51) Comparar v0 e v1 nos dias com fumaça (FU) no METAR, temporada 2026
 - **S3.2 — Evidência e histórico**
-  - Aerossol por satélite: MAIAC MCD19A2 (Earthdata), GOES-19 AOD (AWS, sem chave), Sentinel-5P CO/índice de aerossol.
-  - Área queimada: MCD64A1, MapBiomas Fogo, INPE AQ1km.
-  - Coletores dos sensores de solo achados na 015.
-  - Arquivo FIRMS (SP) desde 2012 e série histórica: dias com FU/HZ × focos × cota do Rio Negro.
+  - [#40](https://github.com/leonardomenezes8500/manaus/issues/40) Coletor MonitorAr: estação de referência FioAres (Manaus), de hora em hora
+  - [#41](https://github.com/leonardomenezes8500/manaus/issues/41) Coletor PurpleAir de Manaus (bloqueada até a decisão do usuário; enquanto isso, pular)
+  - [#52](https://github.com/leonardomenezes8500/manaus/issues/52) Arquivo FIRMS (SP) desde 2012: focos por dia de Manaus, sem carregar 14 anos no banco
+  - [#53](https://github.com/leonardomenezes8500/manaus/issues/53) Coletor AERONET (ATTO e Manaus_EMBRAPA): aerossol medido do chão, diário + histórico
+  - [#54](https://github.com/leonardomenezes8500/manaus/issues/54) MAIAC MCD19A2: AOD de satélite (1 km) em Manaus e no ATTO, 2012–2026
+  - [#55](https://github.com/leonardomenezes8500/manaus/issues/55) Série 2012–2026: fumaça (FU/HZ, visibilidade, AOD) × focos × cota do Rio Negro
+- **Depois do merge** (issue de conferência no padrão da #44): 24 h de cron de GFS, ERA5, AERONET, FioAres e PurpleAir; um dia da v1 que saiu com GFS e foi refeito com ERA5 sem mão humana; começa a contar as 2 semanas de FioAres da #42.
+
+**Decisões do M3 (2026-10-22, provisórias; o usuário pode mudar):**
+- **Trajetória com integrador próprio em TS**, testado com Jest. O HYSPLIT confere 3 dias, uma vez, neste PC. Motivo: ele só lê vento no formato ARL da NOAA (a conversão é em Fortran, ou seriam arquivos globais de centenas de MB por semana), a licença não é declarada e não dá para testar.
+- **Vento:** GFS 0,5° nos últimos dias (provisório) e ERA5 no histórico e na versão final, que chega uns 5 dias depois; aí a v1 do dia é refeita. Os dois usam a mesma grade (0,5°, de 3 em 3 h, 1000–700 hPa, caixa da região) e o mesmo código. Juntos, ~0,4 GB/ano no R2.
+- As trajetórias saem a 950, 900 e 850 hPa (mais ou menos 500, 1000 e 1500 m), para não precisar do geopotencial.
+- **Aerossol:** AERONET (medido do chão, diário) + MAIAC (satélite, rodado neste PC para a série). GOES-19 e Sentinel-5P saem do M3: trazem formatos novos (netCDF/HDF5), o GOES-19 só tem dado desde 2025 e o Sentinel-5P dependia da conta Copernicus. Entram na triagem do `IDEIAS.md` no fim do S3.2.
+- **Área queimada** (MCD64A1, MapBiomas Fogo, INPE AQ1km) vai para o M4/S4.1. A série do M3 usa focos e FRP por dia; área queimada é mensal e serve para cruzar com imóveis.
+- **Focos de 2012 em diante:** VIIRS S-NPP (o mesmo sensor no período todo) e MODIS para conferir, bruto em gzip. Os 14 anos não entram em `firms.foco` (seriam uns 5 milhões de linhas no banco da slice e no backup diário); só os totais por dia.
+- A comparação v0 × v1 usa a temporada 2026 (20 dias com FU até 22/10). 2023 e 2024 (33 e 27 dias) ficam para depois, se precisar.
+- [#42](https://github.com/leonardomenezes8500/manaus/issues/42) (calibrar sensores baratos com a FioAres) foi para o M4: precisa de 2 semanas de horas da FioAres, e a coleta só começa na slice com o merge do M3.
+- **R2:** o M3 soma ~0,6 GB no primeiro ano (ERA5 0,24; GFS 0,15; arquivo FIRMS 0,14; o resto é pequeno). O uso vai de ~5,3 para ~6 GB dos 10 grátis.
 
 ## [M4](https://github.com/leonardomenezes8500/manaus/milestone/5) — Fumaça v2: do fogo ao responsável (3 sprints)
 **Objetivo:** para cada foco relevante, dizer onde ele caiu (desmatamento, imóvel, área protegida), quem é o dono ou responsável, qual o efeito na saúde e quem deveria agir e quanto gastou.
 **Pronto quando:** existe o relatório "cadeia completa" de um dia (dia → focos → áreas/imóveis → embargos/autos → internações → órgãos e gastos), com fonte em cada elo.
 
-- **S4.1 — Onde queimou:** PRODES e DETER (TerraBrasilis), MapBiomas Alerta, florestas públicas (CNFP/SFB); cruzar com TIs e UCs (039).
+- **S4.1 — Onde queimou:** PRODES e DETER (TerraBrasilis), MapBiomas Alerta, florestas públicas (CNFP/SFB); cruzar com TIs e UCs (039). Área queimada vinda do M3: MapBiomas Fogo primeiro (menos trabalho), depois MCD64A1 e INPE AQ1km.
+- Vinda do M3: [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (só depois de 2 semanas de coleta da #40 na slice).
 - **S4.2 — De quem é:** CAR/SICAR (AM, RO, AC, PA), SIGEF/SNCI (INCRA), embargos e autos de infração do IBAMA e do ICMBio. Sai a lista de imóveis com fogo recorrente que já foram embargados.
 - **S4.3 — Saúde e poder público:** DATASUS SIH/SIM (respiratório, Manaus), SISAM; Portal da Transparência (Prevfogo, ICMBio, GLO), PNCP, transparência do AM (SEMA, IPAAM, CBMAM), Prefeitura. Fecha com o relatório "cadeia completa".
 
