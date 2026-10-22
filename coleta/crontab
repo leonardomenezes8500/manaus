@@ -18,6 +18,9 @@
 # INPE Queimadas (#14): arquivo diário do Brasil, o do dia anterior. O INPE fecha o arquivo do dia D por volta das 12:05 UTC de D+1.
 30 9 * * * coleta/rodar.sh inpe-queimadas; coleta/rodar.sh carga/focos
 
+# Cota do Rio Negro em Manaus (#29): telemetria da ANA dos últimos 3 dias, 1 vez por dia.
+40 7 * * * coleta/rodar.sh ana
+
 # Relatório da fumaça (#17, #18): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
 0 8 * * * coleta/rodar.sh analise/fumaca/relatorio --ontem
 0 17 * * * coleta/rodar.sh analise/fumaca/relatorio --hoje
