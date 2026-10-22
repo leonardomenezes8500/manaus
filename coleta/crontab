@@ -21,6 +21,9 @@
 # Cota do Rio Negro em Manaus (#29): telemetria da ANA dos últimos 3 dias, 1 vez por dia.
 40 7 * * * coleta/rodar.sh ana
 
+# GFS 0,5° (#48): vento em níveis de pressão, f000 e f003 de cada rodada pronta dos últimos 2 dias, 4h30 depois das rodadas de 00/06/12/18 UTC.
+30 0,6,12,18 * * * coleta/rodar.sh gfs
+
 # Relatório da fumaça (#17, #18): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
 0 8 * * * coleta/rodar.sh analise/fumaca/relatorio --ontem
 0 17 * * * coleta/rodar.sh analise/fumaca/relatorio --hoje
