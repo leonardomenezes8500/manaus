@@ -37,13 +37,21 @@ async function principal(args: string[]) {
           (await listKeys(`bruto/${p.fonte}/`)).map((k) => k.key),
         );
       const nome = nomeDoDocumento(p.url);
-      const ja = p.bruto || chaves.get(p.fonte)!.find((k) => k.endsWith(`Z_${nome}`));
+      const ja = p.bruto || chaves.get(p.fonte)!.find((k) => k.endsWith(`Z_${nome}`) || k.endsWith(`Z_${nome}.gz`));
       let id: number;
       if (ja) {
         const meta = JSON.parse(await readRaw(ja + '.meta.json'));
         id = await registrar(db, { chave: ja, fonte: p.fonte, sha256: meta.sha256, baixado_em: meta.baixado_em });
       } else {
-        const b = await baixar({ fonte: p.fonte, coletor: 'calendario', nome, url: p.url, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        // gzip: some official pages are huge HTML (13.9 MB per COB page)
+        const b = await baixar({
+          fonte: p.fonte,
+          coletor: 'calendario',
+          nome,
+          url: p.url,
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+          gzip: true,
+        });
         console.log(b.chave, b.bytes);
         id = await registrar(db, b);
       }

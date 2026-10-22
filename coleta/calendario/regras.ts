@@ -14,7 +14,7 @@ export type Periodo = {
   bruto?: string; // its raw key, once downloaded
 };
 
-export const TIPOS = ['feriado', 'ponto_facultativo', 'eleicao', 'festa'];
+export const TIPOS = ['feriado', 'ponto_facultativo', 'eleicao', 'festa', 'escola', 'esporte'];
 const P = 'https://www.planalto.gov.br/ccivil_03/';
 const DIA = 86_400_000;
 const iso = (t: number) => new Date(t).toISOString().slice(0, 10);

@@ -1,3 +1,6 @@
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { lerCatalogo } from '../../fontes/catalogo.ts';
 import { daPascoa, eleicoes, feriadosLocais, feriadosNacionais, lerCsvCalendario, pascoa } from './regras.ts';
 
 test('Easter of known years, and the dates counted from it', () => {
@@ -97,4 +100,10 @@ test('AM and Manaus holidays by law, from the year each law applies; Manaus muni
   expect(de(2022)).toContain('Manaus 2022-10-24 Elevação de Manaus à categoria de Cidade (aniversário de Manaus)');
   const aniv = feriadosLocais(2026).find((f) => f.inicio === '2026-10-24')!;
   expect(aniv).toMatchObject({ fonte: 'cmm-manaus', ato: 'Lei Orgânica do Município de Manaus (1990), art. 437' });
+});
+
+test('every calendar CSV in the repo reads, and each source is in the catalog', () => {
+  const ids = new Set(lerCatalogo(join(import.meta.dirname, '..', '..', 'fontes')).map((d) => d.card.id));
+  for (const f of readdirSync(import.meta.dirname).filter((f) => f.endsWith('.csv')))
+    for (const p of lerCsvCalendario(readFileSync(join(import.meta.dirname, f), 'utf8'))) expect([f, ids.has(p.fonte)]).toEqual([f, true]);
 });

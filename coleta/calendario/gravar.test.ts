@@ -40,4 +40,32 @@ comBanco('calendário no banco', () => {
     ]);
     expect((await db.query(`SELECT feriado FROM contexto.dia WHERE dia = '2026-12-25'`)).rows[0].feriado).toBe('Natal');
   });
+
+  test('a school holiday with a Brazil match shows in both columns (#61)', async () => {
+    const base = { abrangencia: 'BR' as const, fonte: 'fifa-api', ato: 'FIFA', url: 'https://exemplo/f', arquivo: null };
+    await gravarPeriodos(db, [
+      {
+        ...base,
+        tipo: 'escola',
+        nome: 'Recesso escolar de julho da rede municipal',
+        inicio: '2014-06-23',
+        fim: '2014-07-06',
+        abrangencia: 'Manaus',
+        fonte: 'semed-manaus',
+      },
+      { ...base, tipo: 'esporte', nome: 'Copa do Mundo masculina 2014', inicio: '2014-06-12', fim: '2014-07-13' },
+      {
+        ...base,
+        tipo: 'esporte',
+        nome: 'Copa do Mundo masculina 2014, jogo do Brasil: Brazil 1x1 Chile (pên. 3x2)',
+        inicio: '2014-06-28',
+        fim: '2014-06-28',
+      },
+    ]);
+    const d = (await db.query(`SELECT escola, esporte FROM contexto.dia WHERE dia = '2014-06-28'`)).rows[0];
+    expect(d).toEqual({
+      escola: 'Recesso escolar de julho da rede municipal',
+      esporte: 'Copa do Mundo masculina 2014; Copa do Mundo masculina 2014, jogo do Brasil: Brazil 1x1 Chile (pên. 3x2)',
+    });
+  });
 });

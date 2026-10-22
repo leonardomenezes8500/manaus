@@ -1,0 +1,114 @@
+{
+  "1ª Fase": {
+    "jogos": [
+      {
+        "ref_jogo": "827459",
+        "num_jogo": "1",
+        "rodada": "1",
+        "grupo": "GRUPO A1",
+        "estadio": "Ismael Benigno",
+        "cidade": "Manaus",
+        "uf": "AM",
+        "data": " 27/04/2024",
+        "hora": "16:00",
+        "transmissao": "",
+        "mandante": {
+          "nome": "Manauara",
+          "uf": "AM",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/59102/escudo.jpg",
+          "gols": "3",
+          "panaltis": ""
+        },
+        "visitante": {
+          "nome": "Rio Branco",
+          "uf": "AC",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/20258/escudo.jpg",
+          "gols": "1",
+          "panaltis": ""
+        }
+      },
+      {
+        "ref_jogo": "827494",
+        "num_jogo": "36",
+        "rodada": "2",
+        "grupo": "GRUPO A1",
+        "estadio": "Arena da Amazônia",
+        "cidade": "Manaus",
+        "uf": "AM",
+        "data": " 05/05/2024",
+        "hora": "16:30",
+        "transmissao": "",
+        "mandante": {
+          "nome": "Manaus",
+          "uf": "AM",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/52844/escudo.jpg",
+          "gols": "1",
+          "panaltis": ""
+        },
+        "visitante": {
+          "nome": "Humaitá",
+          "uf": "AC",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/54133/escudo.jpg",
+          "gols": "0",
+          "panaltis": ""
+        }
+      },
+      {
+        "ref_jogo": "827467",
+        "num_jogo": "9",
+        "rodada": "1",
+        "grupo": "GRUPO A3",
+        "estadio": "Manoel Barretto",
+        "cidade": "Ceara-Mirim",
+        "uf": "RN",
+        "data": " 27/04/2024",
+        "hora": "15:00",
+        "transmissao": "",
+        "mandante": {
+          "nome": "Santa Cruz de Natal",
+          "uf": "RN",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/35622/escudo.jpg",
+          "gols": "3",
+          "panaltis": ""
+        },
+        "visitante": {
+          "nome": "Treze",
+          "uf": "PB",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/20071/escudo.jpg",
+          "gols": "4",
+          "panaltis": ""
+        }
+      }
+    ]
+  },
+  "Final": {
+    "jogos": [
+      {
+        "ref_jogo": "828713",
+        "num_jogo": "509",
+        "rodada": "1",
+        "grupo": "GRUPO F01",
+        "estadio": "Jonas Duarte",
+        "cidade": "Anapolis",
+        "uf": "GO",
+        "data": " 22/09/2024",
+        "hora": "16:00",
+        "transmissao": "",
+        "mandante": {
+          "nome": "Anápolis",
+          "uf": "GO",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/20164/escudo.jpg",
+          "gols": "2",
+          "panaltis": ""
+        },
+        "visitante": {
+          "nome": "Retrô",
+          "uf": "PE",
+          "url_escudo": "https://conteudo.cbf.com.br/clubes/55531/escudo.jpg",
+          "gols": "1",
+          "panaltis": ""
+        }
+      }
+    ]
+  }
+}

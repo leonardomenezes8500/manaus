@@ -16,4 +16,4 @@ teste: 'curl -sS "https://api.fifa.com/api/v3/competitions/17?language=en"'
 ---
 - O teste devolveu JSON da competição 17 ("FIFA World Cup"). É a API que o site da FIFA usa, sem documentação pública: guardar o bruto de cada pedido.
 - Serve para o calendário esportivo (#61): datas das Copas e dos jogos do Brasil.
-- A CBF ficou sem card: em 2026-10-22 o site dela falhou na verificação do certificado (cadeia incompleta). Tentar de novo na #61.
+- Jogos de uma edição: `/api/v3/calendar/matches?idCompetition=17|103&idSeason=<id>&count=500` (ids das edições em `coleta/calendario/esporte.ts`). A CBF tem card próprio (`cbf`).
