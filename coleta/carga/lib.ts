@@ -50,12 +50,13 @@ export async function loadOnce(db: pg.ClientBase, arquivo: number, tabela: strin
 }
 
 /** GeoPackage or FlatGeobuf → staging `table` (replaced every time) in EPSG:4326, polygons as multi, with ogr2ogr. Connection from the PG* variables. */
-export function stageGpkg(gpkg: string, table: string, select: string): void {
+export function stageGpkg(gpkg: string, table: string, select: string, extra: string[] = []): void {
   execFileSync(
     'ogr2ogr',
     [
       ...['-f', 'PostgreSQL', 'PG:', gpkg, '-nln', table, '-overwrite', '-t_srs', 'EPSG:4326', '-nlt', 'PROMOTE_TO_MULTI'],
       ...['-lco', 'GEOMETRY_NAME=geom', '-lco', 'SPATIAL_INDEX=NONE', '-select', select],
+      ...extra,
     ],
     { stdio: 'inherit' },
   );

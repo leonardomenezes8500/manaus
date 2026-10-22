@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const root = join(import.meta.dirname, '..');
 // Set by the platform, the image or the test runner, never by a person in .env.
-const NOT_IN_ENV = ['CI', 'PATH', 'GIT_COMMIT', 'NODE_ENV'];
+const NOT_IN_ENV = ['CI', 'PATH', 'GIT_COMMIT', 'NODE_ENV', 'NODE_EXTRA_CA_CERTS'];
 
 const files = readdirSync(root, { recursive: true, encoding: 'utf8' }).filter(
   (f) => f.endsWith('.ts') && !f.startsWith('node_modules') && !f.endsWith('.test.ts'),
