@@ -37,6 +37,10 @@ test('aggregates of the other themes: 5-digit variables (V01006), and only the v
   expect(aggregatesOf(h, '130260305000001;13;100;8;9', '13', new Set(['v01031']))).toEqual([
     { setor: '130260305000001', variavel: 'v01031', valor: 8 },
   ]);
+  // The household files (#67) call the key just "setor".
+  expect(aggregatesOf(['setor', 'V00111'], '"130260305000001";"250"', '13')).toEqual([
+    { setor: '130260305000001', variavel: 'v00111', valor: 250 },
+  ]);
   // The demography, race and literacy files have no CD_UF and call the column "CD_setor": the UF is the start of the code.
   const real = ['CD_setor', 'V01006', 'V01031'];
   expect(aggregatesOf(real, '"130260305000001";"100";"8"', '13')).toHaveLength(2);
@@ -62,6 +66,19 @@ test('dictionary text → group (age band, sex, race, literate); crossed variabl
     ['alfabetizacao', 'v00748', 'Pessoas alfabetizadas, 15 a 19 anos'],
     ['alfabetizacao', 'v00900', '15 anos ou mais, Morador sabe ler e escrever'],
     ['alfabetizacao', 'v00901', '15 anos ou mais, Morador não sabe ler e escrever'],
+    ['caracteristicas_domicilio2', 'v00111', 'Domicílios Particulares Permanentes Ocupados, Utiliza rede geral de distribuição'],
+    ['caracteristicas_domicilio2', 'v00113', 'Domicílios Particulares Permanentes Ocupados, Utiliza poço raso, freático ou cacimba'],
+    [
+      'caracteristicas_domicilio2',
+      'v00312',
+      'Domicílios Particulares Permanentes Ocupados, Destinação do esgoto do banheiro ou sanitário ou buraco para dejeções é fossa rudimentar ou buraco',
+    ],
+    ['caracteristicas_domicilio2', 'v00399', 'Domicílios Particulares Permanentes Ocupados, Lixo queimado na propriedade'],
+    [
+      'caracteristicas_domicilio2',
+      'v00463',
+      'Domicílios Particulares Permanentes Ocupados, Tem ligação à rede geral mas utiliza principalmente outra forma',
+    ], // not one of the groups
   ];
   expect(dic.map(([t, , d]) => grupoDe(t, d))).toEqual([
     'total',
@@ -81,6 +98,11 @@ test('dictionary text → group (age band, sex, race, literate); crossed variabl
     null,
     'alfabetizados:15+',
     'nao_alfabetizados:15+',
+    'agua:rede',
+    'agua:poco',
+    'esgoto:fossa_rudimentar',
+    'lixo:queimado',
+    null,
   ]);
   // A synthetic tract: the age bands add up to the total.
   const valor: Record<string, number> = { v01006: 100, v01031: 8, v01032: 9, v01033: 10, v01034: 30, v01039: 30, v01040: 8, v01041: 5 };

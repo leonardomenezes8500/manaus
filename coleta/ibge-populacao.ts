@@ -1,4 +1,4 @@
-// Detailed population (#63), one-off on this PC (needs unzip and ogr2ogr):
+// Detailed population (#63) and household sanitation (#67), one-off on this PC (needs unzip and ogr2ogr):
 //   node coleta/ibge-populacao.ts
 // Census 2022 aggregates per tract (demography, race, literacy; Brazil zips, AM rows, only the variables the views use),
 // their dictionary with the group of each variable, and the yearly series: SIDRA estimates (6579) and censuses
@@ -21,6 +21,11 @@ const TEMAS: Record<string, { tema: string; zip: string }> = {
   demografia: { tema: 'Demografia', zip: 'Agregados_por_setores_demografia_BR.zip' },
   cor_ou_raca: { tema: 'Cor ou Raça', zip: 'Agregados_por_setores_cor_ou_raca_BR.zip' },
   alfabetizacao: { tema: 'Alfabetização', zip: 'Agregados_por_setores_alfabetizacao_BR.zip' },
+  // #67: water, sewage and garbage of the occupied households (the zip name carries the publication date)
+  caracteristicas_domicilio2: {
+    tema: 'Características do Domicílio - Parte 2',
+    zip: 'Agregados_por_setores_caracteristicas_domicilio2_BR_20250417.zip',
+  },
 };
 const MANAUS = '1302603';
 const SIDRA = 'https://apisidra.ibge.gov.br/values';
@@ -71,7 +76,7 @@ try {
   const dic = await noBruto(db, 'ibge-agregados-setor', DIC, `${AGG}/${DIC}`);
   const linhas = folha(await local(dic.chave), 'Dicionário não PCT', join(tmp, 'dic.csv'))
     .split('\n')
-    .map(splitCsv);
+    .map((l) => splitCsv(l));
   const manter = new Map<string, Set<string>>();
   for (const [tabela, { tema }] of Object.entries(TEMAS)) {
     const vars = linhas

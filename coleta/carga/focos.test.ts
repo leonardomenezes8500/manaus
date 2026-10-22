@@ -135,7 +135,10 @@ comBanco('carga de focos', () => {
 
 /** Rows of the INPE fixture inside the region box (lon -74..-52, lat -15..3). */
 async function expectedInpe() {
-  const [, ...rows] = fixture('inpe.csv').trim().split('\n').map(splitCsv);
+  const [, ...rows] = fixture('inpe.csv')
+    .trim()
+    .split('\n')
+    .map((l) => splitCsv(l));
   return rows.filter((r) => +r[2] >= -74 && +r[2] <= -52 && +r[1] >= -15 && +r[1] <= 3).length;
 }
 
