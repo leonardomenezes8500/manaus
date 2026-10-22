@@ -12,3 +12,17 @@ export async function tentar<T>(f: () => Promise<T>, { vezes = 5, esperaMs = 10_
     }
   }
 }
+
+/** GET `url` as JSON with tentar(): a 5xx, or a 200 whose body is not JSON (the gateway's HTML page), is tried again. */
+export function jsonComTentativas(url: string, opcoes?: Parameters<typeof tentar>[1]): Promise<any> {
+  return tentar(async () => {
+    const r = await fetch(url);
+    const texto = await r.text();
+    if (!r.ok) throw new Error(`HTTP ${r.status} em ${url}`);
+    try {
+      return JSON.parse(texto);
+    } catch {
+      throw new Error(`HTTP 502 em ${url}: a resposta não é JSON`); // a gateway page sent as 200
+    }
+  }, opcoes);
+}

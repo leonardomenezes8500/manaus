@@ -21,7 +21,15 @@
 # Cota do Rio Negro em Manaus (#29): telemetria da ANA dos últimos 3 dias, 1 vez por dia.
 40 7 * * * coleta/rodar.sh ana
 
-# Relatório da fumaça (#17, #18): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
+# ERA5 (#47): vento em níveis de pressão, os dias completos de 6 a 10 dias atrás que faltam no R2 (o ERA5T sai com ~5 dias).
+# Na mesma linha (#50): refaz com ERA5 os dias dos últimos 30 cuja v1 ainda não usa ERA5 (trajetórias, v1 e produtos no R2).
+20 5 * * * coleta/rodar.sh era5; coleta/rodar.sh analise/fumaca/relatorio --refazer-era5
+
+# GFS 0,5° (#48): vento em níveis de pressão, f000 e f003 de cada rodada pronta dos últimos 2 dias, 4h30 depois das rodadas de 00/06/12/18 UTC.
+30 0,6,12,18 * * * coleta/rodar.sh gfs
+
+# Relatório da fumaça (#17, #18, #50): 08h fecha o dia anterior; 17h parcial do dia (depois da passagem da tarde do VIIRS).
+# Cada um calcula a v0, as trajetórias do dia (GFS enquanto o ERA5 não sai) e a v1, que é a que o relatório mostra.
 0 8 * * * coleta/rodar.sh analise/fumaca/relatorio --ontem
 0 17 * * * coleta/rodar.sh analise/fumaca/relatorio --hoje
 
@@ -37,3 +45,9 @@
 
 # Verificador de chaves (#6): segunda, 07h → estado/chaves.md no R2.
 0 7 * * 1 coleta/rodar.sh verificar-chaves
+
+# MonitorAr / FioAres (#40): a única estação de referência de Manaus; o app só guarda 24 h.
+25 * * * * coleta/rodar.sh monitorar
+
+# AERONET (#53): AOD diária do ATTO (fotômetro), últimos 7 dias, níveis 1.5 e 2.0.
+0 6 * * * coleta/rodar.sh aeronet

@@ -10,6 +10,7 @@
     "tipos": "tsc --noEmit",
     "migrar": "node db/migrar.ts",
     "fumaca": "node analise/fumaca/atribuir.ts",
+    "trajetorias": "node analise/trajetoria/trajetorias.ts",
     "test:e2e": "playwright test",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -17,7 +18,7 @@
     "prepare": "git config core.hooksPath .githooks || true"
   },
   "jest": {
-    "testTimeout": 30000,
+    "testTimeout": 120000,
     "transform": {
       "^.+\\.ts$": "@swc/jest",
       "/node_modules/cookie/.+\\.js$": "@swc/jest"

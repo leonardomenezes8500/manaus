@@ -103,6 +103,11 @@ export function confidence(s: { steadiness: number; spotsInSector: number; measu
     measuredAndModelAgree:
       s.measuredPm25 !== null && s.modelPm25 !== null && s.measuredPm25 > WHO_DAILY_PM25 === s.modelPm25 > WHO_DAILY_PM25,
   };
+  return nivelConfianca(signals);
+}
+
+/** 3 signals yes = alta, 2 = media, 0–1 = baixa (shared by v0 and v1). */
+export function nivelConfianca<T extends Record<string, boolean>>(signals: T) {
   const yes = Object.values(signals).filter(Boolean).length;
   return { level: yes === 3 ? 'alta' : yes === 2 ? 'media' : 'baixa', signals };
 }
