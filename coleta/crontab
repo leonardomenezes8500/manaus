@@ -40,3 +40,6 @@
 
 # Verificador de chaves (#6): segunda, 07h → estado/chaves.md no R2.
 0 7 * * 1 coleta/rodar.sh verificar-chaves
+
+# MonitorAr / FioAres (#40): a única estação de referência de Manaus; o app só guarda 24 h.
+25 * * * * coleta/rodar.sh monitorar
