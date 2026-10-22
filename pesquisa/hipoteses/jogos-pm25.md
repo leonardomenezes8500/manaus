@@ -8,8 +8,11 @@ epoca: 'mesma hora do mesmo dia da semana nas 4 semanas em volta'
 comparacao: 'as mesmas horas em dias sem jogo, nas 4 semanas em volta'
 teste: 'diferença das medianas horárias (jogo − sem jogo), permutando os dias'
 rodada: '1'
-status: 'escrita'
+status: 'testada'
 escrita_em: '2026-10-22'
+testada_em: '2026-10-22'
+confianca: 'baixa'
+resultado: 'PM2.5 do Centro nas 2 horas de jogo − mesmas horas sem jogo (8 jogos de 2026): -54%; p = 0.2494, p ajustado (BH da rodada 1) = 0.5819, não passa na correção'
 ---
 ## Por quê
 Em jogo do Brasil as ruas esvaziam; depois do jogo todo mundo sai ao mesmo tempo.
@@ -18,4 +21,4 @@ Em jogo do Brasil as ruas esvaziam; depois do jogo todo mundo sai ao mesmo tempo
 Jogos da FIFA e da FAF (#61) e o sensor do Centro (OpenAQ). Se o sensor não cobrir nenhuma Copa, fica sem teste até ter.
 
 ## Resultado
-Ainda não testada.
+PM2.5 do Centro nas 2 horas de jogo − mesmas horas sem jogo (8 jogos de 2026): -54%; p = 0.2494, p ajustado (BH da rodada 1) = 0.5819, não passa na correção. Confiança baixa: menos de 8 anos de dado. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-22. Números em produtos/contexto/rodada-1.csv.

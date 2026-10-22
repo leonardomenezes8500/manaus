@@ -125,3 +125,44 @@ export function benjaminiHochberg(p: number[], q = 0.1): { ajustado: number[]; r
   }
   return { ajustado, rejeita: ajustado.map((a) => a <= q) };
 }
+
+export const mediana = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+};
+
+/**
+ * Two groups (e.g. weekend × weekday, even × odd years): effect = median(group) − median(rest), two-sided p by
+ * shuffling the labels, inside each block when `blocos` is given (e.g. the week of each day, so the season stays).
+ * `estatistica` replaces the median difference (e.g. a log ratio); the p stays two-sided on its absolute value.
+ */
+export function permutacaoGrupos(
+  v: number[],
+  grupo: boolean[],
+  {
+    blocos,
+    n = 999,
+    semente = 1,
+    estatistica,
+  }: { blocos?: number[]; n?: number; semente?: number; estatistica?: (g: boolean[]) => number } = {},
+) {
+  const ef = estatistica ?? ((g: boolean[]) => mediana(v.filter((_, i) => g[i])) - mediana(v.filter((_, i) => !g[i])));
+  const obs = ef(grupo);
+  const porBloco = new Map<number, number[]>();
+  v.forEach((_, i) => porBloco.set(blocos?.[i] ?? 0, [...(porBloco.get(blocos?.[i] ?? 0) ?? []), i]));
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) {
+    const g = [...grupo];
+    for (const idx of porBloco.values()) {
+      const rot = idx.map((i) => grupo[i]);
+      for (let i = rot.length - 1; i > 0; i--) {
+        const j = Math.floor(r() * (i + 1));
+        [rot[i], rot[j]] = [rot[j], rot[i]];
+      }
+      idx.forEach((i, j) => (g[i] = rot[j]));
+    }
+    if (Math.abs(ef(g)) >= Math.abs(obs)) fortes++;
+  }
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
+}

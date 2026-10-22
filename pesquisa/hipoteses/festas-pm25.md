@@ -8,8 +8,11 @@ epoca: 'mesma hora das noites da semana anterior e da seguinte'
 comparacao: 'as noites da semana anterior e da seguinte'
 teste: 'razão do PM2.5 noturno (festa ÷ noites vizinhas), permutando as noites'
 rodada: '1'
-status: 'escrita'
+status: 'testada'
 escrita_em: '2026-10-22'
+testada_em: '2026-10-22'
+confianca: 'baixa'
+resultado: 'PM2.5 da noite de festa ÷ noites uma semana antes e depois (20 noites desde 07/2025): +10%; p = 0.8550, p ajustado (BH da rodada 1) = 0.9745, não passa na correção'
 ---
 ## Por quê
 Fogos de artifício, trânsito e churrasco soltam partícula fina. O aniversário de Manaus (24/10) cai no meio da fumaça e tem que ser olhado à parte.
@@ -18,4 +21,4 @@ Fogos de artifício, trânsito e churrasco soltam partícula fina. O aniversári
 Festas de `contexto.dia` (#60) e o sensor do Centro (OpenAQ).
 
 ## Resultado
-Ainda não testada.
+PM2.5 da noite de festa ÷ noites uma semana antes e depois (20 noites desde 07/2025): +10%; p = 0.8550, p ajustado (BH da rodada 1) = 0.9745, não passa na correção. Confiança baixa: menos de 8 anos de dado. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-22. Números em produtos/contexto/rodada-1.csv.

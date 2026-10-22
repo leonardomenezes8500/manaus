@@ -8,8 +8,11 @@ epoca: 'uma data por ano'
 comparacao: 'os outros anos'
 teste: 'Spearman entre o dia de início dos focos e o dia de início da vazante, por ano, com permutação dos anos'
 rodada: '1'
-status: 'escrita'
+status: 'testada'
 escrita_em: '2026-10-22'
+testada_em: '2026-10-22'
+confianca: 'baixa'
+resultado: 'Spearman entre o dia em que o rio começa a baixar (dia seguinte à cota máxima) e o início da temporada de focos: -0.09 (15 anos); p = 0.7409, p ajustado (BH da rodada 1) = 0.9745, não passa na correção'
 ---
 ## Por quê
 O preparo da roça e do pasto espera a terra secar. A janela de preparo sai de uma regra escrita (é derivada, não é dado oficial), porque não há calendário oficial de roça do AM com data.
@@ -18,4 +21,4 @@ O preparo da roça e do pasto espera a terra secar. A janela de preparo sai de u
 Focos por dia (`analise.focos_dia`) e cota (`ana.cota_dia`), 2012–2026. Início dos focos = primeiro dia com média de 7 dias acima do percentil 75 do ano.
 
 ## Resultado
-Ainda não testada.
+Spearman entre o dia em que o rio começa a baixar (dia seguinte à cota máxima) e o início da temporada de focos: -0.09 (15 anos); p = 0.7409, p ajustado (BH da rodada 1) = 0.9745, não passa na correção. Confiança baixa: não passa na correção. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-22. Números em produtos/contexto/rodada-1.csv.

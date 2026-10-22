@@ -1,8 +1,8 @@
 # Roadmap — REA de Manaus
 
-**Sprint atual: S3.5.1** (M3.5), depois da conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57); o M3 foi mergeado no PR #58). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: S3.5.2** (M3.5), depois da conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57); o M3 foi mergeado no PR #58). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
-Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o S3.5.1 já têm issues; o S3.5.2 e do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
+Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o M3.5 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
 ## Decisões tomadas (o usuário precisa confirmar)
 - **(2026-10-21) Repo público no GitHub** (`leonardomenezes8500/manaus`), com issues e sprints lá. Público porque o Actions é grátis em repo público e o usuário já queria abrir o projeto. Nada sensível no repo (ver `CLAUDE.md`).
@@ -135,11 +135,11 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
   - [#63](https://github.com/leonardomenezes8500/manaus/issues/63) População detalhada: idade, sexo, cor ou raça e alfabetização por setor (Censo 2022) + série anual por município
   - [#64](https://github.com/leonardomenezes8500/manaus/issues/64) Rodada 1 de cruzamentos: as hipóteses do calendário e da população, pelo método
 - **S3.5.2 — Cidade básica** (cada fonte com a hipótese já escrita na #59):
-  - Gasto por setor: SICONFI (despesa por função e subfunção da Prefeitura e do Estado, desde 2015).
-  - Contratos e licitações: PNCP (Manaus, todas as esferas, desde 2021: quem ganha em cada setor), com coleta diária leve na slice; Querido Diário para os atos (emergência, contrato sem licitação). TCE-AM e portais de transparência só se uma hipótese pedir e houver exportação, porque são páginas.
-  - Água e esgoto: Censo 2022 "características do domicílio" (água, esgoto e lixo por setor; ~0,15 GB de zip), SINISA (anual) e SISAGUA (medir o tamanho antes e guardar só o AM). Águas de Manaus (páginas) só para a tarifa.
-  - Energia: ANEEL (DEC/FEC dos conjuntos de Manaus, tarifa residencial).
-  - Rodada 2 de cruzamentos, com o mesmo método e a mesma correção.
+  - [#65](https://github.com/leonardomenezes8500/manaus/issues/65) Gasto por setor: SICONFI (despesa por função e subfunção da Prefeitura e do Estado, desde 2015), com IPCA
+  - [#66](https://github.com/leonardomenezes8500/manaus/issues/66) Contratos e licitações: PNCP (Manaus, todas as esferas, desde 2021), com coleta diária leve na slice. O Querido Diário está fora do ar (erro 500) desde 2026-10-22; TCE-AM e portais de transparência só se uma hipótese pedir.
+  - [#67](https://github.com/leonardomenezes8500/manaus/issues/67) Água e esgoto: Censo 2022 por setor (domicílio), SISAGUA de Manaus e SINISA
+  - [#68](https://github.com/leonardomenezes8500/manaus/issues/68) Energia: DEC/FEC da ANEEL dos conjuntos de Manaus e a tarifa residencial
+  - [#69](https://github.com/leonardomenezes8500/manaus/issues/69) Rodada 2 de cruzamentos, com o mesmo método e a mesma correção
 
 **Decisões do M3.5 (2026-10-22, provisórias; o usuário pode mudar):**
 - **Antes do M4.** O método vem antes de qualquer cruzamento novo, inclusive internações × fumaça no M4. Gasto e contratos são coletados uma vez aqui, para todos os setores, e o S4.3 só filtra os órgãos do fogo. A população por idade e o calendário escolar servem ao S4.3 e ao M5. Enquanto isso, a FioAres junta as 2 semanas de dados que a #42 precisa.

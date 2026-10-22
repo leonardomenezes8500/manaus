@@ -1,4 +1,4 @@
-import { anomalia, benjaminiHochberg, defasagens, permutacaoBlocos, sorteio, spearman } from './cruzar.ts';
+import { anomalia, benjaminiHochberg, defasagens, permutacaoBlocos, permutacaoGrupos, sorteio, spearman } from './cruzar.ts';
 
 // Ten years of days with the same yearly cycle and independent noise: the trap the method exists for.
 function sazonal(semente: number) {
@@ -52,4 +52,21 @@ test('block permutation: the same seed gives the same p-value', () => {
 test('Spearman with ties uses average ranks; nulls drop the pair', () => {
   expect(spearman([1, 2, 2, 3], [1, 2, 3, 4])).toBeCloseTo(0.9487, 4);
   expect(spearman([1, 2, null, 3], [3, 2, 9, 1])).toBeCloseTo(-1);
+});
+
+test('group test by label permutation: a real shift gives a small p, no shift a large one; labels move only inside their block', () => {
+  const r = sorteio(9);
+  const v = Array.from({ length: 140 }, () => r());
+  const g = v.map((_, i) => i % 7 >= 5); // "weekend" days
+  const comEfeito = v.map((x, i) => (g[i] ? x + 0.5 : x));
+  const semana = v.map((_, i) => Math.floor(i / 7));
+  expect(permutacaoGrupos(comEfeito, g, { blocos: semana, n: 199, semente: 1 }).p).toBeLessThan(0.01);
+  // Without an effect, about 5% of datasets fall under 0.05 (40 random ones here).
+  const falsos = Array.from({ length: 40 }, (_, k) => {
+    const rk = sorteio(100 + k);
+    const w = v.map(() => rk());
+    return permutacaoGrupos(w, g, { blocos: semana, n: 99, semente: k }).p < 0.05;
+  }).filter(Boolean).length;
+  expect(falsos).toBeLessThanOrEqual(6);
+  expect(permutacaoGrupos(comEfeito, g, { n: 99, semente: 2 }).efeito).toBeGreaterThan(0.3);
 });
