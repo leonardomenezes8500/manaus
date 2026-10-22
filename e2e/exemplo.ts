@@ -1,5 +1,5 @@
 // A realistic day for the map and its e2e test (numbers shaped like 2026-10-21, not a real result).
-import type { DayRow, SpotOut } from '../analise/fumaca/relatorio.ts';
+import type { DayRow, SpotOut, TrajOut } from '../analise/fumaca/relatorio.ts';
 
 export const row: DayRow = {
   dia: '2026-10-21',
@@ -27,3 +27,17 @@ export const spots: SpotOut[] = [
   { lat: -3.61, lon: -59.2, peso: 1.1, frp: 3.4, em: '2026-10-20T17:32:00Z', municipio: 'Autazes/AM', distancia_km: 107 },
   { lat: -3.14, lon: -58.44, peso: 2.3, frp: 8, em: '2026-10-21T05:16:00Z', municipio: 'Itacoatiara/AM', distancia_km: 176 },
 ];
+
+// The same day in v1: 3 trajectories (one per starting level) coming from the east.
+export const rowV1: DayRow = {
+  ...row,
+  versao: 'v1',
+  meteo: 'era5',
+  vento: { meteo: 'era5', trajetorias: 3, chegadas: 1, concordancia_km: 60, niveis: '950/900/850 hPa (modelo)' },
+  sinais: { trajetoriasConcordam: true, spotsInSector: false, measuredAndModelAgree: true },
+};
+
+export const trajetorias: TrajOut[] = [950, 900, 850].map((nivel_hpa, k) => ({
+  nivel_hpa,
+  pontos: Array.from({ length: 73 }, (_, i) => [-3.1 - 0.004 * i * (k - 1), -60.02 + 0.03 * i] as [number, number]),
+}));

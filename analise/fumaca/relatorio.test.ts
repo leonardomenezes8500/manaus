@@ -71,6 +71,55 @@ test('the map embeds the data without breaking out of the script tag', () => {
 
 test('season table has one line per day', () => {
   const s = buildSeason([row, { ...row, dia: '2026-10-22' }]);
-  expect(s).toContain('| 2026-10-21 | 35,5 | 28,1 | 6 | Autazes/AM 41%, Careiro/AM 20%, fora do Brasil 10% |');
+  expect(s).toContain('| 2026-10-21 | v0 | 35,5 | 28,1 | 6 | Autazes/AM 41%, Careiro/AM 20%, fora do Brasil 10% |');
   expect(s.split('\n').filter((l) => l.startsWith('| 2026'))).toHaveLength(2);
+});
+
+const v1: DayRow = {
+  ...row,
+  versao: 'v1',
+  meteo: 'gfs',
+  vento: { meteo: 'gfs', trajetorias: 24, chegadas: 8, concordancia_km: 140, horas_media: 33.4, niveis: '950/900/850 hPa (modelo)' },
+  sinais: { trajetoriasConcordam: true, spotsInSector: true, measuredAndModelAgree: false },
+};
+
+test('report v1: says it is v1, which wind (GFS provisional or ERA5) and whether the trajectories agree; still ≤ 15 lines', () => {
+  const r = buildReport(v1, false);
+  expect(r.split('\n').length).toBeLessThanOrEqual(15);
+  expect(r).toContain('Atribuição v1');
+  expect(r).toContain('**Trajetórias** (GFS, provisório)');
+  expect(r).toContain('24 retrotrajetórias de até 72 h');
+  expect(r).toContain('em média 33 h dentro da caixa do vento'); // most stop at its east edge, 8° from Manaus
+  expect(r).toContain('trajetórias concordam');
+  expect(r).not.toContain('Heurística v0');
+  expect(buildReport({ ...v1, meteo: 'era5', vento: { ...v1.vento, meteo: 'era5' } }, false)).toContain('**Trajetórias** (ERA5)');
+});
+
+test('map v1: the trajectories as lines instead of the wind sector, and the v1 note', () => {
+  const linhas = [
+    {
+      nivel_hpa: 950,
+      pontos: [
+        [-3.1, -60.02],
+        [-3.5, -59],
+      ] as [number, number][],
+    },
+    {
+      nivel_hpa: 850,
+      pontos: [
+        [-3.1, -60.02],
+        [-2.8, -58.9],
+      ] as [number, number][],
+    },
+  ];
+  const html = buildMap(v1, [], linhas);
+  expect(html).toContain('"trajetorias":[{"nivel_hpa":950');
+  expect(html).toContain('Atribuição v1');
+  expect(html).not.toContain('Setor de onde o vento veio');
+});
+
+test('season table: the newest version of each day, and which one it is', () => {
+  const s = buildSeason([row, { ...v1, dia: '2026-10-22' }]);
+  expect(s).toContain('| 2026-10-21 | v0 |');
+  expect(s).toContain('| 2026-10-22 | v1 (GFS) |');
 });

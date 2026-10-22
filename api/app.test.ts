@@ -136,4 +136,10 @@ comBanco('API v0 no banco', () => {
     expect((await app.inject('/fumaca/2026-09-11')).statusCode).toBe(404);
     expect((await app.inject('/fumaca/ontem')).statusCode).toBe(400);
   });
+
+  test('/fumaca/:dia: with v0 and v1 stored, the newest version (v1) comes back, with the wind it used', async () => {
+    await db.query(`INSERT INTO analise.fumaca_dia (dia, versao, pm25_medido_horas, horas_fu_hz, vento, focos_contados, peso_total, ranking, confianca, sinais, nota, meteo)
+      VALUES ('2026-09-10', 'v1', 20, 6, '{}', 80, 40.1, '[]', 'alta', '{}', 'v1', 'era5')`);
+    expect((await app.inject('/fumaca/2026-09-10')).json()).toMatchObject({ versao: 'v1', meteo: 'era5', focos_contados: 80 });
+  });
 });
