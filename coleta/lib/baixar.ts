@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execSync } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { Readable, Transform } from 'node:stream';
@@ -154,19 +154,7 @@ export type Baixado = { chave: string; caminho: string; sha256: string; bytes: n
  * Devolve o caminho local no cache (válido por 7 dias).
  */
 export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
-  for (const [campo, v] of [
-    ['fonte', d.fonte],
-    ['nome', d.nome],
-  ]) {
-    if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
-  }
-  await enviarPendentes().catch(() => {}); // rede ainda fora: tenta de novo no fim
-
-  const iso = agora.toISOString();
-  const chave = `bruto/${d.fonte}/${iso.slice(0, 4)}/${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(11, 19).replaceAll(':', '')}Z_${d.nome}`;
-  const tmp = buffer('tmp', `${process.pid}-${Date.now()}-${d.nome}`);
-  await mkdir(dirname(tmp), { recursive: true });
-
+  const { chave, iso, tmp } = await novoBruto(d, agora);
   const res = await fetch(d.url, { headers: d.headers });
   if (!res.ok || !res.body) {
     await res.body?.cancel();
@@ -191,16 +179,47 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
     throw e;
   }
   const sha256 = hash.digest('hex');
-  const meta = {
-    url: urlSemChaves(d.url),
-    baixado_em: iso,
-    http_status: res.status,
-    bytes,
-    sha256,
-    coletor: { nome: d.coletor, commit: commit() },
-    parametros: d.parametros ?? {},
-  };
+  const meta = { url: urlSemChaves(d.url), baixado_em: iso, http_status: res.status, bytes, sha256 };
+  return paraOBruto(d, tmp, chave, meta);
+}
 
+/** Like baixar(), for a file made on this machine (e.g. a clip read straight from a remote GeoParquet): `origem` goes to meta.url. */
+export async function guardar(
+  caminhoLocal: string,
+  d: Omit<Download, 'url' | 'headers'> & { origem: string },
+  agora = new Date(),
+): Promise<Baixado> {
+  const { chave, iso, tmp } = await novoBruto(d, agora);
+  await copyFile(caminhoLocal, tmp);
+  const hash = createHash('sha256');
+  for await (const parte of createReadStream(tmp)) hash.update(parte);
+  const meta = { url: urlSemChaves(d.origem), baixado_em: iso, bytes: (await stat(tmp)).size, sha256: hash.digest('hex') };
+  return paraOBruto(d, tmp, chave, meta);
+}
+
+async function novoBruto(d: { fonte: string; nome: string }, agora: Date): Promise<{ chave: string; iso: string; tmp: string }> {
+  for (const [campo, v] of [
+    ['fonte', d.fonte],
+    ['nome', d.nome],
+  ]) {
+    if (!/^[\w][\w.-]*$/.test(v)) throw new Error(`${campo} inválido: ${v}`);
+  }
+  await enviarPendentes().catch(() => {}); // rede ainda fora: tenta de novo no fim
+  const iso = agora.toISOString();
+  const chave = `bruto/${d.fonte}/${iso.slice(0, 4)}/${iso.slice(5, 7)}/${iso.slice(8, 10)}/${iso.slice(11, 19).replaceAll(':', '')}Z_${d.nome}`;
+  const tmp = buffer('tmp', `${process.pid}-${Date.now()}-${d.nome}`);
+  await mkdir(dirname(tmp), { recursive: true });
+  return { chave, iso, tmp };
+}
+
+/** tmp file + meta → pendente/ → R2 → cache. */
+async function paraOBruto(
+  d: { fonte: string; coletor: string; parametros?: Record<string, unknown> },
+  tmp: string,
+  chave: string,
+  base: { url: string; baixado_em: string; bytes: number; sha256: string; http_status?: number },
+): Promise<Baixado> {
+  const meta = { ...base, coletor: { nome: d.coletor, commit: commit() }, parametros: d.parametros ?? {} };
   const pendente = buffer('pendente', chave);
   await mkdir(dirname(pendente), { recursive: true });
   await writeFile(pendente + '.meta.json', semSegredos(JSON.stringify(meta, null, 2)) + '\n');
@@ -208,7 +227,7 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
 
   await enviarPendentes();
   await limparCache();
-  return { chave, caminho: buffer('cache', chave), sha256, bytes, fonte: d.fonte, baixado_em: iso };
+  return { chave, caminho: buffer('cache', chave), sha256: base.sha256, bytes: base.bytes, fonte: d.fonte, baixado_em: base.baixado_em };
 }
 
 /** Every key under `prefix` in R2 (all pages), with size and last-modified time. */

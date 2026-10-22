@@ -6,10 +6,8 @@ import { createReadStream, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type pg from 'pg';
+import { MANAUS_BBOX as B } from '../regiao.ts';
 import { loadOnce } from './lib.ts';
-
-// Manaus municipality (IBGE mesh: -60.80 -3.18 -59.15 -1.91) plus ~5 km.
-export const MANAUS_BBOX = ['-60.85', '-3.24', '-59.10', '-1.86'];
 
 /** "norte-261020.osm.pbf" → "2026-10-20" (Geofabrik names the dated file YYMMDD). */
 export function snapshotOf(name: string): string {
@@ -40,7 +38,7 @@ export function stageOsm(pbf: string): void {
     'ogr2ogr',
     [
       ...['-f', 'PostgreSQL', 'PG:', pbf, 'points', 'lines', 'multipolygons'],
-      ...['-overwrite', '-spat', ...MANAUS_BBOX, '-gt', '65536'],
+      ...['-overwrite', '-spat', ...[B.oeste, B.sul, B.leste, B.norte].map(String), '-gt', '65536'],
       ...['-lco', 'SCHEMA=osm', '-lco', 'GEOMETRY_NAME=geom', '-lco', 'SPATIAL_INDEX=NONE'],
     ],
     { stdio: 'inherit', env: { ...process.env, CPL_TMPDIR: tmp } },

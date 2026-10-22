@@ -8,5 +8,8 @@ export const bboxTexto = () => `${BBOX.oeste},${BBOX.sul},${BBOX.leste},${BBOX.n
 /** Ponto de referência de Manaus (Centro) para vento, ar e distâncias. */
 export const MANAUS = { lat: -3.1, lon: -60.02, codigo: 1302603 } as const;
 
+/** Município de Manaus (malha do IBGE: -60.80 -3.18 -59.15 -1.91) com folga de ~5 km: recorte do OSM e das edificações. */
+export const MANAUS_BBOX = { oeste: -60.85, sul: -3.24, leste: -59.1, norte: -1.86 } as const;
+
 /** Estados com malha municipal na base (os focos caem neles). */
 export const UFS = ['AM', 'RO', 'AC', 'PA', 'RR', 'MT'] as const;

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
 import { mockClient } from 'aws-sdk-client-mock';
-import { baixar, enviar, enviarPendentes, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
+import { baixar, enviar, enviarPendentes, guardar, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
 
 // S3 de mentira: guarda em memória e respeita If-None-Match: *
 const s3 = mockClient(S3Client);
@@ -107,6 +107,27 @@ test('grava arquivo + meta na chave datada', async () => {
   });
   expect(s3.commandCalls(PutObjectCommand).every((c) => c.args[0].input.IfNoneMatch === '*')).toBe(true);
   expect(await readdir(join(dir, 'cache/bruto/ibge-malhas/2026/10/21'))).toHaveLength(2);
+});
+
+test('guardar: a local file (e.g. a clip made here) goes to the dated key with the same meta, the origin as url', async () => {
+  const local = join(dir, 'recorte.parquet');
+  await writeFile(local, 'prédios');
+  const r = await guardar(
+    local,
+    { fonte: 'overture', nome: 'manaus.parquet', coletor: 'teste', origem: 's3://bucket/release/x', parametros: { release: 'x' } },
+    quando,
+  );
+  expect(r.chave).toBe('bruto/overture/2026/10/21/150405Z_manaus.parquet');
+  expect(r2.get(r.chave)!.corpo.toString()).toBe('prédios');
+  expect(JSON.parse(r2.get(r.chave + '.meta.json')!.corpo.toString())).toEqual({
+    url: 's3://bucket/release/x',
+    baixado_em: '2026-10-21T15:04:05.000Z',
+    bytes: Buffer.byteLength('prédios'),
+    sha256: sha('prédios'),
+    coletor: { nome: 'teste', commit: 'abc1234' },
+    parametros: { release: 'x' },
+  });
+  expect(r.caminho).toBe(join(dir, 'cache', r.chave));
 });
 
 test('não sobrescreve: segunda escrita na mesma chave é recusada', async () => {

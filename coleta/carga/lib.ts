@@ -49,7 +49,7 @@ export async function loadOnce(db: pg.ClientBase, arquivo: number, tabela: strin
   }
 }
 
-/** GeoPackage → staging `table` (replaced every time) in EPSG:4326, polygons as multi, with ogr2ogr. Connection from the PG* variables. */
+/** GeoPackage or FlatGeobuf → staging `table` (replaced every time) in EPSG:4326, polygons as multi, with ogr2ogr. Connection from the PG* variables. */
 export function stageGpkg(gpkg: string, table: string, select: string): void {
   execFileSync(
     'ogr2ogr',
