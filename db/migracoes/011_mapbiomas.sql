@@ -1,0 +1,50 @@
+-- MapBiomas (#27): the land cover rasters stay out of PostGIS, as COGs in normalizado/mapbiomas/col11/ on R2
+-- (one per year, 1985–2025, Manaus metropolitan region); the point query reads them with gdallocationinfo.
+-- Here only the legend: code → class (Collection 11, official table of 2026-08-13). 0 = no data.
+CREATE SCHEMA mapbiomas;
+CREATE TABLE mapbiomas.classe (
+  codigo smallint PRIMARY KEY,
+  nome   text NOT NULL
+);
+INSERT INTO mapbiomas.classe VALUES
+  (1, 'Floresta'),
+  (3, 'Formação Florestal'),
+  (6, 'Floresta Alagável'),
+  (4, 'Formação Savânica'),
+  (7, 'Savana Alagada (beta)'),
+  (5, 'Mangue'),
+  (49, 'Restinga Arbórea'),
+  (10, 'Vegetação Herbácea e Arbustiva'),
+  (12, 'Formação Campestre'),
+  (77, 'Formação Herbáceo Arbustiva'),
+  (11, 'Campo Alagado e Área Pantanosa'),
+  (84, 'Marisma (beta)'),
+  (50, 'Restinga Herbácea ou Arbustiva'),
+  (32, 'Apicum'),
+  (29, 'Afloramento Rochoso'),
+  (14, 'Agropecuária'),
+  (15, 'Pastagem'),
+  (18, 'Agricultura'),
+  (19, 'Lavoura Temporária'),
+  (39, 'Soja'),
+  (20, 'Cana'),
+  (40, 'Arroz'),
+  (62, 'Algodão (beta)'),
+  (41, 'Outras Lavouras Temporárias'),
+  (36, 'Lavoura Perene'),
+  (46, 'Café'),
+  (47, 'Citrus'),
+  (35, 'Dendê'),
+  (48, 'Outras Lavouras Perenes'),
+  (9, 'Silvicultura'),
+  (21, 'Mosaico de Usos'),
+  (22, 'Área não vegetada'),
+  (23, 'Praia, Duna e Areal'),
+  (24, 'Área Urbanizada'),
+  (30, 'Mineração'),
+  (75, 'Usina Fotovoltaica'),
+  (91, 'Parque eólico (beta)'),
+  (25, 'Outras Áreas não Vegetadas'),
+  (26, 'Corpo D''água'),
+  (33, 'Rio, Lago e Oceano'),
+  (31, 'Aquicultura');
