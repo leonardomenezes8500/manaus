@@ -58,6 +58,12 @@ comBanco('carga do OSM', () => {
 
     await stage('Escola B');
     await loadOsm(db, await arquivo('b.pbf'), '2026-10-27');
+
+    // An empty snapshot (ogr2ogr found nothing) is refused and the tables stay as they were.
+    await stage('Escola C');
+    await db.query('TRUNCATE osm.points, osm.lines, osm.multipolygons');
+    await expect(loadOsm(db, await arquivo('c.pbf'), '2026-11-03')).rejects.toThrow('vazio');
+    await db.query('DROP TABLE osm.points, osm.lines, osm.multipolygons');
     expect((await db.query('SELECT name, snapshot::text FROM osm.ponto')).rows).toEqual([{ name: 'Escola B', snapshot: '2026-10-27' }]);
   });
 });

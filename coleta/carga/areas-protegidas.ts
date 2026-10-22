@@ -63,14 +63,14 @@ export function loadUnidades(db: pg.ClientBase, arquivo: number): Promise<number
   });
 }
 
-/** INPE fire spots since `desde` (UTC day): how many fell in an indigenous land, in a conservation unit, and per agency. */
+/** INPE fire spots since `desde` (Manaus day): how many fell in an indigenous land, in a conservation unit, and per agency. */
 export async function focosEmAreasProtegidas(db: pg.ClientBase, desde: string) {
   const r = await db.query(
     `WITH f AS (
        SELECT f.id,
               EXISTS (SELECT 1 FROM funai.terra_indigena t WHERE ST_Intersects(t.geom, f.geom)) AS em_ti,
               (SELECT array_agg(DISTINCT u.orgao_gestor || ' (' || u.esfera || ')') FROM cnuc.unidade u WHERE ST_Intersects(u.geom, f.geom)) AS ucs
-       FROM inpe.foco f WHERE f.data_hora >= $1::date)
+       FROM inpe.foco f WHERE (f.data_hora AT TIME ZONE 'America/Manaus')::date >= $1::date)
      SELECT (SELECT count(*)::int FROM f) AS total,
             (SELECT count(*)::int FROM f WHERE em_ti) AS em_ti,
             (SELECT count(*)::int FROM f WHERE ucs IS NOT NULL) AS em_uc,

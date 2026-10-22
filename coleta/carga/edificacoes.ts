@@ -45,6 +45,8 @@ export function stageOverture(fgb: string): void {
 /** Staging → overture.edificacao (whole table replaced by this release), then drops the staging table. */
 export function loadOverture(db: pg.ClientBase, arquivo: number, release: string): Promise<number> {
   return loadOnce(db, arquivo, 'overture.edificacao', async () => {
+    if (Number((await db.query('SELECT count(*) AS n FROM overture.carga_edificacao')).rows[0].n) === 0)
+      throw new Error('recorte da Overture vazio: a tabela fica como estava');
     await db.query('TRUNCATE overture.edificacao');
     const r = await db.query(
       `INSERT INTO overture.edificacao (id, subtipo, classe, altura, andares, dataset, geom, release, arquivo)

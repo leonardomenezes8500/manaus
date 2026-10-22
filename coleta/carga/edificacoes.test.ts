@@ -70,6 +70,9 @@ comBanco('carga de edificações', () => {
     expect((await db.query("SELECT to_regclass('overture.carga_edificacao') AS t")).rows[0].t).toBeNull();
     await stage('b2');
     await loadOverture(db, await arquivo('r2.parquet', 'overture-maps'), '2026-10-21.0');
+    await stage('c3');
+    await db.query('TRUNCATE overture.carga_edificacao');
+    await expect(loadOverture(db, await arquivo('r3.parquet', 'overture-maps'), '2026-11-18.0')).rejects.toThrow('vazio');
     expect((await db.query('SELECT id, release FROM overture.edificacao')).rows).toEqual([{ id: 'b2', release: '2026-10-21.0' }]);
   });
 });

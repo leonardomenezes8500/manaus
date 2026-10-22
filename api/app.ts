@@ -53,8 +53,8 @@ async function entidade(db: Db, tipo: string, where: string, param: string | num
   let geometry = null;
   for (const c of escolhidos) {
     if (c.campo === 'geom') geometry = c.geom;
-    escolhido[c.campo] = { valor: c.campo === 'geom' ? undefined : c.valor, fonte: c.fonte, regra: c.regra, data_fonte: c.data_fonte };
-    if (c.campo === 'geom') delete (escolhido.geom as any).valor;
+    const origem = { fonte: c.fonte, regra: c.regra, data_fonte: c.data_fonte };
+    escolhido[c.campo] = c.campo === 'geom' ? origem : { valor: c.valor, ...origem };
   }
   const por_fonte: Record<string, Record<string, unknown>> = {};
   for (const v of valores) {

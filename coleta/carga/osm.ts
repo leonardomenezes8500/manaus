@@ -52,6 +52,8 @@ const TAGS = `jsonb_strip_nulls(to_jsonb(s) - '{ogc_fid,osm_id,osm_way_id,geom,o
 /** Staging → osm.ponto/linha/poligono (whole tables replaced), then drops the staging tables. Returns the rows loaded. */
 export function loadOsm(db: pg.ClientBase, arquivo: number, snapshot: string): Promise<number> {
   return loadOnce(db, arquivo, 'osm', async () => {
+    const novos = (await db.query('SELECT (SELECT count(*) FROM osm.points) + (SELECT count(*) FROM osm.multipolygons) AS n')).rows[0].n;
+    if (Number(novos) === 0) throw new Error('snapshot do OSM vazio na caixa de Manaus: as tabelas ficam como estavam');
     await db.query('TRUNCATE osm.ponto, osm.linha, osm.poligono');
     let n = 0;
     for (const [table, staging, id] of [

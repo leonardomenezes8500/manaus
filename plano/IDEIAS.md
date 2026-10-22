@@ -16,6 +16,8 @@ A linha triada sai da caixa de entrada e vai para "Triadas", com o destino escri
 - [2026-10-21] (do planejamento) Instalar sensores de PM2.5 baratos em pontos escolhidos (depende do resultado da 015).
 - [2026-10-21] (#10) OpenAQ: há AirGradient em Porto Velho (5616182) e Lábrea (5616694), no caminho da fumaça que vem do sul. Coletar junto com o de Manaus para ver a pluma chegando.
 - [2026-10-21] (#13) Manaus não tem rede oficial de qualidade do ar: 1 estação de referência (FioAres, Fiocruz) e ~34 PurpleAir de UEA/Sema/MPAM. O município vetou os pontos de monitoramento da Lei 3.699/2026 (9/9/2026). Coletores novos para a triagem: #40, #41, #42.
+- [2026-10-22] (M2) Backup diário do banco vai crescer com as edificações e a telemetria (banco de dev: 1,2 GB). Tirar do `pg_dump` diário os esquemas que se refazem do bruto (`overture`, `openbuildings`, `osm`, `ana.leitura`) para o R2 continuar abaixo dos 10 GB grátis.
+- [2026-10-22] (#24) Tentar de novo o geoportal da Prefeitura/IMPLURB (estava fora do ar) antes de mexer na fusão de bairros.
 
 ## Triadas
 - [2026-10-21] Alerta diário de fumaça para a população → M5 / S5.2

@@ -16,4 +16,4 @@ teste: 'curl -sSI "https://dados.mma.gov.br/dataset/44b6dc8a-dc82-4a84-8d95-1b0d
 ---
 - Tema: território e quem deveria agir. Shapefile (polígonos e pontos, SIRGAS 2000) no CKAN do MMA. Os shapefiles de 2026 estão só no SharePoint do MMA (pede login Microsoft); o CSV de 2026-07 é público, sem geometria.
 - Carga (#30): `node coleta/areas-protegidas.ts` → `cnuc.unidade`: 292 UCs na região de influência (de 3.122 no país). ICMBio e SEMA-AM com camada própria entram depois como fontes separadas.
-- Focos INPE da temporada 2026 (01/08 a 20/10, todas as detecções de todos os satélites) na região: 937.499; 77.530 em TI, 119.464 em UC, 195.334 em alguma das duas. Por órgão: FUNAI 77.530, ICMBio 53.844, IDEFLOR-Bio/PA 37.767, SEDAM/RO 14.441, SEMA-AM 7.550, SEMA-MT 5.590.
+- Focos INPE da temporada 2026 (01/08 a 20/10 no dia de Manaus, todas as detecções de todos os satélites) na região: 937.287; 77.530 em TI, 119.451 em UC, 195.321 em alguma das duas. Por órgão: FUNAI 77.530, ICMBio 53.831, IDEFLOR-Bio/PA 37.767, SEDAM/RO 14.441, SEMA-AM 7.550, SEMA-MT 5.590.
