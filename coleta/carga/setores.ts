@@ -1,8 +1,7 @@
 // Census tract load (#21): the tract mesh comes through ogr2ogr (GeoPackage → staging table), the aggregates
 // from the IBGE CSV (latin1, ";" separated, decimal comma) in long format.
-import { execFileSync } from 'node:child_process';
 import type pg from 'pg';
-import { loadOnce } from './lib.ts';
+import { loadOnce, stageGpkg } from './lib.ts';
 
 export type Aggregate = { setor: string; variavel: string; valor: number };
 
@@ -43,31 +42,9 @@ export function loadAggregates(db: pg.ClientBase, arquivo: number, tabela: strin
   });
 }
 
-/** GeoPackage → ibge.carga_setor (staging, replaced every time) with ogr2ogr; connection from the PG* variables. */
+/** GeoPackage → ibge.carga_setor (staging, replaced every time). */
 export function stageTracts(gpkg: string): void {
-  execFileSync(
-    'ogr2ogr',
-    [
-      '-f',
-      'PostgreSQL',
-      'PG:',
-      gpkg,
-      '-nln',
-      'ibge.carga_setor',
-      '-overwrite',
-      '-t_srs',
-      'EPSG:4326',
-      '-nlt',
-      'PROMOTE_TO_MULTI',
-      '-lco',
-      'GEOMETRY_NAME=geom',
-      '-lco',
-      'SPATIAL_INDEX=NONE',
-      '-select',
-      'CD_SETOR,SITUACAO,CD_TIPO,AREA_KM2,CD_MUN,CD_BAIRRO,NM_BAIRRO',
-    ],
-    { stdio: 'inherit' },
-  );
+  stageGpkg(gpkg, 'ibge.carga_setor', 'CD_SETOR,SITUACAO,CD_TIPO,AREA_KM2,CD_MUN,CD_BAIRRO,NM_BAIRRO');
 }
 
 /** Staging table → ibge.setor (insert or update by code), then drops the staging table. */

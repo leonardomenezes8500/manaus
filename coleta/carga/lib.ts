@@ -1,4 +1,5 @@
 // Controle de carga (camada 2): que arquivo do bruto existe (bruto.arquivo) e para que tabela já foi lido (bruto.carga).
+import { execFileSync } from 'node:child_process';
 import type pg from 'pg';
 
 export type Arquivo = { chave: string; fonte: string; sha256: string; baixado_em: string };
@@ -46,4 +47,16 @@ export async function loadOnce(db: pg.ClientBase, arquivo: number, tabela: strin
     await db.query('ROLLBACK');
     throw e;
   }
+}
+
+/** GeoPackage → staging `table` (replaced every time) in EPSG:4326, polygons as multi, with ogr2ogr. Connection from the PG* variables. */
+export function stageGpkg(gpkg: string, table: string, select: string): void {
+  execFileSync(
+    'ogr2ogr',
+    [
+      ...['-f', 'PostgreSQL', 'PG:', gpkg, '-nln', table, '-overwrite', '-t_srs', 'EPSG:4326', '-nlt', 'PROMOTE_TO_MULTI'],
+      ...['-lco', 'GEOMETRY_NAME=geom', '-lco', 'SPATIAL_INDEX=NONE', '-select', select],
+    ],
+    { stdio: 'inherit' },
+  );
 }

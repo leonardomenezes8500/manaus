@@ -12,4 +12,4 @@ tipo: registro-oficial
 confiabilidade: media
 status: candidata
 ---
-- Tema: vários. Notícias, boletins e relatórios das secretarias municipais. Respondeu 503 ao curl em 2026-10-21 (talvez bloqueio de robô).
+- Tema: vários. Notícias, boletins e relatórios das secretarias municipais. Em 2026-10-21 o site todo respondia 503 com a página "Serviço temporariamente indisponível", também no navegador (ver `implurb-bairros`).
