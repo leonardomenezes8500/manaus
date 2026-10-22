@@ -1,8 +1,8 @@
 # Roadmap — REA de Manaus
 
-**Sprint atual: S3.1** (M3; o M2 foi mergeado no PR #46). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: S3.5.1** (M3.5), depois da conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57); o M3 foi mergeado no PR #58). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
-Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
+Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o S3.5.1 já têm issues; o S3.5.2 e do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
 ## Decisões tomadas (o usuário precisa confirmar)
 - **(2026-10-21) Repo público no GitHub** (`leonardomenezes8500/manaus`), com issues e sprints lá. Público porque o Actions é grátis em repo público e o usuário já queria abrir o projeto. Nada sensível no repo (ver `CLAUDE.md`).
@@ -16,9 +16,14 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - Horários vão para o banco em UTC. "Dia" é o dia de Manaus (UTC−4).
 - OSM é baixado **toda semana**, porque o próprio OSM guarda o histórico. Fonte que perde histórico se não for salva tem coleta frequente.
 - A atribuição v0 da fumaça é uma heurística (vento local em linha reta). Retrotrajetória de verdade só no M3, e o relatório tem que dizer isso.
+- **(2026-10-22) Fonte nova só entra com hipótese escrita antes** (método da [#59](https://github.com/leonardomenezes8500/manaus/issues/59)): o que ela explicaria e por quê, a época, a defasagem e o grupo de comparação. Um teste do catálogo barra fonte nova em `coletando` sem hipótese. Vale do M3.5 em diante, inclusive no M4.
 
 ## Em aberto (decisão do usuário)
 - **(2026-10-21) Língua do código.** Código novo (identificadores e comentários) é em inglês; docs, issues e PRs em pt-BR. Renomear o código que já existe (`coleta/`, `db/migracoes/`, scripts `migrar`/`tipos`, funções e tabelas em português) espera o usuário. Até lá, nada existente é renomeado, e tabela nova segue o nome em português que a issue já fixou, para não misturar dentro do mesmo esquema.
+- **(2026-10-22) Camada de contexto (M3.5) antes do M4.** O M4 (do fogo ao dono, à saúde e ao gasto) começa uns 2 sprints depois. Se o usuário preferir o M4 primeiro, o S4.3 espera o método e a população do M3.5.
+- **(2026-10-22) O que conta como fonte oficial no calendário (M3.5):** lei e decreto (Planalto, Assembleia do AM, Câmara de Manaus), TSE, secretarias de educação (SEDUC, SEMED), FIFA, COI/COB, CBF e FAF. O Querido Diário entra só como busca no Diário Oficial de Manaus, sempre com o link da edição oficial.
+- **(2026-10-22) Recorte do calendário (M3.5):** Brasil, AM e Manaus (do interior, só o Festival de Parintins). Eleições e esportes desde 1994; escola e festas desde 2012, o período da série da fumaça. "Jogo relevante no Amazonas" = jogo das competições nacionais da CBF com mando em Manaus, finais do Amazonense e os jogos da Copa de 2014 e dos Jogos de 2016 na Arena da Amazônia.
+- **(2026-10-22) Copa × eleição:** desde 1994 toda eleição presidencial caiu em ano de Copa, então não há ano para comparar. Fica escrita como hipótese sem teste; no máximo, desempenho da seleção × voto no governo (n ≈ 9, confiança baixa).
 
 ## Pendências do usuário
 - **R2:** criar o bucket e um token **só de leitura e escrita de objetos, só nesse bucket**; no bucket, a regra de ciclo de vida "apagar `backup/pg/` com mais de 14 dias" (o código nunca apaga nada no R2). Depois pôr `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` e `R2_BUCKET` no `.env` local e no GitHub com `gh secret set <NOME>` (o valor é digitado no prompt, nunca colado no chat). Bloqueia a [#3](https://github.com/leonardomenezes8500/manaus/issues/3) e o resto do M0.
@@ -118,6 +123,32 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - [#42](https://github.com/leonardomenezes8500/manaus/issues/42) (calibrar sensores baratos com a FioAres) foi para o M4: precisa de 2 semanas de horas da FioAres, e a coleta só começa na slice com o merge do M3.
 - **R2:** o M3 soma ~0,6 GB no primeiro ano (ERA5 0,24; GFS 0,15; arquivo FIRMS 0,14; o resto é pequeno). O uso vai de ~5,3 para ~6 GB dos 10 grátis.
 
+## [M3.5](https://github.com/leonardomenezes8500/manaus/milestone/10) — Camada de contexto da cidade (2 sprints)
+**Objetivo:** uma camada de contexto da cidade que serve para qualquer cruzamento, não só para a fumaça: calendário oficial, população detalhada e cidade básica (gasto, contratos, água, energia). Não abre problema novo. Nada é coletado sem hipótese escrita antes, e os cruzamentos seguem um método escrito.
+**Pronto quando:** o método e o registro de hipóteses existem e um teste barra fonte nova sem hipótese; `contexto.dia` cobre 1994–2026 com fonte oficial em cada linha; idade, sexo, cor ou raça e alfabetização estão por setor, com a série anual de população; gasto por função, contratos, água e energia de Manaus estão no banco; as rodadas 1 e 2 de cruzamentos saíram, cada hipótese com grau de confiança.
+
+- **S3.5.1 — Método, calendário e população**
+  - [#59](https://github.com/leonardomenezes8500/manaus/issues/59) Método para cruzar variáveis: hipótese escrita antes de coletar, registro de hipóteses e teste que barra fonte sem hipótese (vem antes de todas)
+  - [#60](https://github.com/leonardomenezes8500/manaus/issues/60) Calendário oficial (1): feriados, pontos facultativos, eleições e festas, com `contexto.dia` e `/contexto/:dia`
+  - [#61](https://github.com/leonardomenezes8500/manaus/issues/61) Calendário oficial (2): escola (SEDUC, SEMED) e esportes (FIFA, COI, CBF, FAF)
+  - [#62](https://github.com/leonardomenezes8500/manaus/issues/62) Calendário oficial (3): proibição do fogo, roça, cheia e seca
+  - [#63](https://github.com/leonardomenezes8500/manaus/issues/63) População detalhada: idade, sexo, cor ou raça e alfabetização por setor (Censo 2022) + série anual por município
+  - [#64](https://github.com/leonardomenezes8500/manaus/issues/64) Rodada 1 de cruzamentos: as hipóteses do calendário e da população, pelo método
+- **S3.5.2 — Cidade básica** (cada fonte com a hipótese já escrita na #59):
+  - Gasto por setor: SICONFI (despesa por função e subfunção da Prefeitura e do Estado, desde 2015).
+  - Contratos e licitações: PNCP (Manaus, todas as esferas, desde 2021: quem ganha em cada setor), com coleta diária leve na slice; Querido Diário para os atos (emergência, contrato sem licitação). TCE-AM e portais de transparência só se uma hipótese pedir e houver exportação, porque são páginas.
+  - Água e esgoto: Censo 2022 "características do domicílio" (água, esgoto e lixo por setor; ~0,15 GB de zip), SINISA (anual) e SISAGUA (medir o tamanho antes e guardar só o AM). Águas de Manaus (páginas) só para a tarifa.
+  - Energia: ANEEL (DEC/FEC dos conjuntos de Manaus, tarifa residencial).
+  - Rodada 2 de cruzamentos, com o mesmo método e a mesma correção.
+
+**Decisões do M3.5 (2026-10-22, provisórias; o usuário pode mudar):**
+- **Antes do M4.** O método vem antes de qualquer cruzamento novo, inclusive internações × fumaça no M4. Gasto e contratos são coletados uma vez aqui, para todos os setores, e o S4.3 só filtra os órgãos do fogo. A população por idade e o calendário escolar servem ao S4.3 e ao M5. Enquanto isso, a FioAres junta as 2 semanas de dados que a #42 precisa.
+- **O método é o portão do escopo:** sem hipótese escrita, a fonte não entra. É isso que segura o milestone em 2 sprints. Páginas sem exportação (TCE-AM, portais de transparência, Águas de Manaus) ficam de fora até uma hipótese pedir.
+- **Calendário só de fonte oficial.** Data que vem de lei sai de código testado; data que só existe no documento do ano fica num CSV no repo, com o link do documento, que vai para o bruto. Ano sem documento fica vazio, nunca estimado.
+- **População:** setores do AM, como o básico (só Manaus, se passar de ~1 milhão de linhas no banco). Em 2026-10-22 o IBGE ainda não publicou renda por setor; até lá, a do município. Projeção por idade só existe por estado.
+- **Muitas comparações:** Benjamini–Hochberg por rodada (S3.5.1 = rodada 1, S3.5.2 = rodada 2), por isso cada sprint fecha com uma issue de rodada.
+- **Custo:** quase tudo é carga anual ou única, rodada neste PC. Na slice, só o PNCP diário, que é leve. R2: ~0,2 GB no S3.5.1 (Censo) e ~0,3 GB no S3.5.2 (Censo domicílio, PNCP em gzip, SISAGUA só do AM). O uso vai de ~6 para ~6,5 GB dos 10 grátis.
+
 ## [M4](https://github.com/leonardomenezes8500/manaus/milestone/5) — Fumaça v2: do fogo ao responsável (3 sprints)
 **Objetivo:** para cada foco relevante, dizer onde ele caiu (desmatamento, imóvel, área protegida), quem é o dono ou responsável, qual o efeito na saúde e quem deveria agir e quanto gastou.
 **Pronto quando:** existe o relatório "cadeia completa" de um dia (dia → focos → áreas/imóveis → embargos/autos → internações → órgãos e gastos), com fonte em cada elo.
@@ -125,14 +156,15 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - **S4.1 — Onde queimou:** PRODES e DETER (TerraBrasilis), MapBiomas Alerta, florestas públicas (CNFP/SFB); cruzar com TIs e UCs (039). Área queimada vinda do M3: MapBiomas Fogo primeiro (menos trabalho), depois MCD64A1 e INPE AQ1km.
 - Vindas do M3: [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (só depois de 2 semanas de coleta da #40 na slice); [#41](https://github.com/leonardomenezes8500/manaus/issues/41) Coletor PurpleAir (espera a decisão do usuário); [#56](https://github.com/leonardomenezes8500/manaus/issues/56) Crescer a caixa da região para leste (as trajetórias param a 8° de Manaus).
 - **S4.2 — De quem é:** CAR/SICAR (AM, RO, AC, PA), SIGEF/SNCI (INCRA), embargos e autos de infração do IBAMA e do ICMBio. Sai a lista de imóveis com fogo recorrente que já foram embargados.
-- **S4.3 — Saúde e poder público:** DATASUS SIH/SIM (respiratório, Manaus), SISAM; Portal da Transparência (Prevfogo, ICMBio, GLO), PNCP, transparência do AM (SEMA, IPAAM, CBMAM), Prefeitura. Fecha com o relatório "cadeia completa".
+- **S4.3 — Saúde e poder público:** DATASUS SIH/SIM (respiratório, Manaus), SISAM; Portal da Transparência (Prevfogo, ICMBio, GLO), PNCP, transparência do AM (SEMA, IPAAM, CBMAM), Prefeitura. Fecha com o relatório "cadeia completa". O PNCP e o SICONFI já vêm do M3.5 (aqui só se filtram os órgãos do fogo). Internações × fumaça seguem o método da #59: hipótese escrita, defasagem, época, taxa por idade (população da #63) e calendário escolar (#61).
+- Toda fonte nova do M4 entra com hipótese escrita (portão da #59).
 
 ## [M5](https://github.com/leonardomenezes8500/manaus/milestone/6) — Pesquisa: problemas e soluções da fumaça (2 sprints)
 **Objetivo:** ter a lista de problemas com evidência e a lista de soluções propostas, avaliadas com critério escrito.
 **Pronto quando:** cada solução tem classificação (prática / paliativa / especulativa), quem se beneficia e quais recursos e dados existentes a sustentam.
 
 - **S5.1:** levantar problemas e soluções já propostas (governo, MP, academia, ONGs, imprensa), cada uma com fonte.
-- **S5.2:** avaliar com os dados do M1–M4. Na cidade: alerta diário (CAMS + sensores) e salas de ar limpo em escolas (INEP/CNEFE) e UBS (CNES), por ordem de exposição.
+- **S5.2:** avaliar com os dados do M1–M4. Na cidade: alerta diário (CAMS + sensores) e salas de ar limpo em escolas (INEP/CNEFE) e UBS (CNES), por ordem de exposição (população por idade da #63).
 
 ## [M6](https://github.com/leonardomenezes8500/manaus/milestone/7) — API pública v1 (2 sprints)
 - Documentação OpenAPI, versão e limite de uso; licença de cada fonte respeitada (OSM é ODbL: exige atribuição e compartilhamento); revisão de segurança; R2 para servir o bruto público; decidir onde hospedar.
