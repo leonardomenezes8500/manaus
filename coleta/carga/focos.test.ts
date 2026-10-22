@@ -5,7 +5,7 @@ import pg from 'pg';
 import { bancoNovo, comBanco } from '../../db/teste.ts';
 import { splitCsv } from './csv.ts';
 import { firmsRow, inpeRow, loadLines } from './focos.ts';
-import { registrar } from './lib.ts';
+import { pendingFiles, registrar } from './lib.ts';
 import { carregarMunicipios } from './municipios.ts';
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, '__fixtures__', name), 'utf8');
@@ -111,6 +111,15 @@ comBanco('carga de focos', () => {
     expect(await count('firms.foco')).toBe(10);
     expect((await db.query('SELECT count(*)::int AS n FROM firms.foco WHERE municipio = 1300000')).rows[0].n).toBe(2);
     expect((await db.query("SELECT count(*)::int AS n FROM bruto.carga WHERE tabela = 'firms.foco'")).rows[0].n).toBe(3);
+  });
+
+  test('the FIRMS archive (.csv.gz, #52) is never picked for firms.foco: only the NRT .csv files are', async () => {
+    const k = (n: string) => `bruto/nasa-firms/2026/10/22/140000Z_${n}`;
+    for (const [i, n] of ['VIIRS_SNPP_SP_2024-09-02_5d.csv.gz', 'VIIRS_SNPP_NRT.csv'].entries())
+      await registrar(db, { chave: k(n), fonte: 'nasa-firms', sha256: String(i).repeat(64), baixado_em: '2026-10-22T14:00:00Z' });
+    const p = (await pendingFiles(db, 'nasa-firms', 'firms.foco', '.csv')).map((f) => f.chave);
+    expect(p).toContain(k('VIIRS_SNPP_NRT.csv'));
+    expect(p).not.toContain(k('VIIRS_SNPP_SP_2024-09-02_5d.csv.gz'));
   });
 
   test('INPE: only spots inside the region box are kept; error text is skipped but marked', async () => {

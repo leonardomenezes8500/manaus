@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Readable } from 'node:stream';
+import { gunzipSync } from 'node:zlib';
 import { mockClient } from 'aws-sdk-client-mock';
 import { baixar, enviar, enviarPendentes, guardar, limparCache, listKeys, readRaw, urlSemChaves } from './baixar.ts';
 
@@ -150,6 +151,18 @@ test('listKeys walks every page; readRaw reads from the cache or, without it, fr
   expect(await readRaw(a.chave)).toBe('malha /malha?formato=geojson');
   await rm(join(dir, 'cache'), { recursive: true });
   expect(await readRaw(a.chave)).toBe('malha /malha?formato=geojson');
+});
+
+test('gzip: stored as .gz, the meta keeps the sha256 and size of the original, readRaw gives the original text back', async () => {
+  const r = await baixar({ ...malha(), gzip: true }, quando);
+  expect(r.chave).toBe('bruto/ibge-malhas/2026/10/21/150405Z_manaus.json.gz');
+  expect(gunzipSync(r2.get(r.chave)!.corpo).toString()).toBe('malha /malha?formato=geojson');
+  const meta = JSON.parse(r2.get(r.chave + '.meta.json')!.corpo.toString());
+  expect(meta).toMatchObject({ bytes: 28, sha256: sha('malha /malha?formato=geojson'), gzip: true });
+  expect(r.sha256).toBe(sha('malha /malha?formato=geojson'));
+  expect(await readRaw(r.chave)).toBe('malha /malha?formato=geojson');
+  await rm(join(dir, 'cache'), { recursive: true });
+  expect(await readRaw(r.chave)).toBe('malha /malha?formato=geojson');
 });
 
 test('a chave some do meta (query e caminho)', async () => {

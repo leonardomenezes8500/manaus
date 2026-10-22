@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { createGunzip, createGzip } from 'node:zlib';
 import { GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 
@@ -144,6 +145,7 @@ export type Download = {
   coletor: string;
   parametros?: Record<string, unknown>;
   headers?: Record<string, string>;
+  gzip?: boolean; // stored as <nome>.gz; the meta keeps the sha256 and size of the original, openRaw/readRaw decompress
 };
 
 export type Baixado = { chave: string; caminho: string; sha256: string; bytes: number; fonte: string; baixado_em: string };
@@ -154,7 +156,7 @@ export type Baixado = { chave: string; caminho: string; sha256: string; bytes: n
  * Devolve o caminho local no cache (válido por 7 dias).
  */
 export async function baixar(d: Download, agora = new Date()): Promise<Baixado> {
-  const { chave, iso, tmp } = await novoBruto(d, agora);
+  const { chave, iso, tmp } = await novoBruto(d.gzip ? { ...d, nome: d.nome + '.gz' } : d, agora);
   const res = await fetch(d.url, { headers: d.headers });
   if (!res.ok || !res.body) {
     await res.body?.cancel();
@@ -172,6 +174,7 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
           cb(null, parte);
         },
       }),
+      ...(d.gzip ? [createGzip()] : []),
       createWriteStream(tmp),
     );
   } catch (e) {
@@ -179,7 +182,7 @@ export async function baixar(d: Download, agora = new Date()): Promise<Baixado> 
     throw e;
   }
   const sha256 = hash.digest('hex');
-  const meta = { url: urlSemChaves(d.url), baixado_em: iso, http_status: res.status, bytes, sha256 };
+  const meta = { url: urlSemChaves(d.url), baixado_em: iso, http_status: res.status, bytes, sha256, ...(d.gzip ? { gzip: true } : {}) };
   return paraOBruto(d, tmp, chave, meta);
 }
 
@@ -217,7 +220,7 @@ async function paraOBruto(
   d: { fonte: string; coletor: string; parametros?: Record<string, unknown> },
   tmp: string,
   chave: string,
-  base: { url: string; baixado_em: string; bytes: number; sha256: string; http_status?: number },
+  base: { url: string; baixado_em: string; bytes: number; sha256: string; http_status?: number; gzip?: boolean },
 ): Promise<Baixado> {
   const meta = { ...base, coletor: { nome: d.coletor, commit: commit() }, parametros: d.parametros ?? {} };
   const pendente = buffer('pendente', chave);
@@ -242,8 +245,13 @@ export async function listKeys(prefix: string): Promise<{ key: string; size: num
   return out;
 }
 
-/** Opens a raw file as a stream: from the local cache when it is there, otherwise from R2. */
+/** Opens a raw file as a stream: from the local cache when it is there, otherwise from R2. A .gz key comes out decompressed. */
 export async function openRaw(key: string): Promise<Readable> {
+  const s = await openStored(key);
+  return key.endsWith('.gz') ? s.pipe(createGunzip()) : s;
+}
+
+async function openStored(key: string): Promise<Readable> {
   const cached = buffer('cache', key);
   if (
     await stat(cached).then(
