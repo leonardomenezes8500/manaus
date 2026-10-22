@@ -8,7 +8,8 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { registrar } from './carga/lib.ts';
 import { gravarPeriodos } from './calendario/gravar.ts';
-import { eleicoes, feriadosLocais, feriadosNacionais, lerCsvCalendario, type Periodo } from './calendario/regras.ts';
+import { eleicoes, feriadosLocais, feriadosNacionais, fogoIpaam, lerCsvCalendario, roca, type Periodo } from './calendario/regras.ts';
+import { periodosDoRio } from './calendario/rio.ts';
 import { baixar, listKeys, readRaw } from './lib/baixar.ts';
 
 const DIR = join(import.meta.dirname, 'calendario');
@@ -20,13 +21,19 @@ export const nomeDoDocumento = (url: string) =>
 async function principal(args: string[]) {
   const ate = Number(args.includes('--ate') ? args[args.indexOf('--ate') + 1] : new Date().getUTCFullYear());
   const periodos: Periodo[] = [];
-  for (let ano = 1994; ano <= ate; ano++) periodos.push(...feriadosNacionais(ano), ...feriadosLocais(ano), ...eleicoes(ano));
+  for (let ano = 1994; ano <= ate; ano++)
+    periodos.push(...feriadosNacionais(ano), ...feriadosLocais(ano), ...eleicoes(ano), ...fogoIpaam(ano), ...roca(ano));
   for (const f of readdirSync(DIR).filter((f) => f.endsWith('.csv')))
     periodos.push(...lerCsvCalendario(readFileSync(join(DIR, f), 'utf8')));
 
   const db = new pg.Client();
   await db.connect();
   try {
+    // River seasons (#62): derived from the measured level of the Porto de Manaus, redone on every run.
+    const cotas = await db.query(
+      `SELECT dia::text, cota_cm AS cm FROM ana.cota_dia WHERE estacao = 14990000 AND dia >= '1993-12-01' ORDER BY dia`,
+    );
+    periodos.push(...periodosDoRio(cotas.rows));
     const arquivo = new Map<string, number>(); // url → bruto.arquivo id
     const chaves = new Map<string, string[]>(); // fonte → raw keys
     for (const p of periodos) {
@@ -57,10 +64,13 @@ async function principal(args: string[]) {
       }
       arquivo.set(p.url, id);
     }
+    await db.query('BEGIN');
+    await db.query(`DELETE FROM contexto.periodo WHERE tipo = 'epoca_rio'`);
     await gravarPeriodos(
       db,
       periodos.map((p) => ({ ...p, arquivo: arquivo.get(p.url)! })),
     );
+    await db.query('COMMIT');
     console.log(`${periodos.length} eventos, ${arquivo.size} documentos`);
   } finally {
     await db.end();

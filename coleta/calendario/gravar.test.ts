@@ -2,7 +2,8 @@ import pg from 'pg';
 import { registrar } from '../carga/lib.ts';
 import { bancoNovo, comBanco } from '../../db/teste.ts';
 import { gravarPeriodos } from './gravar.ts';
-import { feriadosNacionais } from './regras.ts';
+import { feriadosNacionais, fogoIpaam } from './regras.ts';
+import { periodosDoRio } from './rio.ts';
 
 comBanco('calendário no banco', () => {
   const db = new pg.Client();
@@ -66,6 +67,22 @@ comBanco('calendário no banco', () => {
     expect(d).toEqual({
       escola: 'Recesso escolar de julho da rede municipal',
       esporte: 'Copa do Mundo masculina 2014; Copa do Mundo masculina 2014, jogo do Brasil: Brazil 1x1 Chile (pên. 3x2)',
+    });
+  });
+  test('a drought day with the fire ban shows in both columns (#62)', async () => {
+    const cotas = Array.from({ length: 30 }, (_, i) => ({
+      dia: new Date(Date.parse('2023-09-27') + i * 86_400_000).toISOString().slice(0, 10),
+      cm: 1850 - 20 * i,
+    }));
+    await gravarPeriodos(
+      db,
+      [...fogoIpaam(2023), ...periodosDoRio(cotas)].map((p) => ({ ...p, arquivo: null })),
+    );
+    const d = (await db.query(`SELECT fogo, epoca_rio, emergencia FROM contexto.dia WHERE dia = '2023-10-20'`)).rows[0];
+    expect(d).toEqual({
+      fogo: 'Uso do fogo proibido no AM (agosto a outubro)',
+      epoca_rio: 'Seca do Rio Negro (15,80 m ou menos)',
+      emergencia: null,
     });
   });
 });

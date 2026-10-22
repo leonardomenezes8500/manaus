@@ -14,7 +14,7 @@ export type Periodo = {
   bruto?: string; // its raw key, once downloaded
 };
 
-export const TIPOS = ['feriado', 'ponto_facultativo', 'eleicao', 'festa', 'escola', 'esporte'];
+export const TIPOS = ['feriado', 'ponto_facultativo', 'eleicao', 'festa', 'escola', 'esporte', 'fogo', 'roca', 'epoca_rio', 'emergencia'];
 const P = 'https://www.planalto.gov.br/ccivil_03/';
 const DIA = 86_400_000;
 const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
@@ -204,6 +204,55 @@ export function eleicoes(ano: number): Periodo[] {
   return [
     turno(`${tipo}, 1º turno`, iso(d[0]), 'Lei 9.504/1997, art. 1º', 'leis/l9504.htm'),
     turno(`${tipo}, 2º turno`, iso(d.at(-1)!), 'Lei 9.504/1997, art. 2º, § 1º', 'leis/l9504.htm'),
+  ];
+}
+
+/**
+ * Fire ban of the AM (#62): Portaria IPAAM 127/2010, art. 1º, forbids fire in the whole state in August, September and
+ * October of every year. A fixed rule since 2010; applying it to every year assumes it was never revoked (none found).
+ */
+export function fogoIpaam(ano: number): Periodo[] {
+  if (ano < 2010) return [];
+  return [
+    {
+      tipo: 'fogo',
+      nome: 'Uso do fogo proibido no AM (agosto a outubro)',
+      inicio: `${ano}-08-01`,
+      fim: `${ano}-10-31`,
+      abrangencia: 'AM',
+      fonte: 'doe-am',
+      ato: 'Portaria IPAAM 127/2010, art. 1º (regra fixa; vale para todo ano se não foi revogada, o que é suposição)',
+      url: 'https://diario.imprensaoficial.am.gov.br/portal/edicoes/download/13808',
+    },
+  ];
+}
+
+const ROCA =
+  'https://www.infoteca.cnptia.embrapa.br/infoteca/bitstream/doc/908305/1/EMATERDOCUMENTOS2AMSISTEMADEPRODUCAOPARAARROZFEIJAOMILHOEMADIOCACDD6331098113.pdf';
+
+/**
+ * Roça of mandioca on terra firme in the AM (#62): the only official text with the burn months is the EMATER-AM/Embrapa
+ * bulletin of 1983 (burn from August to October, planting from October to 15 December). A fixed yearly rule from an
+ * old source: newer ones (ZARC, CONAB) give planting windows only, never the burn.
+ */
+export function roca(ano: number): Periodo[] {
+  const base = { tipo: 'roca', abrangencia: 'AM' as const, fonte: 'embrapa-infoteca', url: ROCA };
+  const ato = 'EMATER-AM/Embrapa, Sistemas de produção para arroz, feijão, milho e mandioca no AM (1983), mandioca de terra firme';
+  return [
+    {
+      ...base,
+      nome: 'Queima da roça na terra firme (agosto a outubro)',
+      inicio: `${ano}-08-01`,
+      fim: `${ano}-10-31`,
+      ato: `${ato}, preparo da área (fonte de 1983)`,
+    },
+    {
+      ...base,
+      nome: 'Plantio da mandioca na terra firme (outubro a 15 de dezembro)',
+      inicio: `${ano}-10-01`,
+      fim: `${ano}-12-15`,
+      ato: `${ato}, coveamento e plantio (fonte de 1983)`,
+    },
   ];
 }
 

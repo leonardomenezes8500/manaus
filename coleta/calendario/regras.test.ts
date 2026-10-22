@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { lerCatalogo } from '../../fontes/catalogo.ts';
-import { daPascoa, eleicoes, feriadosLocais, feriadosNacionais, lerCsvCalendario, pascoa } from './regras.ts';
+import { daPascoa, eleicoes, feriadosLocais, feriadosNacionais, fogoIpaam, lerCsvCalendario, pascoa, roca } from './regras.ts';
 
 test('Easter of known years, and the dates counted from it', () => {
   expect(pascoa(2024)).toBe('2024-03-31');
@@ -106,4 +106,20 @@ test('every calendar CSV in the repo reads, and each source is in the catalog', 
   const ids = new Set(lerCatalogo(join(import.meta.dirname, '..', '..', 'fontes')).map((d) => d.card.id));
   for (const f of readdirSync(import.meta.dirname).filter((f) => f.endsWith('.csv')))
     for (const p of lerCsvCalendario(readFileSync(join(import.meta.dirname, f), 'utf8'))) expect([f, ids.has(p.fonte)]).toEqual([f, true]);
+});
+
+test('AM fire ban by the IPAAM rule: August to October from 2010 on, with the act and the assumption written', () => {
+  expect(fogoIpaam(2009)).toEqual([]);
+  expect(fogoIpaam(2023)).toEqual([
+    expect.objectContaining({ tipo: 'fogo', inicio: '2023-08-01', fim: '2023-10-31', abrangencia: 'AM', fonte: 'doe-am' }),
+  ]);
+  expect(fogoIpaam(2023)[0].ato).toMatch(/Portaria IPAAM 127\/2010.*suposição/);
+});
+
+test('roça of the AM by the 1983 EMATER-AM/Embrapa bulletin: burn August to October, planting October to 15 December', () => {
+  expect(roca(2024).map((p) => [p.tipo, p.inicio, p.fim, p.fonte])).toEqual([
+    ['roca', '2024-08-01', '2024-10-31', 'embrapa-infoteca'],
+    ['roca', '2024-10-01', '2024-12-15', 'embrapa-infoteca'],
+  ]);
+  expect(roca(2024)[0].ato).toMatch(/1983/);
 });
