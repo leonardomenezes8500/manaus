@@ -5,7 +5,7 @@ import pg from 'pg';
 import { baixar, readRaw } from './lib/baixar.ts';
 import { loadHidro, massaRow, trechoRow } from './carga/ana.ts';
 import { registrar } from './carga/lib.ts';
-import { tentar } from './lib/tentar.ts';
+import { jsonComTentativas, tentar } from './lib/tentar.ts';
 import { RMM_BBOX as B } from './regiao.ts';
 
 const BASE = 'https://www.snirh.gov.br/arcgis/rest/services/SPR';
@@ -19,9 +19,9 @@ const db = new pg.Client();
 await db.connect();
 try {
   for (const c of CAMADAS) {
-    const ids: number[] = (
-      await (await tentar(() => fetch(`${BASE}/${c.servico}/query?${CAIXA}&returnIdsOnly=true&f=json`))).json()
-    ).objectIds.sort((a: number, b: number) => a - b);
+    const ids: number[] = (await jsonComTentativas(`${BASE}/${c.servico}/query?${CAIXA}&returnIdsOnly=true&f=json`)).objectIds.sort(
+      (a: number, b: number) => a - b,
+    );
     // A new run only asks for what is not in the table yet (the water body id is the service id; the reach id is
     // its cotrecho, so reaches are skipped only when all are there).
     const ja = new Set((await db.query(`SELECT id FROM ${c.tabela}`)).rows.map((r) => Number(r.id)));
