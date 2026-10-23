@@ -166,3 +166,16 @@ export function permutacaoGrupos(
   }
   return { efeito: obs, p: (1 + fortes) / (n + 1) };
 }
+
+/**
+ * One value per year (e.g. a log ratio inside ÷ outside): effect = the mean, two-sided p by flipping the sign of whole
+ * years at random (under no effect each year's sign is a coin toss).
+ */
+export function sinaisPorAnos(d: number[], { n = 999, semente = 1 } = {}): { efeito: number; p: number } {
+  const media = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const obs = media(d);
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) if (Math.abs(media(d.map((x) => (r() < 0.5 ? -x : x)))) >= Math.abs(obs)) fortes++;
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
+}

@@ -1,4 +1,4 @@
-import { anomalia, benjaminiHochberg, defasagens, permutacaoBlocos, permutacaoGrupos, sorteio, spearman } from './cruzar.ts';
+import { anomalia, benjaminiHochberg, defasagens, permutacaoBlocos, permutacaoGrupos, sinaisPorAnos, sorteio, spearman } from './cruzar.ts';
 
 // Ten years of days with the same yearly cycle and independent noise: the trap the method exists for.
 function sazonal(semente: number) {
@@ -69,4 +69,11 @@ test('group test by label permutation: a real shift gives a small p, no shift a 
   }).filter(Boolean).length;
   expect(falsos).toBeLessThanOrEqual(6);
   expect(permutacaoGrupos(comEfeito, g, { n: 99, semente: 2 }).efeito).toBeGreaterThan(0.3);
+});
+
+test('sign flips of whole years: 10 years all on one side give p near 2/1024; mixed signs give a large p', () => {
+  const forte = sinaisPorAnos([0.5, 0.6, 0.4, 0.7, 0.5, 0.3, 0.6, 0.5, 0.4, 0.6], { n: 9999, semente: 2 });
+  expect(forte.efeito).toBeCloseTo(0.51, 6);
+  expect(forte.p).toBeLessThan(0.01); // only the all-positive and all-negative flips are as strong: 2 of 1024
+  expect(sinaisPorAnos([0.5, -0.6, 0.4, -0.7, 0.5, -0.3, 0.6, -0.5, 0.4, -0.6], { n: 999, semente: 2 }).p).toBeGreaterThan(0.5);
 });

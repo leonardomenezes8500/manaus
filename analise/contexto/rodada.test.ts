@@ -3,6 +3,8 @@ import {
   atualizarHipotese,
   fecharRodada,
   grauDeConfianca,
+  segundoConfirma,
+  direcaoContraria,
   inicioTemporada,
   logRazaoPorBloco,
   razaoPorAnos,
@@ -76,4 +78,20 @@ test('ratio of proportions by permuting whole years: the labelled year stands ou
   expect(Math.exp(forte.efeito)).toBeCloseTo(0.1 / (64 / 2800), 6); // 20/200 labelled against 27 months at 2 + one at 10 out of 2800
   expect(forte.p).toBeLessThan(0.15); // 1 year in 10: the smallest p a permutation of years can give is about 0.1
   expect(razaoPorAnos(u(2), { n: 199, semente: 3 }).p).toBeGreaterThan(0.5);
+});
+
+test('the second cut confirms with the same direction and p < 0.05; a ratio is read against 1', () => {
+  expect(segundoConfirma({ efeito: 2.1, unidade: 'razão' }, { efeito: 1.6, p: 0.01 })).toBe(true);
+  expect(segundoConfirma({ efeito: 2.1, unidade: 'razão' }, { efeito: 0.8, p: 0.01 })).toBe(false);
+  expect(segundoConfirma({ efeito: 0.4, unidade: 'Spearman' }, { efeito: 0.5, p: 0.2 })).toBe(false);
+  expect(segundoConfirma({ efeito: -0.4, unidade: 'Spearman' }, { efeito: -0.5, p: 0.03 })).toBe(true);
+  expect(segundoConfirma({ efeito: 0.4, unidade: 'Spearman' })).toBe(false);
+});
+
+test('the effect against the written direction is flagged; no direction written, never flagged', () => {
+  expect(direcaoContraria({ efeito: 0.071, unidade: 'pontos (fração)', espera: -1 })).toBe(true);
+  expect(direcaoContraria({ efeito: 0.2, unidade: 'razão', espera: -1 })).toBe(false); // a ratio below 1 is "less"
+  expect(direcaoContraria({ efeito: 3.5, unidade: 'razão', espera: 1 })).toBe(false);
+  expect(direcaoContraria({ efeito: -0.3, unidade: 'Spearman', espera: 1 })).toBe(true);
+  expect(direcaoContraria({ efeito: -0.3, unidade: 'Spearman' })).toBe(false);
 });
