@@ -28,6 +28,7 @@ const SEM_DADOS = [
   'incra.sigef',
   'incra.snci',
   'incra.assentamento',
+  'mapbiomas_alerta.alerta',
 ];
 
 const pasta = mkdtempSync(join(process.env.MANAUS_BUFFER || tmpdir(), 'pg-'));
