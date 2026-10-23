@@ -1,7 +1,7 @@
 // Coletor NASA FIRMS (#9): focos de calor dos 4 sensores NRT na caixa da região, pelo baixar().
 //   node coleta/firms.ts                          últimos 2 dias (cron a cada 3 h; a sobreposição sai na carga, #15)
 //   node coleta/firms.ts --historico 2026-08-01   de uma data até hoje, em janelas de 5 dias (máximo da API)
-//   node coleta/firms.ts --arquivo 2012-01-20 [fim]   arquivo padrão (SP) da S-NPP e do MODIS, em gzip, para a série (#52);
+//   node coleta/firms.ts --arquivo 2012-01-20 [fim]   arquivo padrão (SP) da S-NPP e do MODIS, em gzip, para a série (#52, #77);
 //                                                     retoma de onde parou (pula as janelas que já estão no R2)
 // Limite da chave: 5000 transações a cada 10 min; o histórico inteiro dá ~70 pedidos, o arquivo ~2.100.
 import { setTimeout as esperar } from 'node:timers/promises';
@@ -14,21 +14,32 @@ export const SENSORES_SP = ['VIIRS_SNPP_SP', 'MODIS_SP'] as const;
 const nomeArquivo = (sensor: string, data: string, dias: number) => `${sensor}_${data}_${dias}d.csv`;
 
 /**
- * SP windows of the period for both sensors, up to where each archive ends (`fimSp`, from data_availability), minus
- * the ones whose days are all in R2 already (stored as .csv.gz, any start date). A window past the end would come back
- * empty, be saved, and then be skipped for good once the archive grows.
+ * SP windows of the period for both sensors, inside each archive (`periodoSp`, [first, last] day from data_availability),
+ * minus the ones whose days are all in R2 already (stored as .csv.gz, any start date). A window past the end would come
+ * back empty, be saved, and then be skipped for good once the archive grows; one before the start is a wasted request.
  */
-export function pedidosArquivo(inicio: string, fim: string, chaves: string[], fimSp: Record<(typeof SENSORES_SP)[number], string>) {
+export function pedidosArquivo(
+  inicio: string,
+  fim: string,
+  chaves: string[],
+  periodoSp: Record<(typeof SENSORES_SP)[number], [string, string]>,
+) {
   const ja = new Set<string>(); // `${sensor}|${day}`
   for (const k of chaves) {
     const m = k.match(/Z_(\w+_SP)_(\d{4}-\d\d-\d\d)_(\d+)d\.csv\.gz$/);
     if (m) for (let i = 0; i < Number(m[3]); i++) ja.add(`${m[1]}|${somarDias(m[2], i)}`);
   }
-  return SENSORES_SP.flatMap((sensor) =>
-    janelas(inicio, fim < fimSp[sensor] ? fim : fimSp[sensor])
-      .map((j) => ({ sensor: sensor as string, dias: j.dias, data: j.data }))
-      .filter((p) => !Array.from({ length: p.dias }, (_, i) => somarDias(p.data, i)).every((d) => ja.has(`${p.sensor}|${d}`))),
-  );
+  return SENSORES_SP.flatMap((sensor) => {
+    const [de, ate] = [
+      inicio > periodoSp[sensor][0] ? inicio : periodoSp[sensor][0],
+      fim < periodoSp[sensor][1] ? fim : periodoSp[sensor][1],
+    ];
+    return de > ate
+      ? []
+      : janelas(de, ate)
+          .map((j) => ({ sensor: sensor as string, dias: j.dias, data: j.data }))
+          .filter((p) => !Array.from({ length: p.dias }, (_, i) => somarDias(p.data, i)).every((d) => ja.has(`${p.sensor}|${d}`)));
+  });
 }
 
 const somarDias = (dia: string, n: number) => new Date(Date.parse(dia) + n * 86_400_000).toISOString().slice(0, 10);
@@ -64,13 +75,15 @@ async function pedir(sensor: string, dias: number, data?: string, gzip = false):
   console.log(r.chave, r.bytes);
 }
 
-/** Last day (AAAA-MM-DD) of a FIRMS source, e.g. VIIRS_SNPP_SP, from the API data_availability. */
-export async function fimDaFonte(fonte: string): Promise<string> {
+/** First and last day (AAAA-MM-DD) of a FIRMS source, e.g. VIIRS_SNPP_SP, from the API data_availability. */
+export async function periodoDaFonte(fonte: string): Promise<[string, string]> {
   const csv = await (await fetch(`https://firms.modaps.eosdis.nasa.gov/api/data_availability/csv/${process.env.FIRMS_MAP_KEY}/ALL`)).text();
-  const fim = csv.match(new RegExp(`^${fonte},[\\d-]+,([\\d-]+)`, 'm'))?.[1];
-  if (!fim) throw new Error(`fim do ${fonte} não encontrado no data_availability`);
-  return fim;
+  const m = csv.match(new RegExp(`^${fonte},([\\d-]+),([\\d-]+)`, 'm'));
+  if (!m) throw new Error(`${fonte} não encontrado no data_availability`);
+  return [m[1], m[2]];
 }
+
+export const fimDaFonte = async (fonte: string) => (await periodoDaFonte(fonte))[1];
 
 async function principal(args: string[]) {
   if (!process.env.FIRMS_MAP_KEY) throw new Error('falta FIRMS_MAP_KEY');
@@ -78,8 +91,8 @@ async function principal(args: string[]) {
   if (args[0] === '--arquivo') {
     const fim = args[2] ?? new Date().toISOString().slice(0, 10);
     const chaves = (await listKeys('bruto/nasa-firms/')).map((k) => k.key);
-    const fimSp = { VIIRS_SNPP_SP: await fimDaFonte('VIIRS_SNPP_SP'), MODIS_SP: await fimDaFonte('MODIS_SP') };
-    for (const p of pedidosArquivo(args[1] ?? '2012-01-20', fim, chaves, fimSp)) pedidos.push([p.sensor, p.dias, p.data, true]);
+    const periodoSp = { VIIRS_SNPP_SP: await periodoDaFonte('VIIRS_SNPP_SP'), MODIS_SP: await periodoDaFonte('MODIS_SP') };
+    for (const p of pedidosArquivo(args[1] ?? '2012-01-20', fim, chaves, periodoSp)) pedidos.push([p.sensor, p.dias, p.data, true]);
   } else if (args[0] === '--historico') {
     const hoje = new Date().toISOString().slice(0, 10);
     for (const j of janelas(args[1] ?? '2026-08-01', args[2] ?? hoje)) for (const s of SENSORES) pedidos.push([s, j.dias, j.data]);
