@@ -2,14 +2,17 @@
 id: mapbiomas-alerta
 nome: MapBiomas Alerta (desmatamento validado)
 publicador: MapBiomas
-url: https://alerta.mapbiomas.org/
+url: https://production.alerta.mapbiomas.org/geoserver/wfs
 acesso: api
-chave: MAPBIOMAS_ALERTA_TOKEN
+chave: nenhuma
 atualizacao: semanal
 cobertura: Brasil, desde 2019
 licenca: CC BY 4.0
 tipo: medicao-satelite
 confiabilidade: alta
-status: candidata
+status: verificada
+verificado_em: 2026-10-23
+teste: 'curl -s "https://production.alerta.mapbiomas.org/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=mapbiomas-alertas:dashboard_alerts-shapefile&resultType=hits&srsName=EPSG:4326&bbox=-15,-74,3,-52"'
 ---
-- Tema: ambiente e donos. Alertas validados com laudo e cruzamento com CAR e embargos. A API pede cadastro e token.
+- Tema: ambiente e donos. Alertas validados com laudo e cruzamento com CAR e embargos. A API pede cadastro e token; o WFS público do GeoServer, não.
+- O teste devolveu `numberMatched="239860"` alertas na caixa da região (com EPSG:4326 o `bbox` vai em lat,lon). Camada `dashboard_alerts-shapefile`, campos `CodeAlerta`, `AreaHa`, `DataDetec`, `DtImgAnt`, `DtImgDep`, `Municipio`, `Estado`. A ligação com o código do CAR só vem pela API; aqui ela é feita pela geometria (#82, #84).

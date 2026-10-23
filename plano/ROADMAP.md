@@ -1,4 +1,4 @@
-# Roadmap — REA de Manaus
+**Sprint atual: S4.2** (M4). O S4.1 fechou em 2026-10-23 (#72 a #78; a rodada 3 está na #78). A conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fecha com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
 **Sprint atual: S4.1** (M4). O M3.5 foi mergeado no PR #71; a conferência pós-merge é a [#70](https://github.com/leonardomenezes8500/manaus/issues/70). A conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fecha com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
