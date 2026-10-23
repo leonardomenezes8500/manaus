@@ -21,6 +21,10 @@ const SEM_DADOS = [
   'ibge.setor_agregado',
   'inpe_desmatamento.deter',
   'sfb.floresta_publica',
+  'ibama.embargo',
+  'ibama.auto_infracao',
+  'icmbio.embargo',
+  'icmbio.auto_infracao',
 ];
 
 const pasta = mkdtempSync(join(process.env.MANAUS_BUFFER || tmpdir(), 'pg-'));
