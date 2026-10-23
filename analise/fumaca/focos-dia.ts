@@ -4,7 +4,7 @@
 import pg from 'pg';
 import { fimDaFonte } from '../../coleta/firms.ts';
 import { listKeys, readRaw } from '../../coleta/lib/baixar.ts';
-import { MANAUS } from '../../coleta/regiao.ts';
+import { BBOX_CAMADAS, MANAUS, naCaixa } from '../../coleta/regiao.ts';
 import { diaDeManaus } from '../dia.ts';
 import { distanceKm } from './heuristica.ts';
 
@@ -87,43 +87,54 @@ export async function gravarFocosDia(db: pg.ClientBase, linhas: ReturnType<typeo
 
 const SATELITES: Record<Sensor, string[]> = { VIIRS_SNPP: ['N'], MODIS: ['Terra', 'Aqua'] };
 
+/**
+ * Every spot of the series of a sensor in the first region box (BBOX_CAMADAS: the series keeps its area when the FIRMS
+ * box grows, #56), each once: the SP archive (each UTC day from its first file)
+ * until the day after it ends, then the NRT in firms.foco. analise.focos_dia and the where-it-burned series (#77) read
+ * the same spots from here.
+ */
+export async function* focosDaSerie(db: pg.ClientBase, sensor: Sensor): AsyncGenerator<Deteccao & { origem: 'SP' | 'NRT' }> {
+  if (!SATELITES[sensor]) throw new Error(`sensor inválido: ${sensor}`);
+  const fim = await fimDaFonte(`${sensor}_SP`);
+  const corte = Date.parse(fim + 'T00:00:00Z') + 86_400_000; // the day after the SP ends, 00Z
+  const chaves = (await listKeys('bruto/nasa-firms/')).map((k) => k.key).filter((k) => new RegExp(`_${sensor}_SP_.*\\.csv\\.gz$`).test(k));
+  const dono = donosDosDias(chaves);
+  // The NRT only starts after the SP's end: SP days not downloaded yet would be a silent hole in the fire season.
+  const ultimo = [...dono.keys()].sort().at(-1);
+  if (ultimo && ultimo < fim)
+    throw new Error(`o SP de ${sensor} vai até ${fim} e o R2 só até ${ultimo}: rode antes node coleta/firms.ts --arquivo ${ultimo}`);
+  for (const k of chaves) {
+    const [cab, ...linhas] = (await readRaw(k)).trim().split('\n');
+    const c = cab.split(',');
+    for (const l of linhas) {
+      const d = linhaSp(c, l.split(','));
+      if (d.em >= corte || dono.get(new Date(d.em).toISOString().slice(0, 10)) !== k || !naCaixa(BBOX_CAMADAS, d.lat, d.lon)) continue;
+      yield { ...d, origem: 'SP' };
+    }
+  }
+  const nrt = await db.query(
+    `SELECT lat, lon, extract(epoch FROM adquirido_em) * 1000 AS em, coalesce(frp, 0) AS frp FROM firms.foco WHERE satelite = ANY($1) AND adquirido_em >= $2`,
+    [SATELITES[sensor], new Date(corte)],
+  );
+  for (const r of nrt.rows)
+    if (naCaixa(BBOX_CAMADAS, r.lat, r.lon)) yield { lat: r.lat, lon: r.lon, em: Number(r.em), frp: r.frp, origem: 'NRT' };
+}
+
 async function principal(args: string[]) {
   const sensores: Sensor[] = args.includes('--sensor') ? [args[args.indexOf('--sensor') + 1] as Sensor] : ['VIIRS_SNPP', 'MODIS'];
   const db = new pg.Client();
   await db.connect();
   try {
     for (const sensor of sensores) {
-      if (!SATELITES[sensor]) throw new Error(`sensor inválido: ${sensor}`);
-      // The cut is the day after the SP ends, 00Z.
-      const corte = Date.parse((await fimDaFonte(`${sensor}_SP`)) + 'T00:00:00Z') + 86_400_000;
-      const chaves = (await listKeys('bruto/nasa-firms/'))
-        .map((k) => k.key)
-        .filter((k) => new RegExp(`_${sensor}_SP_.*\\.csv\\.gz$`).test(k));
-      const dono = donosDosDias(chaves);
       const soma = somador(sensor);
-      let nSp = 0;
-      for (const k of chaves) {
-        const [cab, ...linhas] = (await readRaw(k)).trim().split('\n');
-        const c = cab.split(',');
-        for (const l of linhas) {
-          const d = linhaSp(c, l.split(','));
-          if (d.em >= corte || dono.get(new Date(d.em).toISOString().slice(0, 10)) !== k) continue;
-          soma.somar(d, 'SP');
-          nSp++;
-        }
+      const n = { SP: 0, NRT: 0 };
+      for await (const d of focosDaSerie(db, sensor)) {
+        soma.somar(d, d.origem);
+        n[d.origem]++;
       }
-      const nrt = (
-        await db.query(
-          `SELECT lat, lon, extract(epoch FROM adquirido_em) * 1000 AS em, coalesce(frp, 0) AS frp FROM firms.foco WHERE satelite = ANY($1) AND adquirido_em >= $2`,
-          [SATELITES[sensor], new Date(corte)],
-        )
-      ).rows;
-      for (const r of nrt) soma.somar({ lat: r.lat, lon: r.lon, em: Number(r.em), frp: r.frp }, 'NRT');
       const linhas = soma.linhas();
       await gravarFocosDia(db, linhas);
-      console.log(
-        `${sensor}: ${chaves.length} arquivos SP (${nSp} focos), ${nrt.length} focos NRT depois de ${new Date(corte).toISOString().slice(0, 10)} → ${linhas.length} linhas`,
-      );
+      console.log(`${sensor}: ${n.SP} focos SP, ${n.NRT} focos NRT → ${linhas.length} linhas`);
     }
   } finally {
     await db.end();

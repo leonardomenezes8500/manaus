@@ -10,9 +10,26 @@ import pg from 'pg';
 import { lerFrontMatter } from '../../fontes/catalogo.ts';
 import { enviar, readRaw } from '../../coleta/lib/baixar.ts';
 import { lerCsvCalendario } from '../../coleta/calendario/regras.ts';
-import { benjaminiHochberg, mediana, permutacaoBlocos, permutacaoGrupos, sorteio, spearman } from '../cruzar.ts';
+import {
+  anomalia,
+  benjaminiHochberg,
+  mediana,
+  permutacaoBlocos,
+  permutacaoGrupos,
+  rotulosEmBlocos,
+  sinaisPorAnos,
+  sorteio,
+  spearman,
+} from '../cruzar.ts';
+import { MANAUS } from '../../coleta/regiao.ts';
 
 /** BH (FDR q) over the main tests of one round. */
+// One CSV cell: quoted when it holds a comma, a quote or a line break (e.g. "CAMS PM2,5").
+export const celula = (v: unknown): string => {
+  const t = String(v ?? '');
+  return /[",\n]/.test(t) ? `"${t.replaceAll('"', '""')}"` : t;
+};
+
 export function fecharRodada<T extends { id: string; p: number }>(resultados: T[], q = 0.1) {
   const { ajustado, rejeita } = benjaminiHochberg(
     resultados.map((r) => r.p),
@@ -28,6 +45,75 @@ export function fecharRodada<T extends { id: string; p: number }>(resultados: T[
 export function grauDeConfianca(s: { passa: boolean; segundoRecorte: boolean; medido: boolean; mecanismo: boolean; anos: number }) {
   if (!s.passa || s.anos < 8 || !s.medido) return 'baixa';
   return s.segundoRecorte && s.mecanismo ? 'alta' : 'media';
+}
+
+/**
+ * The second independent cut (round 3: MODIS for VIIRS, AQ1km for MapBiomas Fogo, PRODES for DETER) shows the effect:
+ * same direction as the main test (a ratio against 1, the rest against 0) and p < 0.05 on its own.
+ */
+export function segundoConfirma(principal: { efeito: number; unidade: string }, segundo?: { efeito: number; p: number }): boolean {
+  if (!segundo) return false;
+  const zero = principal.unidade === 'razão' ? 1 : 0;
+  return segundo.p < 0.05 && Math.sign(principal.efeito - zero) === Math.sign(segundo.efeito - zero) && segundo.efeito !== zero;
+}
+
+/** The effect went the other way from the one the hypothesis wrote (a ratio is read against 1, the rest against 0). */
+export function direcaoContraria(r: { efeito: number; unidade: string; espera?: 1 | -1 }): boolean {
+  const zero = r.unidade === 'razão' ? 1 : 0;
+  return !!r.espera && Math.sign(r.efeito - zero) === -r.espera;
+}
+
+/** Round 5: day i is exposed when it or one of the `defasagem` days before had smoke. */
+export function exposto(fu: boolean[], defasagem: number): boolean[] {
+  return fu.map((_, i) => fu.slice(Math.max(0, i - defasagem), i + 1).some(Boolean));
+}
+
+const mediaDe = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+
+/**
+ * Each value minus (or ÷) the mean of its own year. The seasonal anomaly compares with the other years, so a trend
+ * (more people 60+ every year) would read as a smoke effect when smoke days pile up in the late years; this keeps
+ * the comparison inside the same season of the same year.
+ */
+export function noAno(dias: string[], v: number[], modo: '-' | '/' = '-'): number[] {
+  const soma = new Map<string, [number, number]>();
+  dias.forEach((d, i) => {
+    const [s, n] = soma.get(d.slice(0, 4)) ?? [0, 0];
+    soma.set(d.slice(0, 4), [s + v[i], n + 1]);
+  });
+  return v.map((x, i) => {
+    const [s, n] = soma.get(dias[i].slice(0, 4))!;
+    return modo === '-' ? x - s / n : x / (s / n);
+  });
+}
+
+/** (exposed ÷ not exposed in `a`) ÷ (the same in `b`): how much more group a goes up than group b. */
+export function razaoDeRazoes(a: number[], b: number[], g: boolean[]): number {
+  const r = (v: number[]) => mediaDe(v.filter((_, i) => g[i])) / mediaDe(v.filter((_, i) => !g[i]));
+  return r(a) / r(b);
+}
+
+/**
+ * School start: mean log of (days 7 to 21 after ÷ the 21 days before), one start per year; p against the same windows
+ * around starts moved by whole weeks (−6 to +6, at random per year), which keeps the season and the weekdays.
+ */
+export function voltaAsAulas(dias: string[], v: number[], voltas: string[], { n = 999, semente = 1 } = {}) {
+  const pos = new Map(dias.map((d, i) => [d, i]));
+  const D = 86_400_000;
+  const logRazao = (volta: string, semanas: number) => {
+    const i = pos.get(new Date(Date.parse(volta) + semanas * 7 * D).toISOString().slice(0, 10));
+    if (i === undefined || i < 21 || i + 21 >= v.length) return null;
+    return Math.log(mediaDe(v.slice(i + 7, i + 22)) / mediaDe(v.slice(i - 21, i)));
+  };
+  const estat = (semanas: number[]) => {
+    const l = voltas.map((x, k) => logRazao(x, semanas[k])).filter((x): x is number => x !== null);
+    return mediaDe(l);
+  };
+  const obs = estat(voltas.map(() => 0));
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) if (Math.abs(estat(voltas.map(() => Math.floor(r() * 13) - 6))) >= Math.abs(obs)) fortes++;
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
 }
 
 /** Start of the fire season of one year: first day whose 7-day mean (that day and the 6 before) passes the year's P75. */
@@ -131,7 +217,16 @@ export function razaoPorAnos(u: { ano: number; mes: number; n: number; fora: num
 
 // ---------- the main tests of round 1 (each one as its hypothesis wrote it) ----------
 
-type Teste = { efeito: number; p: number; n: number; anos: number; texto: (e: number) => string; unidade: string };
+type Teste = {
+  efeito: number;
+  p: number;
+  n: number;
+  anos: number;
+  texto: (e: number) => string;
+  unidade: string;
+  segundo?: { nome: string; efeito: number; p: number }; // the same test on the second cut (round 3 on)
+  espera?: 1 | -1; // the direction the hypothesis wrote (round 3 on): above or below no effect
+};
 const N = 9999;
 const SEMENTE = 64;
 const FOCOS = `SELECT dia::text, focos FROM analise.focos_dia WHERE sensor = 'VIIRS_SNPP' AND anel = '800km'`;
@@ -181,7 +276,37 @@ async function anosDeFumaca(db: pg.Client): Promise<Map<number, boolean>> {
   return new Map(r.rows.map((l) => [l.ano, l.fu > m]));
 }
 
-const TESTES: Record<string, (db: pg.Client) => Promise<Teste>> = {
+/**
+ * Round 3 (#72): log of the spot density (spots per km², analise.onde_queimou_dia ÷ analise.area_categoria_ano) of
+ * category `a` ÷ category `b` of one dimension, per year, in the given states. `porAnoProdes`: spots grouped by PRODES
+ * year (August to July), as the PRODES categories are; otherwise by calendar year.
+ */
+async function logDensidades(
+  db: pg.Client,
+  o: { sensor: string; ufs: string[]; dimA: string; a: string; dimB: string; b: string; de: number; ate: number; porAnoProdes?: boolean },
+) {
+  const ano = o.porAnoProdes ? `(extract(year FROM dia) + (extract(month FROM dia) >= 8)::int)::int` : `extract(year FROM dia)::int`;
+  const { rows } = await db.query(
+    `WITH f AS (SELECT ${ano} AS ano, dimensao, categoria, sum(focos)::float8 AS n FROM analise.onde_queimou_dia
+                WHERE sensor = $1 AND uf = ANY($2) AND ((dimensao = $3 AND categoria = $4) OR (dimensao = $5 AND categoria = $6)) GROUP BY 1, 2, 3),
+          a AS (SELECT ano, dimensao, categoria, sum(km2) AS km2 FROM analise.area_categoria_ano
+                WHERE uf = ANY($2) AND ((dimensao = $3 AND categoria = $4) OR (dimensao = $5 AND categoria = $6)) GROUP BY 1, 2, 3)
+     SELECT f.ano, f.dimensao = $3 AND f.categoria = $4 AS em_a, f.n / a.km2 AS densidade
+     FROM f JOIN a USING (ano, dimensao, categoria) WHERE f.ano BETWEEN $7 AND $8 ORDER BY 1`,
+    [o.sensor, o.ufs, o.dimA, o.a, o.dimB, o.b, o.de, o.ate],
+  );
+  const anos = [...new Set(rows.map((r) => r.ano))].filter((y) => rows.filter((r) => r.ano === y).length === 2);
+  return anos.map((y) => {
+    const da = rows.find((r) => r.ano === y && r.em_a).densidade;
+    const db_ = rows.find((r) => r.ano === y && !r.em_a).densidade;
+    return { ano: y, d: Math.log(da / db_) };
+  });
+}
+
+const UFS_REGIAO = ['AM', 'RO', 'AC', 'PA', 'RR', 'MT'];
+const INTEIROS = ['AM', 'AC', 'RO']; // the states wholly inside the region box
+
+const TESTES: Record<string, (db: pg.Client) => Promise<Teste | { semTeste: string }>> = {
   // Spearman between the minimum level and the days with FU, August to November, 2012-2025, permuting the years.
   'cheia-seca-fumaca': async (db) => {
     const r = await db.query(`SELECT min(cota_cm) AS cota, count(*) FILTER (WHERE horas_fu > 0)::int AS fu
@@ -408,6 +533,402 @@ const TESTES: Record<string, (db: pg.Client) => Promise<Teste>> = {
   },
 };
 
+/** Density test (round 3): log ratio per year, sign flips of the years; the effect back as a ratio. */
+async function razaoDensidade(db: pg.Client, o: Parameters<typeof logDensidades>[1]) {
+  const d = await logDensidades(db, o);
+  const t = sinaisPorAnos(
+    d.map((x) => x.d),
+    { n: N, semente: SEMENTE },
+  );
+  return { d, efeito: Math.exp(t.efeito), p: t.p };
+}
+
+/** A density test on VIIRS S-NPP, with MODIS (same years) as the second cut. */
+async function densidadeComModis(
+  db: pg.Client,
+  o: Omit<Parameters<typeof logDensidades>[1], 'sensor'>,
+  texto: (d: { ano: number }[], e: number) => string,
+  espera: 1 | -1,
+) {
+  const v = await razaoDensidade(db, { ...o, sensor: 'VIIRS_SNPP' });
+  const m = await razaoDensidade(db, { ...o, sensor: 'MODIS' });
+  return {
+    efeito: v.efeito,
+    p: v.p,
+    n: v.d.length,
+    anos: v.d.length,
+    unidade: 'razão',
+    texto: (e: number) => texto(v.d, e),
+    segundo: { nome: 'MODIS', efeito: m.efeito, p: m.p },
+    espera,
+  };
+}
+
+/** FU days of August-November per year with the minimum level, joined to one yearly value `x`, Spearman on the residual. */
+async function fuContraAno(db: pg.Client, porAno: { ano: number; x: number }[]) {
+  const r = (
+    await db.query(
+      `SELECT extract(year FROM dia)::int AS ano, min(cota_cm) AS cota, count(*) FILTER (WHERE horas_fu > 0)::int AS fu
+       FROM analise.serie_dia WHERE extract(month FROM dia) BETWEEN 8 AND 11 GROUP BY 1 ORDER BY 1`,
+    )
+  ).rows.filter((l) => porAno.some((p) => p.ano === l.ano));
+  const y = residuoPostos(
+    r.map((l) => l.fu),
+    r.map((l) => l.cota),
+  );
+  const x = r.map((l) => porAno.find((p) => p.ano === l.ano)!.x);
+  return { r, efeito: spearman(x, y), p: permutacaoBlocos(x, y, { bloco: 1, n: N, semente: SEMENTE }) };
+}
+
+/** FU days of each month August-November 2012-2025 against the burned area of one product, without the effect of the spots. */
+async function fuContraAreaQueimada(db: pg.Client, produto: string) {
+  const r = (
+    await db.query(
+      `WITH s AS (SELECT date_trunc('month', dia)::date AS mes, count(*) FILTER (WHERE horas_fu > 0)::int AS fu, sum(focos_800km)::int AS focos
+                  FROM analise.serie_dia WHERE extract(month FROM dia) BETWEEN 8 AND 11 AND dia BETWEEN '2012-01-01' AND '2025-12-31' GROUP BY 1),
+            q AS (SELECT make_date(ano, mes, 1) AS mes, sum(hectares) AS ha FROM analise.area_queimada_mes
+                  WHERE produto = $1 AND recorte = '800km' GROUP BY 1)
+       SELECT s.mes::text, s.fu, s.focos, coalesce(q.ha, 0) AS ha FROM s LEFT JOIN q USING (mes) ORDER BY 1`,
+      [produto],
+    )
+  ).rows;
+  if (r.length % 4) throw new Error('area-queimada-fumaca: os anos precisam ter os 4 meses');
+  const y = residuoPostos(
+    r.map((l) => l.fu),
+    r.map((l) => l.focos),
+  );
+  const x = r.map((l) => l.ha);
+  return { r, efeito: spearman(x, y), p: permutacaoBlocos(x, y, { bloco: 4, n: N, semente: SEMENTE }) };
+}
+
+Object.assign(TESTES, {
+  // Recent deforestation (PRODES 1 to 3 years before) ÷ old (up to 2007), spots per km², per PRODES year 2013-2025
+  // (VIIRS S-NPP; the PRODES year 2012 starts before the VIIRS archive), sign flips of the years.
+  'desmatamento-recente-focos': (db: pg.Client): Promise<Teste> =>
+    densidadeComModis(
+      db,
+      { ufs: UFS_REGIAO, dimA: 'prodes', a: 'desm_1a3', dimB: 'prodes', b: 'desm_ate2007', de: 2013, ate: 2025, porAnoProdes: true },
+      (d, e) =>
+        `focos por km² no desmatamento do PRODES de 1 a 3 anos antes ÷ no desmatamento até 2007, caixa da região, VIIRS S-NPP, anos PRODES ${d[0].ano}–${d.at(-1)!.ano} (média geométrica): ${e.toFixed(2)}×`,
+      1,
+    ),
+  // Spearman between the FU days of August-November after the minimum level (ranks) and the clear-cut DETER area of
+  // January-July within 800 km, 2017-2025, permuting the years. Second cut: the PRODES deforestation of the PRODES year
+  // (August to July) within 800 km.
+  'deter-antes-da-fumaca': async (db: pg.Client): Promise<Teste> => {
+    const deter = (
+      await db.query(
+        `SELECT extract(year FROM view_date)::int AS ano, sum(area_km2) AS x FROM inpe_desmatamento.deter
+         WHERE classe = 'DESMATAMENTO_CR' AND extract(month FROM view_date) BETWEEN 1 AND 7
+           AND view_date BETWEEN '2017-01-01' AND '2025-12-31'
+           AND geom && ST_Expand(ST_SetSRID(ST_Point($1, $2), 4326), 8)
+           AND ST_DWithin(geom::geography, ST_SetSRID(ST_Point($1, $2), 4326)::geography, 800000) GROUP BY 1`,
+        [MANAUS.lon, MANAUS.lat],
+      )
+    ).rows;
+    const prodes = (
+      await db.query(
+        `SELECT ano::int, km2 AS x FROM analise.area_categoria_ano
+         WHERE uf = '800km' AND dimensao = 'prodes' AND categoria = 'desm_ano' AND ano BETWEEN 2017 AND 2025`,
+      )
+    ).rows;
+    const t = await fuContraAno(db, deter);
+    const s = await fuContraAno(db, prodes);
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: t.r.length,
+      anos: t.r.length,
+      unidade: 'Spearman',
+      espera: 1,
+      segundo: { nome: 'PRODES', efeito: s.efeito, p: s.p },
+      texto: (e) =>
+        `Spearman entre o corte raso do DETER de janeiro a julho a até 800 km e os dias com FU de agosto a novembro sem o efeito da cota mínima (postos), ${t.r.length} anos (${t.r[0].ano}–${t.r.at(-1).ano}): ${e.toFixed(2)}`,
+    };
+  },
+  // Undesignated public forest (CNFP tipo B, A created later counts as B) ÷ TI and UC, spots per km², AM + AC + RO,
+  // 2012-2025, sign flips of the years.
+  'floresta-nao-destinada-focos': (db: pg.Client): Promise<Teste> =>
+    densidadeComModis(
+      db,
+      { ufs: INTEIROS, dimA: 'cnfp', a: 'B', dimB: 'protegida', b: 'sim', de: 2012, ate: 2025 },
+      (d, e) =>
+        `focos por km² na floresta pública não destinada (CNFP tipo B no ano do foco) ÷ em TI e UC, AM + AC + RO, VIIRS S-NPP, ${d[0].ano}–${d.at(-1)!.ano} (média geométrica): ${e.toFixed(2)}×`,
+      1,
+    ),
+  // Inside TIs and UCs ÷ the 10 km band around them, spots per km², region box, 2012-2025, sign flips of the years.
+  'areas-protegidas-focos': (db: pg.Client): Promise<Teste> =>
+    densidadeComModis(
+      db,
+      { ufs: UFS_REGIAO, dimA: 'protegida', a: 'sim', dimB: 'protegida', b: 'faixa_10km', de: 2012, ate: 2025 },
+      (d, e) =>
+        `focos por km² dentro de TI e UC ÷ na faixa de 10 km em volta, caixa da região, VIIRS S-NPP, ${d[0].ano}–${d.at(-1)!.ano} (média geométrica): ${e.toFixed(2)}×`,
+      -1,
+    ),
+  // Spearman between the FU days of the month after the spots within 800 km (ranks) and the MapBiomas Fogo burned area
+  // within 800 km, August-November 2012-2025, permuting whole years (blocks of 4 months). Second cut: AQ1km.
+  'area-queimada-fumaca': async (db: pg.Client): Promise<Teste> => {
+    const t = await fuContraAreaQueimada(db, 'mapbiomas-fogo');
+    const s = await fuContraAreaQueimada(db, 'inpe-aq1km');
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: t.r.length,
+      anos: t.r.length / 4,
+      unidade: 'Spearman',
+      espera: 1,
+      segundo: { nome: 'INPE AQ1km', efeito: s.efeito, p: s.p },
+      texto: (e) =>
+        `Spearman entre a área queimada do MapBiomas Fogo a até 800 km e os dias com FU do mês sem o efeito dos focos (postos), agosto a novembro, ${t.r.length / 4} anos: ${e.toFixed(2)}`,
+    };
+  },
+  // Share of the year's spots in August-October, AM minus the mean of RO and AC (MODIS), 2010-2025 minus 2003-2009,
+  // permuting the before/after labels of the years. No second cut: the VIIRS starts in 2012, after the ban.
+  'proibicao-ipaam-2010': async (db: pg.Client): Promise<Teste> => {
+    const r = (
+      await db.query(
+        `SELECT extract(year FROM dia)::int AS ano, uf,
+                sum(focos) FILTER (WHERE extract(month FROM dia) BETWEEN 8 AND 10)::float8 / sum(focos) AS fatia
+         FROM analise.onde_queimou_dia WHERE sensor = 'MODIS' AND dimensao = 'ti' AND uf IN ('AM', 'RO', 'AC')
+           AND dia BETWEEN '2003-01-01' AND '2025-12-31' GROUP BY 1, 2 ORDER BY 1, 2`,
+      )
+    ).rows;
+    const anos = [...new Set(r.map((l) => l.ano))];
+    const f = (ano: number, uf: string) => r.find((l) => l.ano === ano && l.uf === uf)!.fatia;
+    const d = anos.map((a) => f(a, 'AM') - (f(a, 'RO') + f(a, 'AC')) / 2);
+    const g = anos.map((a) => a >= 2010);
+    const media = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    const t = permutacaoGrupos(d, g, {
+      n: N,
+      semente: SEMENTE,
+      estatistica: (gg) => media(d.filter((_, i) => gg[i])) - media(d.filter((_, i) => !gg[i])),
+    });
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: d.length,
+      anos: d.length,
+      unidade: 'pontos (fração)',
+      espera: -1,
+      texto: (e) =>
+        `fatia dos focos do ano de agosto a outubro, AM menos a média de RO e AC (MODIS), 2010–2025 menos 2003–2009: ${(100 * e).toFixed(1)} pontos percentuais`,
+    };
+  },
+});
+
+// ---------- round 5 (#92): health and federal spending ----------
+
+/** Last day with 6 SIH processing months after it (an admission can arrive months later), capped at `teto`. */
+async function fimDoSih(db: pg.Client, teto: string): Promise<string> {
+  const { rows } = await db.query(`SELECT max(periodo) AS p FROM datasus.lido WHERE fonte = 'datasus-sih'`);
+  const [a, m] = String(rows[0].p).split('-').map(Number);
+  const fim = new Date(Date.UTC(a, m - 6, 0)).toISOString().slice(0, 10); // last day of the month 6 months before
+  return fim < teto ? fim : teto;
+}
+
+/** Every day from `de` to `ate`: the count of `soma` (a query giving dia, n), smoke (FU in the METAR) and the CAMS PM2.5. */
+async function serieDiaria(db: pg.Client, soma: string, de: string, ate: string) {
+  const { rows } = await db.query(
+    `WITH d AS (SELECT generate_series($1::date, $2::date, '1 day')::date AS dia)
+     SELECT d.dia::text, coalesce(x.n, 0)::float8 AS n, coalesce(s.horas_fu, 0) > 0 AS fu, c.pm25
+     FROM d LEFT JOIN (${soma}) x ON x.dia = d.dia LEFT JOIN analise.serie_dia s ON s.dia = d.dia
+       LEFT JOIN cams.pm25_dia c ON c.dia = d.dia AND c.produto = 'eac4'
+     ORDER BY 1`,
+    [de, ate],
+  );
+  return {
+    dias: rows.map((r) => r.dia as string),
+    n: rows.map((r) => r.n as number),
+    fu: rows.map((r) => r.fu as boolean),
+    cams: rows.map((r) => r.pm25 !== null && r.pm25 > 25),
+  };
+}
+
+const agoNov = (dia: string) => Number(dia.slice(5, 7)) >= 8 && Number(dia.slice(5, 7)) <= 11;
+
+/** The relative difference of the seasonal anomaly on the days after smoke (0 to 7), August-November, blocks of 7 days. */
+function depoisDaFumaca(s: Awaited<ReturnType<typeof serieDiaria>>, marca: boolean[]) {
+  const anom = anomalia(s.dias, s.n, 7).map((x) => x ?? 0);
+  const idx = s.dias.map((d, i) => (agoNov(d) ? i : -1)).filter((i) => i >= 0);
+  const g = exposto(marca, 7);
+  const base = mediaDe(idx.map((i) => s.n[i]));
+  const v = noAno(
+    idx.map((i) => s.dias[i]),
+    idx.map((i) => anom[i]),
+  );
+  const est = (gg: boolean[]) => (mediaDe(v.filter((_, k) => gg[k])) - mediaDe(v.filter((_, k) => !gg[k]))) / base;
+  return rotulosEmBlocos(
+    idx.map((i) => g[i]),
+    est,
+    { n: N, semente: SEMENTE },
+  );
+}
+
+async function saude(db: pg.Client, soma: string, ate: string, texto: (e: number, anos: string) => string): Promise<Teste> {
+  const fim = await fimDoSih(db, ate);
+  const s = await serieDiaria(db, soma, '2012-01-01', fim);
+  const t = depoisDaFumaca(s, s.fu);
+  const c = depoisDaFumaca(s, s.cams);
+  const anos = `2012–${fim.slice(0, 4)}`;
+  return {
+    efeito: t.efeito,
+    p: t.p,
+    n: s.dias.filter(agoNov).length,
+    anos: Number(fim.slice(0, 4)) - 2011,
+    unidade: 'fração',
+    espera: 1,
+    segundo: { nome: 'CAMS PM2,5 > 25 µg/m³ (modelado)', efeito: c.efeito, p: c.p },
+    texto: (e) => texto(e, anos),
+  };
+}
+
+type SemTeste = { semTeste: string };
+
+Object.assign(TESTES, {
+  // Respiratory admissions (J00-J99) of Manaus residents, anomaly, days 0-7 after a FU day ÷ the others, Aug-Nov 2012-2025.
+  'fumaca-internacao-respiratoria': (db: pg.Client) =>
+    saude(
+      db,
+      `SELECT dia, sum(internacoes) AS n FROM datasus.internacao_dia WHERE grupo = 'respiratorio' GROUP BY dia`,
+      '2025-12-31',
+      (e, anos) =>
+        `internações respiratórias de moradores de Manaus nos 0 a 7 dias depois de um dia com FU, em anomalia sazonal e contra os outros dias do mesmo ano, agosto a novembro, ${anos}: ${(100 * e).toFixed(1)}% de um dia comum`,
+    ),
+  // Deaths of residents 60+ with underlying cause J or I, same design, 2012-2024 (the SIM of 2025 is preliminary).
+  'fumaca-obito-idoso': async (db: pg.Client): Promise<Teste> => {
+    const s = await serieDiaria(
+      db,
+      `SELECT dia, sum(obitos) AS n FROM datasus.obito_dia WHERE faixa = '60+' AND grupo IN ('respiratorio', 'circulatorio') GROUP BY dia`,
+      '2012-01-01',
+      '2024-12-31',
+    );
+    const t = depoisDaFumaca(s, s.fu);
+    const c = depoisDaFumaca(s, s.cams);
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: s.dias.filter(agoNov).length,
+      anos: 13,
+      unidade: 'fração',
+      espera: 1,
+      segundo: { nome: 'CAMS PM2,5 > 25 µg/m³ (modelado)', efeito: c.efeito, p: c.p },
+      texto: (e) =>
+        `óbitos de moradores de Manaus com 60 anos ou mais por causa respiratória ou circulatória nos 0 a 7 dias depois de um dia com FU, em anomalia sazonal e contra os outros dias do mesmo ano, agosto a novembro, 2012–2024: ${(100 * e).toFixed(1)}% de um dia comum`,
+    };
+  },
+  // Respiratory admissions: (0-4 and 60+, smoke ÷ no smoke) ÷ (5-59, smoke ÷ no smoke), days 0-7 after FU, Aug-Nov.
+  // Within a band the population is the same on both sides, so the ratio of rates is the ratio of counts.
+  'idade-internacao-fumaca': async (db: pg.Client): Promise<Teste> => {
+    const fim = await fimDoSih(db, '2025-12-31');
+    const q = (faixas: string) =>
+      `SELECT dia, sum(internacoes) AS n FROM datasus.internacao_dia WHERE grupo = 'respiratorio' AND faixa IN (${faixas}) GROUP BY dia`;
+    const a = await serieDiaria(db, q(`'0-4', '60+'`), '2012-01-01', fim);
+    const b = await serieDiaria(db, q(`'5-9', '10-14', '15-59'`), '2012-01-01', fim);
+    const idx = a.dias.map((d, i) => (agoNov(d) ? i : -1)).filter((i) => i >= 0);
+    const pega = (v: number[]) =>
+      noAno(
+        idx.map((i) => a.dias[i]),
+        idx.map((i) => v[i]),
+        '/',
+      );
+    const teste = (marca: boolean[]) => {
+      const g = exposto(marca, 7);
+      return rotulosEmBlocos(
+        idx.map((i) => g[i]),
+        (gg) => razaoDeRazoes(pega(a.n), pega(b.n), gg),
+        { n: N, semente: SEMENTE },
+      );
+    };
+    const t = teste(a.fu);
+    const c = teste(a.cams);
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: idx.length,
+      anos: Number(fim.slice(0, 4)) - 2011,
+      unidade: 'razão',
+      espera: 1,
+      segundo: { nome: 'CAMS PM2,5 > 25 µg/m³ (modelado)', efeito: c.efeito, p: c.p },
+      texto: (e) =>
+        `alta das internações respiratórias de menores de 5 e de 60 anos ou mais nos 0 a 7 dias depois de um dia com FU ÷ a mesma alta de 5 a 59 anos, cada faixa contra a média do próprio ano, agosto a novembro, 2012–${fim.slice(0, 4)}: ${e.toFixed(2)}×`,
+    };
+  },
+  // Respiratory admissions 0-9: days 7-21 after the February school start ÷ the 21 days before, against placebo starts.
+  'escola-internacao-criancas': async (db: pg.Client): Promise<Teste> => {
+    const fim = await fimDoSih(db, '2025-12-31');
+    const s = await serieDiaria(
+      db,
+      `SELECT dia, sum(internacoes) AS n FROM datasus.internacao_dia WHERE grupo = 'respiratorio' AND faixa IN ('0-4', '5-9') GROUP BY dia`,
+      '2012-01-01',
+      fim,
+    );
+    // One start per year: the municipal network (urban), else the state network in the capital; remote years left out.
+    const { rows } = await db.query(
+      `SELECT DISTINCT ON (extract(year FROM inicio)) inicio::text AS dia FROM contexto.periodo
+       WHERE tipo = 'escola' AND extract(month FROM inicio) = 2 AND nome ~ '^(Início|Abertura) do ano letivo da rede (municipal|estadual)'
+         AND nome !~ '(remoto|interior)' AND inicio <= $1::date - 21
+       ORDER BY extract(year FROM inicio), nome ~ 'municipal' DESC, inicio`,
+      [fim],
+    );
+    const voltas = rows.map((r) => r.dia as string);
+    const t = voltaAsAulas(s.dias, s.n, voltas, { n: N, semente: SEMENTE });
+    return {
+      efeito: Math.exp(t.efeito),
+      p: t.p,
+      n: voltas.length,
+      anos: voltas.length,
+      unidade: 'razão',
+      espera: 1,
+      texto: (e) =>
+        `internações respiratórias de 0 a 9 anos de 1 a 3 semanas depois da volta às aulas de fevereiro ÷ as 3 semanas antes, ${voltas.length} anos (${voltas.map((v) => v.slice(0, 4)).join(', ')}), média geométrica: ${e.toFixed(2)}×`,
+    };
+  },
+  // Spearman between the VIIRS spots of the year in AM + AC + RO and the August-December liquidated value of the fire
+  // actions localized in those states, in reais of the last IPCA year, 2014-2025, permuting the years.
+  'gasto-federal-fogo-reativo': async (db: pg.Client): Promise<Teste | SemTeste> => {
+    const gasto = async (acoes: string[]) =>
+      (
+        await db.query(
+          `SELECT extract(year FROM mes)::int AS ano, sum(liquidado_real)::float8 AS x FROM transparencia.despesa_fogo_mes_real
+           WHERE acao = ANY($1) AND uf IN ('AM', 'AC', 'RO') AND extract(month FROM mes) >= 8 AND mes BETWEEN '2014-01-01' AND '2025-12-31'
+           GROUP BY 1 HAVING sum(liquidado_real) > 0 ORDER BY 1`,
+          [acoes],
+        )
+      ).rows as { ano: number; x: number }[];
+    const todas = await gasto(['214M', '214N', '214P', '218X', '20X7']);
+    if (todas.length < 8)
+      return {
+        semTeste: `o gasto liquidado de agosto a dezembro dessas ações com localizador no AM, no AC ou em RO só aparece em ${todas.length} dos 12 anos de 2014 a 2025 (${todas.map((r) => r.ano).join(', ') || 'nenhum'}): quase tudo vem localizado como nacional ou por região, sem estado`,
+      };
+    const focos = (
+      await db.query(
+        `SELECT extract(year FROM dia)::int AS ano, sum(focos)::float8 AS f FROM analise.onde_queimou_dia
+         WHERE sensor = 'VIIRS_SNPP' AND dimensao = 'ti' AND uf IN ('AM', 'AC', 'RO') AND dia BETWEEN '2014-01-01' AND '2025-12-31' GROUP BY 1`,
+      )
+    ).rows as { ano: number; f: number }[];
+    const teste = (g: { ano: number; x: number }[]) => {
+      const par = g.map((r) => ({ x: focos.find((f) => f.ano === r.ano)?.f ?? 0, y: r.x }));
+      const x = par.map((p) => p.x);
+      const y = par.map((p) => p.y);
+      return { efeito: spearman(x, y), p: permutacaoBlocos(x, y, { bloco: 1, n: N, semente: SEMENTE }), anos: g.length };
+    };
+    const t = teste(todas);
+    const prev = await gasto(['214M']);
+    const s = prev.length >= 3 ? teste(prev) : undefined;
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: t.anos,
+      anos: t.anos,
+      unidade: 'Spearman',
+      espera: 1,
+      ...(s ? { segundo: { nome: 'só o Prevfogo (214M)', efeito: s.efeito, p: s.p } } : {}),
+      texto: (e) =>
+        `Spearman entre os focos do ano no AM, no AC e em RO (VIIRS S-NPP) e o gasto federal do fogo liquidado de agosto a dezembro com localizador nesses estados (reais do último ano do IPCA), ${t.anos} anos: ${e.toFixed(2)}`,
+    };
+  },
+});
+
 async function principal(args: string[]) {
   const rodada = args[args.indexOf('--rodada') + 1];
   const dir = join(import.meta.dirname, '../../pesquisa/hipoteses');
@@ -418,23 +939,47 @@ async function principal(args: string[]) {
   const db = new pg.Client();
   await db.connect();
   const feitos = [];
+  const semTeste: { id: string; f: string; motivo: string }[] = [];
   try {
     for (const h of hips) {
       const t = TESTES[h.card.id];
       if (!t) throw new Error(`sem teste escrito para ${h.card.id}`);
-      feitos.push({ id: h.card.id, f: h.f, ...(await t(db)) });
-      console.log(h.card.id, feitos.at(-1)!.efeito, feitos.at(-1)!.p);
+      const r = await t(db);
+      if ('semTeste' in r) {
+        semTeste.push({ id: h.card.id, f: h.f, motivo: r.semTeste });
+        console.log(h.card.id, 'sem teste:', r.semTeste);
+        continue;
+      }
+      feitos.push({ id: h.card.id, f: h.f, ...r });
+      console.log(h.card.id, r.efeito, r.p);
     }
   } finally {
     await db.end();
   }
   const hoje = new Date(Date.now() - 4 * 3_600_000).toISOString().slice(0, 10);
   const fechados = fecharRodada(feitos);
-  const linhas = ['id,n,anos,efeito,unidade,p,p_ajustado,passa_bh,confianca,permutacoes,semente,banco,testada_em'];
+  const linhas = [
+    'id,n,anos,efeito,unidade,p,p_ajustado,passa_bh,segundo_recorte,segundo_efeito,segundo_p,confianca,permutacoes,semente,banco,testada_em',
+  ];
   for (const r of fechados) {
-    const confianca = grauDeConfianca({ passa: r.passa, segundoRecorte: false, medido: true, mecanismo: true, anos: r.anos });
-    const frase = `${r.texto(r.efeito)}; p = ${r.p.toFixed(4)}, p ajustado (BH da rodada ${rodada}) = ${r.p_ajustado.toFixed(4)}, ${r.passa ? 'passa' : 'não passa'} na correção`;
-    const detalhe = `${frase}. Confiança ${confianca}: ${r.anos < 8 ? 'menos de 8 anos de dado' : r.passa ? 'falta um segundo recorte independente' : 'não passa na correção'}. Dado medido; ${N} permutações, semente ${SEMENTE}, banco ${process.env.PGDATABASE} em ${hoje}. Números em produtos/contexto/rodada-${rodada}.csv.`;
+    const segundoRecorte = segundoConfirma(r, r.segundo);
+    const confianca = grauDeConfianca({ passa: r.passa, segundoRecorte, medido: true, mecanismo: !direcaoContraria(r), anos: r.anos }); // the written mechanism is for the expected direction
+    const contra = direcaoContraria(r) ? ', na direção contrária à esperada: a hipótese não se confirma' : '';
+    const frase = `${r.texto(r.efeito)}; p = ${r.p.toFixed(4)}, p ajustado (BH da rodada ${rodada}) = ${r.p_ajustado.toFixed(4)}, ${r.passa ? 'passa' : 'não passa'} na correção${contra}`;
+    const seg = r.segundo
+      ? ` Segundo recorte (${r.segundo.nome}): ${r.segundo.efeito.toFixed(2)}, p = ${r.segundo.p.toFixed(4)}, ${segundoRecorte ? 'confirma' : 'não confirma'}.`
+      : '';
+    const porque =
+      r.anos < 8
+        ? 'menos de 8 anos de dado'
+        : !r.passa
+          ? 'não passa na correção'
+          : segundoRecorte
+            ? 'passa na correção e o segundo recorte confirma'
+            : r.segundo
+              ? 'o segundo recorte não confirma'
+              : 'falta um segundo recorte independente';
+    const detalhe = `${frase}.${seg} Confiança ${confianca}: ${porque}. Dado medido; ${N} permutações, semente ${SEMENTE}, banco ${process.env.PGDATABASE} em ${hoje}. Números em produtos/contexto/rodada-${rodada}.csv.`;
     const p = join(dir, r.f);
     writeFileSync(
       p,
@@ -450,12 +995,35 @@ async function principal(args: string[]) {
         r.p.toFixed(4),
         r.p_ajustado.toFixed(4),
         r.passa,
+        r.segundo?.nome ?? '',
+        r.segundo?.efeito.toFixed(4) ?? '',
+        r.segundo?.p.toFixed(4) ?? '',
         confianca,
         N,
         SEMENTE,
         process.env.PGDATABASE,
         hoje,
-      ].join(','),
+      ]
+        .map(celula)
+        .join(','),
+    );
+  }
+  // What the data do not allow testing as written: sem-teste with the reason, out of the correction (the test does not change).
+  for (const r of semTeste) {
+    const p = join(dir, r.f);
+    const motivo = `Sem teste na rodada ${rodada} (${hoje}): ${r.motivo}.`;
+    writeFileSync(
+      p,
+      atualizarHipotese(readFileSync(p, 'utf8'), {
+        status: 'sem-teste',
+        testada_em: hoje,
+        confianca: '',
+        resultado: motivo,
+        detalhe: motivo,
+      }),
+    );
+    linhas.push(
+      [r.id, '', '', '', '', '', '', '', '', '', '', 'sem-teste', N, SEMENTE, process.env.PGDATABASE, hoje].map(celula).join(','),
     );
   }
   const tmp = mkdtempSync(join(tmpdir(), 'rodada-'));

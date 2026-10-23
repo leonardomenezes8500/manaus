@@ -14,7 +14,7 @@ const { default: pg } = await import('pg');
 const { baixar, readRaw } = await import('./lib/baixar.ts');
 const { focosEmAreasProtegidas, loadTis, loadUnidades, stageUnidades, tiRow } = await import('./carga/areas-protegidas.ts');
 const { registrar } = await import('./carga/lib.ts');
-const { BBOX: B } = await import('./regiao.ts');
+const { BBOX_CAMADAS: B } = await import('./regiao.ts');
 
 const FUNAI =
   'https://geoserver.funai.gov.br/geoserver/Funai/ows?service=WFS&version=2.0.0&request=GetFeature&typeNames=Funai:tis_poligonais' +

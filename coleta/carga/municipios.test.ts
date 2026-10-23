@@ -1,6 +1,6 @@
 import pg from 'pg';
 import { bancoNovo, comBanco } from '../../db/teste.ts';
-import { BBOX, MANAUS } from '../regiao.ts';
+import { BBOX_CAMADAS, MANAUS } from '../regiao.ts';
 import { registrar } from './lib.ts';
 import { carregarMunicipios } from './municipios.ts';
 
@@ -91,6 +91,6 @@ comBanco('carga de municípios', () => {
     const r = await db.query(
       "SELECT ST_XMin(geom) AS oeste, ST_YMin(geom) AS sul, ST_XMax(geom) AS leste, ST_YMax(geom) AS norte FROM analise.regiao WHERE nome = 'influencia_fumaca'",
     );
-    expect(r.rows[0]).toEqual(BBOX);
+    expect(r.rows[0]).toEqual(BBOX_CAMADAS);
   });
 });

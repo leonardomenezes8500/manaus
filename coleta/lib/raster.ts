@@ -38,6 +38,25 @@ export function valorNoPonto(raster: string, lon: number, lat: number, nodata: n
 }
 
 /**
+ * Pixel values at many points in one gdallocationinfo run (lon lat per line on stdin); null off the raster or at
+ * `nodata`. gdallocationinfo exits 1 when a point is off the raster, so the check is one output line per point.
+ */
+export function valoresNosPontos(raster: string, pontos: { lon: number; lat: number }[], nodata: number): (number | null)[] {
+  if (!pontos.length) return [];
+  const r = spawnSync('gdallocationinfo', ['-valonly', '-wgs84', raster], {
+    env: gdalR2Env(),
+    input: pontos.map((p) => `${p.lon} ${p.lat}\n`).join(''),
+    encoding: 'utf8',
+    maxBuffer: 1 << 30,
+  });
+  // n lines, each ended by \n: an unreadable raster gives '' (one piece), which must not pass for one null.
+  const linhas = r.stdout.split('\n');
+  if (r.error || linhas.length !== pontos.length + 1 || linhas.at(-1) !== '')
+    throw new Error(`gdallocationinfo falhou em ${raster}: ${r.error?.message ?? r.stderr.trim()}`);
+  return linhas.slice(0, -1).map((l) => (l.trim() === '' || Number(l) === nodata ? null : Number(l)));
+}
+
+/**
  * Clips `fontes` (one raster, or tiles mosaicked through a VRT) to the box and writes a COG in EPSG:4326.
  * `categorico`: nearest neighbour for the overviews, so class codes survive zooming out.
  */

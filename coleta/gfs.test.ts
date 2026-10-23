@@ -8,8 +8,8 @@ test('filter URL: UGRD, VGRD and VVEL on the 8 levels from 1000 to 700 hPa, the 
   expect(q.get('file')).toBe('gfs.t12z.pgrb2full.0p50.f003');
   for (const v of ['UGRD', 'VGRD', 'VVEL']) expect(q.get(`var_${v}`)).toBe('on');
   for (const n of [700, 800, 850, 900, 925, 950, 975, 1000]) expect(q.get(`lev_${n}_mb`)).toBe('on');
-  expect([q.get('toplat'), q.get('leftlon'), q.get('rightlon'), q.get('bottomlat')]).toEqual(['3', '-74', '-52', '-15']);
-  expect(nomeBruto({ rodada: '2026102112', passo: '003' })).toBe('gfs_2026102112_f003.grib');
+  expect([q.get('toplat'), q.get('leftlon'), q.get('rightlon'), q.get('bottomlat')]).toEqual(['3', '-74', '-44', '-15']);
+  expect(nomeBruto({ rodada: '2026102112', passo: '003' })).toBe('gfs_2026102112_f003_l44.grib');
 });
 
 test('runs ready at a given UTC time: 4 h after the run, back to the start day', () => {
@@ -26,7 +26,10 @@ test('runs ready at a given UTC time: 4 h after the run, back to the start day',
 });
 
 test('missing files: f000 and f003 of each run not yet in R2', () => {
-  const chaves = ['bruto/noaa-gfs-nomads/2026/10/22/043000Z_gfs_2026102200_f000.grib'];
+  const chaves = [
+    'bruto/noaa-gfs-nomads/2026/10/22/043000Z_gfs_2026102200_f000_l44.grib',
+    'bruto/noaa-gfs-nomads/2026/10/22/043000Z_gfs_2026102200_f003.grib', // the first box (#56): asked again
+  ];
   expect(arquivosQueFaltam(chaves, ['2026102200', '2026102206'])).toEqual([
     { rodada: '2026102200', passo: '003' },
     { rodada: '2026102206', passo: '000' },

@@ -7,6 +7,7 @@ import { splitCsv } from './csv.ts';
 import { firmsRow, inpeRow, loadLines } from './focos.ts';
 import { pendingFiles, registrar } from './lib.ts';
 import { carregarMunicipios } from './municipios.ts';
+import { BBOX, naCaixa } from '../regiao.ts';
 
 const fixture = (name: string) => readFileSync(join(import.meta.dirname, '__fixtures__', name), 'utf8');
 async function* lines(text: string) {
@@ -133,13 +134,13 @@ comBanco('carga de focos', () => {
   });
 });
 
-/** Rows of the INPE fixture inside the region box (lon -74..-52, lat -15..3). */
+/** Rows of the INPE fixture inside the spots box (BBOX: lon -74..-44 since #56, lat -15..3). */
 async function expectedInpe() {
   const [, ...rows] = fixture('inpe.csv')
     .trim()
     .split('\n')
     .map((l) => splitCsv(l));
-  return rows.filter((r) => +r[2] >= -74 && +r[2] <= -52 && +r[1] >= -15 && +r[1] <= 3).length;
+  return rows.filter((r) => naCaixa(BBOX, +r[1], +r[2])).length;
 }
 
 comBanco('carga de focos a partir de um arquivo (readline)', () => {

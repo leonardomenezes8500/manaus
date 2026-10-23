@@ -1,6 +1,4 @@
-# Roadmap — REA de Manaus
-
-**Sprint atual: M3.5 em revisão** (#59–#69 no PR do M3.5; a conferência pós-merge é a [#70](https://github.com/leonardomenezes8500/manaus/issues/70)). Depois vem o M4/S4.1, com as issues a criar. A conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fecha com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: M4 em revisão** (PR único do M4, aberto em 2026-10-23). S4.2 e S4.3 fecharam em 2026-10-23, menos o que espera o CAR ([#83](https://github.com/leonardomenezes8500/manaus/issues/83) a #86 e o elo do imóvel na #93, download à mão do usuário), a #42 (a partir de ~05/11) e a #41 (decisão do usuário). A conferência do M4 é a [#94](https://github.com/leonardomenezes8500/manaus/issues/94); a do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fechou com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
 Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o M3.5 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
@@ -31,6 +29,7 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - **Earthdata, usuário e senha (M3, [#54](https://github.com/leonardomenezes8500/manaus/issues/54)):** pôr `EARTHDATA_USER` e `EARTHDATA_PASSWORD` no `.env` deste PC (só aqui, não vai para a slice nem para o GitHub). O AppEEARS, que dá a série do MAIAC num CSV pequeno, não aceita o token. Sem isso, o MAIAC fica só nos dias da comparação, e a série 2012–2026 sai sem ele.
 - **PurpleAir ([#41](https://github.com/leonardomenezes8500/manaus/issues/41), foi para o M4 em 2026-10-22):** decidir entre pedir à UEA/EducAIR autorização para ler o mapa do SELVA e/ou criar uma chave da API PurpleAir (grátis no começo, depois paga por uso). Saiu do M3 sem decisão.
 - Conta no Copernicus Data Space: não faz mais falta no M3, porque o Sentinel-5P saiu dele. Fica para quando ele voltar.
+- **CAR (S4.2, [#83](https://github.com/leonardomenezes8500/manaus/issues/83)):** baixar à mão, na "Base de downloads" do SICAR, os perímetros dos imóveis de AM, AC, RO e PA (4 zips, tem captcha de imagem, ~5 min). O passo a passo está na #83. Sem isso, o S4.2 para no #84.
 - Confirmar as decisões acima.
 
 ---
@@ -153,11 +152,50 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 **Objetivo:** para cada foco relevante, dizer onde ele caiu (desmatamento, imóvel, área protegida), quem é o dono ou responsável, qual o efeito na saúde e quem deveria agir e quanto gastou.
 **Pronto quando:** existe o relatório "cadeia completa" de um dia (dia → focos → áreas/imóveis → embargos/autos → internações → órgãos e gastos), com fonte em cada elo.
 
-- **S4.1 — Onde queimou:** PRODES e DETER (TerraBrasilis), MapBiomas Alerta, florestas públicas (CNFP/SFB); cruzar com TIs e UCs (039). Focos do arquivo FIRMS por estado (AM e vizinhos), para dar teste à hipótese `proibicao-fogo-focos` (#64). Área queimada vinda do M3: MapBiomas Fogo primeiro (menos trabalho), depois MCD64A1 e INPE AQ1km.
-- Vindas do M3: [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (só depois de 2 semanas de coleta da #40 na slice); [#41](https://github.com/leonardomenezes8500/manaus/issues/41) Coletor PurpleAir (espera a decisão do usuário); [#56](https://github.com/leonardomenezes8500/manaus/issues/56) Crescer a caixa da região para leste (as trajetórias param a 8° de Manaus).
-- **S4.2 — De quem é:** CAR/SICAR (AM, RO, AC, PA), SIGEF/SNCI (INCRA), embargos e autos de infração do IBAMA e do ICMBio. Sai a lista de imóveis com fogo recorrente que já foram embargados.
-- **S4.3 — Saúde e poder público:** DATASUS SIH/SIM (respiratório, Manaus), SISAM; Portal da Transparência (Prevfogo, ICMBio, GLO), PNCP, transparência do AM (SEMA, IPAAM, CBMAM), Prefeitura. Fecha com o relatório "cadeia completa". O PNCP e o SICONFI já vêm do M3.5 (aqui só se filtram os órgãos do fogo). Internações × fumaça seguem o método da #59: hipótese escrita, defasagem, época, taxa por idade (população da #63) e calendário escolar (#61).
+- **S4.1 — Onde queimou** (cada fonte com a hipótese escrita na #72 antes de coletar):
+  - [#72](https://github.com/leonardomenezes8500/manaus/issues/72) Hipóteses do S4.1 (rodada 3) antes de coletar: desmatamento, florestas públicas, áreas protegidas, área queimada e a proibição do IPAAM antes e depois de 2010 (vem antes de todas)
+  - [#73](https://github.com/leonardomenezes8500/manaus/issues/73) Backup diário sem os dados que se refazem do bruto, antes das camadas grandes (vem do `IDEIAS.md`)
+  - [#74](https://github.com/leonardomenezes8500/manaus/issues/74) Desmatamento do INPE: DETER (alertas desde 2016, coleta semanal leve na slice) e PRODES (mapa anual em COG, fora do PostGIS)
+  - [#75](https://github.com/leonardomenezes8500/manaus/issues/75) Florestas públicas: CNFP 2025 do SFB na região e a conferência com TIs e UCs (#30)
+  - [#76](https://github.com/leonardomenezes8500/manaus/issues/76) Área queimada por mês: MapBiomas Fogo (30 m) e INPE AQ1km (1 km), no anel de 800 km e por estado; MCD64A1 fica no backlog
+  - [#77](https://github.com/leonardomenezes8500/manaus/issues/77) Onde caiu cada foco: estado, TI, UC, floresta pública, PRODES e DETER, no arquivo FIRMS desde 2001 (focos por estado da #64) e nos focos da v1 de cada dia
+  - [#78](https://github.com/leonardomenezes8500/manaus/issues/78) Rodada 3 de cruzamentos, com o mesmo método e a mesma correção
+- **S4.2 — De quem é** (issues criadas em 2026-10-23; cada fonte testada com uma requisição real):
+  - [#56](https://github.com/leonardomenezes8500/manaus/issues/56) Crescer a caixa da região para leste (vem do M3; vai primeiro). Só a caixa do vento e do FIRMS cresce; as camadas de terra ficam na caixa atual
+  - [#79](https://github.com/leonardomenezes8500/manaus/issues/79) Hipóteses do S4.2 (rodada 4), antes de coletar
+  - [#80](https://github.com/leonardomenezes8500/manaus/issues/80) Terra certificada do INCRA: SIGEF, SNCI e assentamentos de AM, AC, RO e PA
+  - [#81](https://github.com/leonardomenezes8500/manaus/issues/81) Embargos e autos de infração do IBAMA e do ICMBio na região
+  - [#82](https://github.com/leonardomenezes8500/manaus/issues/82) MapBiomas Alerta pelo WFS público (sem token; a ligação com o CAR é feita aqui)
+  - [#83](https://github.com/leonardomenezes8500/manaus/issues/83) CAR (SICAR) de AM, AC, RO e PA, cabendo no R2 (o download é à mão, pelo usuário: tem captcha)
+  - [#84](https://github.com/leonardomenezes8500/manaus/issues/84) Onde caiu cada foco (2): imóvel do CAR, título do INCRA, embargo e alerta
+  - [#85](https://github.com/leonardomenezes8500/manaus/issues/85) Lista de imóveis com fogo recorrente que já foram embargados
+  - [#86](https://github.com/leonardomenezes8500/manaus/issues/86) Rodada 4 de cruzamentos
+- **S4.3 — Saúde e poder público:**
+  - [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (vem do M3; a partir de ~05/11). [#41](https://github.com/leonardomenezes8500/manaus/issues/41) PurpleAir continua esperando a decisão do usuário
+  - [#87](https://github.com/leonardomenezes8500/manaus/issues/87) Hipóteses do S4.3 (rodada 5), antes de coletar
+  - [#88](https://github.com/leonardomenezes8500/manaus/issues/88) Internações e óbitos: SIH e SIM do DATASUS, moradores de Manaus, desde 2012
+  - [#89](https://github.com/leonardomenezes8500/manaus/issues/89) PM2,5 modelado do CAMS (EAC4) em Manaus, no lugar do SISAM
+  - [#90](https://github.com/leonardomenezes8500/manaus/issues/90) Gasto federal do fogo: Portal da Transparência, desde 2014
+  - [#91](https://github.com/leonardomenezes8500/manaus/issues/91) Quem deveria agir: órgão responsável por tipo de área, com a lei, e os gastos e contratos de cada órgão
+  - [#92](https://github.com/leonardomenezes8500/manaus/issues/92) Rodada 5 de cruzamentos
+  - [#93](https://github.com/leonardomenezes8500/manaus/issues/93) Relatório "cadeia completa" de um dia e a rota `/cadeia/:dia`
+  - [#94](https://github.com/leonardomenezes8500/manaus/issues/94) Conferência pós-merge do M4
 - Toda fonte nova do M4 entra com hipótese escrita (portão da #59).
+
+**Decisões do S4.1 (2026-10-23, provisórias; o usuário pode mudar):**
+- **R2 mais cheio do que se pensava:** 6,95 GiB em 23/10, e o backup diário tem 103 MB (14 dias = ~1,4 GB). A #73 tira do backup o que se refaz do bruto. O S4.1 soma ~0,5 a 0,65 GB e termina perto de 8,5 a 9 GB. O CAR do S4.2 não cabe nos 10 GB grátis: aí o usuário decide se paga (~US$ 0,015 por GB por mês acima de 10 GB). Conferir a regra de 14 dias do `backup/pg/` contando os dumps a partir de 05/11.
+- MapBiomas Alerta vai para o S4.2; MCD64A1 vai para o backlog (o AQ1km já dá a segunda visão, mais leve).
+- PRODES em COG fora do PostGIS; MapBiomas Fogo não é guardado, só os totais. CNFP só na edição 2025.
+- DETER com cron semanal na slice; AQ1km à mão uma vez por mês.
+- Rodadas: 3 = S4.1, 4 = S4.2, 5 = S4.3. Todas as camadas usam a caixa atual da região.
+
+**Decisões do S4.2 e S4.3 (2026-10-23, provisórias; Em aberto para o usuário):**
+- **Backup:** em 23/10 o dump diário de produção foi a 451 MB (as cargas do M3.5) e o R2 a 8,07 GiB. A #73 saiu antes do M4, no PR [#95](https://github.com/leonardomenezes8500/manaus/pull/95), para o R2 não passar dos 10 GB em ~4 dias.
+- **CAR no R2:** só a parte dentro da caixa, geometria intacta, em FlatGeobuf com gzip (como o CNFP). Se o total passar de 9,5 GB, primeiro recomprimir os 2 COGs de relevo (2,36 GiB) com LERC (erro máximo de 1 cm, economia de ~1 a 1,5 GB). Pagar o excedente (~US$ 0,015 por GB por mês) ou guardar o backup por 7 dias em vez de 14 é decisão do usuário.
+- **Dados pessoais:** o banco guarda o que o IBAMA e o ICMBio publicam; produtos e relatórios mostram nome só de empresa, e pessoa física pelo número do auto. Mostrar nome de pessoa física fica em aberto.
+- **SISAM** trocado pelo CAMS EAC4 (mesmo modelo; o SISAM só exporta por e-mail). Portais de transparência do AM e de Manaus ficam de fora (pedem token ou sessão): o gasto estadual e municipal vem do SICONFI por subfunção e as compras de cada órgão do PNCP.
+- **Achados do M4 (2026-10-23):** o gasto federal do fogo quase nunca vem com o estado no localizador (em 2024, R$ 3,5 mil com AM contra R$ 500 milhões "nacional"), então a `gasto-federal-fogo-reativo` ficou sem teste. Na rodada 5, a fumaça não aparece nas internações nem nos óbitos dos dias seguintes depois de comparar cada dia com o próprio ano (a primeira versão confundia a tendência dos anos com efeito, achado da revisão); a volta às aulas de fevereiro aparece nas internações de crianças. A caixa do vento até −44 (#56) faz 59% das trajetórias chegarem às 72 h (eram 19%).
+- SIH, SIM, embargos e alertas atualizados à mão neste PC; cron mensal ou semanal na slice fica em aberto. O dia de exemplo da cadeia completa é 17/10/2026: agosto de 2026 não teve nenhum dia com FU, e 17/10 é o dia com FU e mais focos na v1 (as internações dele saem em dezembro).
 
 ## [M5](https://github.com/leonardomenezes8500/manaus/milestone/6) — Pesquisa: problemas e soluções da fumaça (2 sprints)
 **Objetivo:** ter a lista de problemas com evidência e a lista de soluções propostas, avaliadas com critério escrito.

@@ -1,14 +1,14 @@
 // ERA5 (#47): wind on pressure levels (u, v, ω; 1000–700 hPa; every 3 h; 0.5°) over the smoke region, from the CDS API
 // with plain fetch, into the raw files through baixar(). ERA5 is a reanalysis: modeled, not measured.
 //   node coleta/era5.ts                       daily (slice cron): the full days 6 to 10 days ago not yet in R2, one request per month
-//   node coleta/era5.ts --history 2026-07-29  one-off on this PC: one request per month, up to 6 days ago
+//   node coleta/era5.ts --history 2026-07-29  one-off on this PC: one request per week, up to 6 days ago
 // The raw name carries the period (era5-pl_AAAA-MM-DD.grib or era5-pl_AAAA-MM-DD_AAAA-MM-DD.grib); the trajectory
 // reader (#49) finds the file of each hour by it.
 import { readFile } from 'node:fs/promises';
 import { setTimeout as esperar } from 'node:timers/promises';
 import { baixar, listKeys } from './lib/baixar.ts';
 import { tentar } from './lib/tentar.ts';
-import { BBOX } from './regiao.ts';
+import { BBOX, SUFIXO_CAIXA } from './regiao.ts';
 
 const API = 'https://cds.climate.copernicus.eu/api/retrieve/v1';
 const DATASET = 'reanalysis-era5-pressure-levels';
@@ -45,25 +45,27 @@ export function pedido(inicio: string, fim: string) {
   };
 }
 
-export const nomeBruto = (inicio: string, fim: string) => `era5-pl_${inicio === fim ? inicio : `${inicio}_${fim}`}.grib`;
+export const nomeBruto = (inicio: string, fim: string) => `era5-pl_${inicio === fim ? inicio : `${inicio}_${fim}`}${SUFIXO_CAIXA}.grib`;
 
-/** Days already in R2, read from the raw names. */
+/** Days already in R2 in the current box, read from the raw names. */
 export function diasCobertos(chaves: string[]): Set<string> {
   const out = new Set<string>();
   for (const k of chaves) {
-    const m = k.match(/era5-pl_(\d{4}-\d\d-\d\d)(?:_(\d{4}-\d\d-\d\d))?\.grib$/);
+    // Only the current box counts: a day of the first box (#56) is asked again.
+    const m = k.match(new RegExp(`era5-pl_(\\d{4}-\\d\\d-\\d\\d)(?:_(\\d{4}-\\d\\d-\\d\\d))?${SUFIXO_CAIXA}\\.grib$`));
     if (m) for (const d of dias(m[1], m[2] ?? m[1])) out.add(d);
   }
   return out;
 }
 
-/** [inicio, fim] of each month between the two days. */
-export function meses(inicio: string, fim: string): [string, string][] {
+/** [inicio, fim] of each month between the two days, cut in pieces of at most maxDias days. */
+export function meses(inicio: string, fim: string, maxDias = 31): [string, string][] {
   const out: [string, string][] = [];
   for (let a = inicio; a <= fim;) {
     const [y, m] = a.split('-').map(Number);
     const ultimo = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
-    const b = ultimo < fim ? ultimo : fim;
+    const teto = new Date(Date.parse(a) + (maxDias - 1) * DIA).toISOString().slice(0, 10);
+    const b = [ultimo, teto, fim].sort()[0];
     out.push([a, b]);
     a = new Date(Date.parse(b) + DIA).toISOString().slice(0, 10);
   }
@@ -84,9 +86,17 @@ export const periodosDiarios = (faltam: string[]) => (faltam.length ? meses(falt
 const cabecalhos = () => ({ 'PRIVATE-TOKEN': process.env.ECMWF_KEY ?? '', 'Content-Type': 'application/json' });
 
 /** Submits the request; the job id, or null when the period is not published yet (CDS answers 400). */
-export async function submeter(corpo: ReturnType<typeof pedido>, f: typeof fetch = fetch): Promise<string | null> {
+/** The CDS by default; CAMS (#89) passes the ADS, which has the same API, account and key. */
+export type Servico = { api: string; dataset: string };
+const CDS: Servico = { api: API, dataset: DATASET };
+
+export async function submeter(
+  corpo: { inputs: object },
+  f: typeof fetch = fetch,
+  { api, dataset }: Servico = CDS,
+): Promise<string | null> {
   const r = await tentar(async () => {
-    const r = await f(`${API}/processes/${DATASET}/execution`, { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo) });
+    const r = await f(`${api}/processes/${dataset}/execution`, { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo) });
     if (r.status >= 500) throw new Error(`HTTP ${r.status} no CDS`);
     return r;
   });
@@ -99,7 +109,12 @@ export async function submeter(corpo: ReturnType<typeof pedido>, f: typeof fetch
 /** Polls the job until it is done; the link and size of the result. */
 export async function esperarJob(
   job: string,
-  { f = fetch, intervaloMs = 15_000, maxMs = 40 * 60_000 }: { f?: typeof fetch; intervaloMs?: number; maxMs?: number } = {},
+  {
+    f = fetch,
+    intervaloMs = 15_000,
+    maxMs = 40 * 60_000,
+    api = API,
+  }: { f?: typeof fetch; intervaloMs?: number; maxMs?: number; api?: string } = {},
 ): Promise<{ href: string; bytes: number }> {
   const json = async (u: string) => (await f(u, { headers: cabecalhos() })).json();
   const fim = Date.now() + maxMs;
@@ -108,7 +123,7 @@ export async function esperarJob(
     for (;;) {
       let status: string;
       try {
-        status = (await json(`${API}/jobs/${job}`)).status;
+        status = (await json(`${api}/jobs/${job}`)).status;
         errosSeguidos = 0;
       } catch (e) {
         if (++errosSeguidos > 5) throw e; // a network blip is tolerated, a network that stays down is not
@@ -116,7 +131,7 @@ export async function esperarJob(
         continue;
       }
       if (status === 'successful') {
-        const { asset } = await json(`${API}/jobs/${job}/results`);
+        const { asset } = await json(`${api}/jobs/${job}/results`);
         return { href: asset.value.href, bytes: asset.value['file:size'] };
       }
       if (status === 'failed' || status === 'rejected' || status === 'dismissed') throw new Error(`job ${job}: ${status}`);
@@ -125,7 +140,7 @@ export async function esperarJob(
     }
   } catch (e) {
     // Cancelled: a job left in the queue makes the CDS reject the next request ("maximum number queued").
-    await f(`${API}/jobs/${job}`, { method: 'DELETE', headers: cabecalhos() }).catch(() => {});
+    await f(`${api}/jobs/${job}`, { method: 'DELETE', headers: cabecalhos() }).catch(() => {});
     throw e;
   }
 }
@@ -158,7 +173,8 @@ async function principal(args: string[]) {
   if (historico) {
     const ate = new Date(Date.now() - MAIS_NOVO * DIA).toISOString().slice(0, 10);
     const ja = diasCobertos(chaves);
-    periodos = meses(args[1] ?? '2026-07-29', ate).filter(([a, b]) => dias(a, b).some((d) => !ja.has(d)));
+    // Weeks, not months: a 1-3 day request started in 1-2 min on 2026-10-23, a month waited 1-3 h in the queue.
+    periodos = meses(args[1] ?? '2026-07-29', ate, 7).filter(([a, b]) => dias(a, b).some((d) => !ja.has(d)));
   } else {
     periodos = periodosDiarios(diasQueFaltam(chaves));
   }

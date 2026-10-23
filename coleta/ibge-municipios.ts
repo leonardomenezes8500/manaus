@@ -5,7 +5,7 @@ import pg from 'pg';
 import { baixar } from './lib/baixar.ts';
 import { carregarMunicipios, type Malha } from './carga/municipios.ts';
 import { registrar, marcarCarregado } from './carga/lib.ts';
-import { MANAUS, UFS } from './regiao.ts';
+import { MANAUS, UFS_FOCOS } from './regiao.ts';
 
 const MALHAS = 'https://servicodados.ibge.gov.br/api/v4/malhas';
 const GEOJSON = 'formato=application/vnd.geo%2Bjson';
@@ -18,7 +18,7 @@ try {
   const malhas: Malha[] = [];
   const nomes = new Map<number, string>();
   const arquivos: number[] = [];
-  for (const uf of UFS) {
+  for (const uf of UFS_FOCOS) {
     const malha = await baixar({
       fonte: 'ibge-malhas',
       coletor,

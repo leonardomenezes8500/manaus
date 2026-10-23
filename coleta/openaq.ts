@@ -7,7 +7,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { baixar } from './lib/baixar.ts';
-import { bboxTexto } from './regiao.ts';
+import { BBOX_CAMADAS, bboxTexto } from './regiao.ts';
 
 export const LOCATION = 5040030;
 const API = 'https://api.openaq.org/v3';
@@ -60,8 +60,8 @@ async function locations() {
     coletor: 'openaq',
     nome: 'locations-regiao.json',
     headers: headers(),
-    url: `${API}/locations?bbox=${bboxTexto()}&limit=1000`,
-    parametros: { bbox: bboxTexto() },
+    url: `${API}/locations?bbox=${bboxTexto(BBOX_CAMADAS)}&limit=1000`,
+    parametros: { bbox: bboxTexto(BBOX_CAMADAS) },
   });
   const ids: number[] = JSON.parse(await readFile(r.caminho, 'utf8')).results.map((l: any) => l.id);
   // Previous list lives in the buffer volume (survives restarts); the first run only saves it.

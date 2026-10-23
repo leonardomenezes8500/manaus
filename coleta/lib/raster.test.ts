@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { copernicusTiles, haPorPixel, histograma, r2Raster, valorNoPonto } from './raster.ts';
+import { copernicusTiles, haPorPixel, histograma, r2Raster, valoresNosPontos, valorNoPonto } from './raster.ts';
 
 // 4×4 pixels of 0.025° from (-60.1, -3.1) to (-60.0, -3.0): urban (24) top left, river (33) bottom left, forest (3) right, one nodata (0).
 const fixture = join(import.meta.dirname, '__fixtures__', 'classes.tif');
@@ -18,6 +18,18 @@ try {
     expect(valorNoPonto(fixture, -60.09, -3.09, 0)).toBe(33);
     expect(valorNoPonto(fixture, -60.04, -3.06, 0)).toBeNull();
     expect(valorNoPonto(fixture, -59, -3, 0)).toBeNull();
+  });
+
+  test('many points in one run, in order; off the raster and nodata are null', () => {
+    const p = [
+      { lon: -60.09, lat: -3.01 },
+      { lon: -59, lat: -3 },
+      { lon: -60.04, lat: -3.06 },
+      { lon: -60.09, lat: -3.09 },
+    ];
+    expect(valoresNosPontos(fixture, p, 0)).toEqual([24, null, null, 33]);
+    expect(valoresNosPontos(fixture, [], 0)).toEqual([]);
+    expect(() => valoresNosPontos('/nao/existe.tif', [{ lon: -60, lat: -3 }], 0)).toThrow('gdallocationinfo falhou');
   });
 });
 

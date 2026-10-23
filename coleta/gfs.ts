@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { guardar, listKeys } from './lib/baixar.ts';
 import { tentar } from './lib/tentar.ts';
-import { BBOX } from './regiao.ts';
+import { BBOX, SUFIXO_CAIXA } from './regiao.ts';
 
 const NIVEIS = [700, 800, 850, 900, 925, 950, 975, 1000];
 const PASSOS = ['000', '003'] as const;
@@ -32,7 +32,7 @@ export function urlGfs({ rodada, passo }: Arquivo): string {
   return `https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_0p50.pl?${q}`;
 }
 
-export const nomeBruto = ({ rodada, passo }: Arquivo) => `gfs_${rodada}_f${passo}.grib`;
+export const nomeBruto = ({ rodada, passo }: Arquivo) => `gfs_${rodada}_f${passo}${SUFIXO_CAIXA}.grib`;
 
 /** Runs (00/06/12/18 UTC) from `desde` (day) that should be on NOMADS at `agora`. */
 export function rodadasProntas(agora: Date, desde: string): string[] {
@@ -44,7 +44,7 @@ export function rodadasProntas(agora: Date, desde: string): string[] {
 }
 
 export function arquivosQueFaltam(chaves: string[], rodadas: string[]): Arquivo[] {
-  const ja = new Set(chaves.map((k) => k.match(/(gfs_\d{10}_f\d{3}\.grib)$/)?.[1]));
+  const ja = new Set(chaves.map((k) => k.match(/(gfs_\d{10}_f\d{3}(?:_\w+)?\.grib)$/)?.[1])); // a file of the first box (#56) does not count
   return rodadas.flatMap((rodada) => PASSOS.map((passo) => ({ rodada, passo }))).filter((a) => !ja.has(nomeBruto(a)));
 }
 

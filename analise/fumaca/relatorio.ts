@@ -16,6 +16,7 @@ import { diaDeManaus } from '../dia.ts';
 import { apagarV1Parcial, attributeDay, dayBounds, NOTE, NOTE_V1, type Versao } from './atribuir.ts';
 import { PARAMS, WHO_DAILY_PM25 } from './heuristica.ts';
 import { PARAMS_V1 } from './v1.ts';
+import { classificarFocos } from '../fogo/onde-queimou.ts';
 import { arquivosEra5, trajetoriasDoDia } from '../trajetoria/trajetorias.ts';
 
 const COMPASS = ['norte', 'nordeste', 'leste', 'sudeste', 'sul', 'sudoeste', 'oeste', 'noroeste'];
@@ -283,6 +284,20 @@ export async function reportDay(db: pg.ClientBase, dia: string, partial: boolean
     // A partial v1 from the 17h run would otherwise stay as the day's answer in the API and the season table.
     if (!partial) await apagarV1Parcial(db, dia);
     console.error(`${dia}: sem v1 (${(e as Error).message}); o relatório fica com a v0`);
+  }
+  if (versao === 'v1') {
+    // Where each spot of the v1 fell (#77); a failure here does not hold the report.
+    try {
+      const { rows } = await db.query(`SELECT foco FROM analise.fumaca_foco WHERE dia = $1 AND versao = 'v1'`, [dia]);
+      console.log(
+        `${dia}: onde caiu, ${await classificarFocos(
+          db,
+          rows.map((r) => Number(r.foco)),
+        )} focos`,
+      );
+    } catch (e) {
+      console.error(`${dia}: onde caiu falhou (${(e as Error).message})`);
+    }
   }
   const row = await readDay(db, dia, versao);
   const spots = await readSpots(db, dia, versao);
