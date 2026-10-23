@@ -28,6 +28,23 @@ test('ERA5 files: the ones that cover every day of the window, or null when a da
   expect(arquivosEra5([...chaves, k('2026-10-01')], '2026-09-30')).toEqual([k('2026-09-01_2026-09-30'), k('2026-10-01')]);
 });
 
+test('the grown box (#56): its files (_l44) win when they cover the whole window; the two boxes never mix', () => {
+  const k = (n: string) => `bruto/ecmwf-cds/2026/10/23/120000Z_era5-pl_${n}.grib`;
+  const velhos = [k('2026-09-01_2026-09-30'), k('2026-10-01')];
+  expect(arquivosEra5([...velhos, k('2026-09-01_2026-09-30_l44')], '2026-09-23')).toEqual([k('2026-09-01_2026-09-30_l44')]);
+  // 2026-10-01 only in the first box: the whole window falls back to the first box.
+  expect(arquivosEra5([...velhos, k('2026-09-01_2026-09-30_l44')], '2026-09-30')).toEqual(velhos);
+  const g = (r: string, p: string, s = '') => `bruto/noaa-gfs-nomads/2026/10/23/120000Z_gfs_${r}_f${p}${s}.grib`;
+  const todas: string[] = [];
+  for (let t = Date.parse('2026-10-17T00:00:00Z'); t <= Date.parse('2026-10-22T06:00:00Z'); t += 6 * H) {
+    const r = new Date(t).toISOString().slice(0, 13).replace(/\D/g, '');
+    todas.push(g(r, '000'), g(r, '003'), g(r, '000', '_l44'), g(r, '003', '_l44'));
+  }
+  expect(arquivosGfs(todas, '2026-10-20')!.every((c) => c.endsWith('_l44.grib'))).toBe(true);
+  const semUm = todas.filter((c) => c !== g('2026101812', '003', '_l44'));
+  expect(arquivosGfs(semUm, '2026-10-20')!.some((c) => c.endsWith('_l44.grib'))).toBe(false);
+});
+
 test('GFS files: one per 3 h of the window, or null with a gap', () => {
   const k = (rodada: string, passo: string) => `bruto/noaa-gfs-nomads/2026/10/22/120000Z_gfs_${rodada}_f${passo}.grib`;
   const todas: string[] = [];

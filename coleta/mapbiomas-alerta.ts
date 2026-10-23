@@ -6,7 +6,7 @@ import pg from 'pg';
 import { registrar } from './carga/lib.ts';
 import { baixar, readRaw } from './lib/baixar.ts';
 import { tentar } from './lib/tentar.ts';
-import { BBOX as B } from './regiao.ts';
+import { BBOX_CAMADAS as B } from './regiao.ts';
 
 const WFS = 'https://production.alerta.mapbiomas.org/geoserver/wfs';
 const POR_PAGINA = 2000;

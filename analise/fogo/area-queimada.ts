@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { baixar, listKeys } from '../../coleta/lib/baixar.ts';
 import { gdalR2Env, haPorPixel, r2Raster } from '../../coleta/lib/raster.ts';
-import { BBOX, MANAUS, UFS } from '../../coleta/regiao.ts';
+import { BBOX_CAMADAS as BBOX, MANAUS, UFS } from '../../coleta/regiao.ts';
 import { ANEL_KM } from '../fumaca/focos-dia.ts';
 
 const FOGO = 'https://storage.googleapis.com/mapbiomas-public/initiatives/brasil/collection_10/fire-col5';

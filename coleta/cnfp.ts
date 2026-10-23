@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { loadOnce, registrar, stageGpkg } from './carga/lib.ts';
 import { guardar } from './lib/baixar.ts';
-import { BBOX as B } from './regiao.ts';
+import { BBOX_CAMADAS as B } from './regiao.ts';
 
 const URL = 'https://mapas.florestal.gov.br/portal/sharing/rest/content/items/2b752dfbf9254920bf8990ce363918af/data'; // CNFP_2025.zip
 const CAMPOS = 'nome,categoria,protecao,tipo,governo,classe,orgao,sobreposic,anocriacao,estagio,uf,municipio,area_ha';

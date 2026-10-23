@@ -17,7 +17,7 @@ import pg from 'pg';
 import { enviar, openRaw } from '../../coleta/lib/baixar.ts';
 import { gdalR2Env, r2Raster, valoresNosPontos } from '../../coleta/lib/raster.ts';
 import { PRODES, prodesChave } from '../../coleta/prodes.ts';
-import { BBOX, UFS } from '../../coleta/regiao.ts';
+import { BBOX_CAMADAS as BBOX, naCaixa, UFS } from '../../coleta/regiao.ts';
 import { diaDeManaus } from '../dia.ts';
 import { focosDaSerie, type Sensor } from '../fumaca/focos-dia.ts';
 import { encaixar, pesoPorLinha, somar, vrtPeso, zonasFixas } from './area-queimada.ts';
@@ -37,6 +37,7 @@ export function categoriaProdes(classe: number | null, dia: string): string {
   if (classe === 101) return 'nao_floresta';
   if (classe >= 50 && classe <= 65) return 'residuo';
   if (classe > 25) return 'sem_dado';
+  if (classe === 0) return 'desm_ate2007'; // d2000: everything cleared up to 2000, not a recent clearing
   const ano = 2000 + classe;
   const k = anoProdes(dia) - ano;
   return k < 0 ? 'desm_depois' : k === 0 ? 'desm_ano' : k <= 3 ? 'desm_1a3' : ano <= 2007 ? 'desm_ate2007' : 'desm_4mais';
@@ -50,6 +51,7 @@ export type Atributos = {
   cnfp: string[]; // sfb.floresta_publica as tipo:ano_criacao, e.g. 'A:2008', 'B:', 'A:'
   deter: string[]; // classes of the DETER alerts that contain it, image date in the 90 days up to the spot
   prodes: number | null;
+  foraDaCaixa?: boolean; // east of BBOX_CAMADAS (#56): the land layers do not reach it
 };
 
 /** Public forest at the time of the spot: a tipo A area created after the spot's year was still without destination (B). */
@@ -60,6 +62,8 @@ export function categoriaCnfp(pecas: string[], ano: number): string {
 
 /** The rule (written before looking at the data, #72): one category per dimension for each spot. */
 export function classificar(a: Atributos, dia: string): { uf: string } & Record<Dimensao, string> {
+  if (a.foraDaCaixa)
+    return { uf: a.uf ?? 'fora', ...(Object.fromEntries(DIMENSOES.map((d) => [d, 'fora_caixa'])) as Record<Dimensao, string>) };
   return {
     uf: a.uf ?? 'fora',
     ti: a.ti ? 'sim' : 'nao',
@@ -126,7 +130,16 @@ export async function classificarFocos(db: pg.ClientBase, ids: number[], prodesR
   const linhas = rows.map((r, i) => ({
     foco: r.id,
     ...classificar(
-      { uf: r.uf, ti: r.ti, uc: lista(r.uc), faixa: r.faixa, cnfp: lista(r.cnfp), deter: lista(r.deter), prodes: prodes[i] },
+      {
+        uf: r.uf,
+        ti: r.ti,
+        uc: lista(r.uc),
+        faixa: r.faixa,
+        cnfp: lista(r.cnfp),
+        deter: lista(r.deter),
+        prodes: prodes[i],
+        foraDaCaixa: !naCaixa(BBOX, r.lat, r.lon),
+      },
       r.dia,
     ),
   }));
@@ -181,6 +194,15 @@ const duck = (base: string, sql: string) => {
   );
 };
 
+/** The layers the series and the areas read, exported from Postgres to FlatGeobuf. */
+const CAMADAS = {
+  mun: 'SELECT uf, geom FROM ibge.municipio',
+  ti: 'SELECT geom FROM funai.terra_indigena',
+  uc: 'SELECT grupo, geom FROM cnuc.unidade',
+  cnfp: 'SELECT tipo, ano_criacao, geom FROM sfb.floresta_publica',
+  deter: 'SELECT classe, view_date, geom FROM inpe_desmatamento.deter',
+};
+
 /** Writes `arquivo` through a .parcial file, so a run killed halfway never leaves a file that --reusar would trust. */
 async function pronto(arquivo: string, reusar: boolean, fazer: (parcial: string) => Promise<void> | void) {
   if (reusar && existsSync(arquivo)) return;
@@ -208,17 +230,10 @@ async function serie(db: pg.ClientBase, tmp: string, reusar: boolean) {
     console.log(`${id} focos na série`);
   });
 
-  const camadas = {
-    mun: 'SELECT uf, geom FROM ibge.municipio',
-    ti: 'SELECT geom FROM funai.terra_indigena',
-    uc: 'SELECT grupo, geom FROM cnuc.unidade',
-    cnfp: 'SELECT tipo, ano_criacao, geom FROM sfb.floresta_publica',
-    deter: 'SELECT classe, view_date, geom FROM inpe_desmatamento.deter',
-  };
   const t = (n: string) => `ST_Read('${join(tmp, `${n}.fgb`)}')`;
   const base = join(tmp, 'onde.duckdb');
   await pronto(base, reusar, (parcial) => {
-    for (const [nome, sql] of Object.entries(camadas)) pg2fgb(join(tmp, `${nome}.fgb`), sql);
+    for (const [nome, sql] of Object.entries(CAMADAS)) pg2fgb(join(tmp, `${nome}.fgb`), sql);
     duck(
       parcial,
       `CREATE TABLE f AS SELECT *, ST_Point(lon, lat) AS g FROM read_csv('${focos}', types = {'dia': 'DATE', 'sensor': 'VARCHAR'});
@@ -277,7 +292,8 @@ async function serie(db: pg.ClientBase, tmp: string, reusar: boolean) {
             '-c',
             `tail -n +2 '${juntos}' | cut -d, -f5,6 | tr , ' ' | gdallocationinfo -valonly -wgs84 '${cog}' > '${parcial}'`,
           ]);
-          p.on('exit', () => ok()); // exit 1 when a spot is off the raster; the line count is checked below
+          // exit 1 when a spot is off the raster (the line count is checked below); killed or other codes fail
+          p.on('exit', (c, sinal) => (c === 0 || c === 1 ? ok() : falha(new Error(`gdallocationinfo saiu com ${c ?? sinal}`))));
           p.on('error', falha);
         }),
     );
@@ -322,6 +338,8 @@ async function serie(db: pg.ClientBase, tmp: string, reusar: boolean) {
 async function areas(db: pg.ClientBase, tmp: string) {
   const cog = r2Raster(prodesChave()); // the COG on R2 has the overviews the coarse read uses
   // Static layers per state, in duckdb on this PC (unions and the band are too heavy for the slice database).
+  // --sem-serie on a clean folder: the series did not export the layers.
+  for (const n of ['mun', 'ti', 'uc', 'cnfp'] as const) if (!existsSync(join(tmp, `${n}.fgb`))) pg2fgb(join(tmp, `${n}.fgb`), CAMADAS[n]);
   const ufs = UFS.map((u) => `'${u}'`).join(',');
   const t = (n: string) => `ST_Read('${join(tmp, `${n}.fgb`)}')`;
   const csvAreas = join(tmp, 'areas.csv');

@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type pg from 'pg';
 import { enviar } from '../../coleta/lib/baixar.ts';
-import { bboxTexto } from '../../coleta/regiao.ts';
+import { BBOX_CAMADAS, bboxTexto } from '../../coleta/regiao.ts';
 import { type Area, responsaveis } from '../fogo/responsavel.ts';
 
 export type Fisc = {
@@ -284,7 +284,7 @@ export async function buscarInsumos(db: Pick<pg.ClientBase, 'query'>, dia: strin
             (SELECT count(*)::int FROM analise.fumaca_foco WHERE dia = $1 AND versao = 'v1') AS total`,
   );
   const focos = await q(
-    `SELECT ff.foco::int, ff.peso, f.lat, f.lon, m.nome AS municipio, coalesce(oq.uf, m.uf) AS uf, coalesce(oq.prodes = 'fora_caixa', false) OR NOT f.geom && ST_MakeEnvelope(${bboxTexto()}, 4326) AS fora_caixa,
+    `SELECT ff.foco::int, ff.peso, f.lat, f.lon, m.nome AS municipio, coalesce(oq.uf, m.uf) AS uf, coalesce(oq.prodes = 'fora_caixa', false) OR NOT f.geom && ST_MakeEnvelope(${bboxTexto(BBOX_CAMADAS)}, 4326) AS fora_caixa,
             EXISTS (SELECT 1 FROM ibge.setor s WHERE s.situacao = 'Urbana' AND ST_Contains(s.geom, f.geom)) AS urbano,
             (SELECT u.esfera FROM cnuc.unidade u WHERE ST_Intersects(u.geom, f.geom) ORDER BY u.esfera = 'Federal' DESC LIMIT 1) AS uc_esfera,
             coalesce(oq.ti = 'sim', false) AS ti,

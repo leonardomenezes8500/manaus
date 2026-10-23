@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { enviar } from './lib/baixar.ts';
 import { recortarCog } from './lib/raster.ts';
-import { BBOX } from './regiao.ts';
+import { BBOX_CAMADAS as BBOX } from './regiao.ts';
 
 export const PRODES = { edicao: 'prodes_amazonia_legal_2025_v20261019', nodata: 255, pixel: 0.00009 } as const;
 const LIMITE_BYTES = 300e6; // above this the 30 m clip is resampled to 60 m by the mode (R2 has little room left)

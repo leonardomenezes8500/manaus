@@ -3,14 +3,14 @@
 import { createInterface } from 'node:readline';
 import pg from 'pg';
 import { openRaw } from '../lib/baixar.ts';
-import { BBOX } from '../regiao.ts';
+import { BBOX, naCaixa } from '../regiao.ts';
 import { records } from './csv.ts';
 import { loadOnce, pendingFiles } from './lib.ts';
 import { registerSource } from './registrar.ts';
 
 const BATCH = 5000;
 const num = (v: string | undefined) => (v === undefined || v === '' ? null : Number(v));
-const inBox = (lat: number, lon: number) => lon >= BBOX.oeste && lon <= BBOX.leste && lat >= BBOX.sul && lat <= BBOX.norte;
+const inBox = (lat: number, lon: number) => naCaixa(BBOX, lat, lon);
 
 export type FirmsRow = {
   satelite: string;

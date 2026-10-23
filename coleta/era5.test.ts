@@ -10,7 +10,7 @@ test('the request: 3 variables, 8 levels from 1000 to 700 hPa, every 3 h, 0.5° 
     month: ['07'],
     day: ['29', '30', '31'],
     time: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-    area: [3, -74, -15, -52],
+    area: [3, -74, -15, -44],
     grid: ['0.5', '0.5'],
     data_format: 'grib',
   });
@@ -18,23 +18,30 @@ test('the request: 3 variables, 8 levels from 1000 to 700 hPa, every 3 h, 0.5° 
 });
 
 test('raw names carry the period; the days covered come back from the R2 keys', () => {
-  expect(nomeBruto('2026-10-15', '2026-10-15')).toBe('era5-pl_2026-10-15.grib');
-  expect(nomeBruto('2026-07-29', '2026-07-31')).toBe('era5-pl_2026-07-29_2026-07-31.grib');
+  expect(nomeBruto('2026-10-15', '2026-10-15')).toBe('era5-pl_2026-10-15_l44.grib');
+  expect(nomeBruto('2026-07-29', '2026-07-31')).toBe('era5-pl_2026-07-29_2026-07-31_l44.grib');
   const chaves = [
-    'bruto/ecmwf-cds/2026/10/22/125000Z_era5-pl_2026-07-29_2026-07-31.grib',
-    'bruto/ecmwf-cds/2026/10/22/125000Z_era5-pl_2026-07-29_2026-07-31.grib.meta.json',
-    'bruto/ecmwf-cds/2026/10/22/130000Z_era5-pl_2026-10-15.grib',
+    'bruto/ecmwf-cds/2026/10/22/125000Z_era5-pl_2026-07-29_2026-07-31_l44.grib',
+    'bruto/ecmwf-cds/2026/10/22/125000Z_era5-pl_2026-07-29_2026-07-31_l44.grib.meta.json',
+    'bruto/ecmwf-cds/2026/10/22/130000Z_era5-pl_2026-10-15_l44.grib',
+    'bruto/ecmwf-cds/2026/10/22/130000Z_era5-pl_2026-08-01.grib', // the first box (#56): asked again
   ];
   expect([...diasCobertos(chaves)].sort()).toEqual(['2026-07-29', '2026-07-30', '2026-07-31', '2026-10-15']);
 });
 
-test('history goes month by month; the daily run asks the full days 6 to 10 days ago that are missing', () => {
+test('history goes week by week inside each month; the daily run asks the full days 6 to 10 days ago that are missing', () => {
   expect(meses('2026-07-29', '2026-09-03')).toEqual([
     ['2026-07-29', '2026-07-31'],
     ['2026-08-01', '2026-08-31'],
     ['2026-09-01', '2026-09-03'],
   ]);
-  const chaves = ['bruto/ecmwf-cds/2026/10/20/070000Z_era5-pl_2026-10-14.grib'];
+  expect(meses('2026-07-29', '2026-08-16', 7)).toEqual([
+    ['2026-07-29', '2026-07-31'],
+    ['2026-08-01', '2026-08-07'],
+    ['2026-08-08', '2026-08-14'],
+    ['2026-08-15', '2026-08-16'],
+  ]);
+  const chaves = ['bruto/ecmwf-cds/2026/10/20/070000Z_era5-pl_2026-10-14_l44.grib'];
   expect(diasQueFaltam(chaves, new Date('2026-10-22T10:00:00Z'))).toEqual(['2026-10-12', '2026-10-13', '2026-10-15', '2026-10-16']);
 });
 

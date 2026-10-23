@@ -10,7 +10,7 @@ import { join } from 'node:path';
 import pg from 'pg';
 import { loadOnce, registrar, stageGpkg } from './carga/lib.ts';
 import { guardar } from './lib/baixar.ts';
-import { BBOX as B } from './regiao.ts';
+import { BBOX_CAMADAS as B } from './regiao.ts';
 
 const BASE = 'https://certificacao.incra.gov.br/csv_shp/zip';
 export const ESTADOS = ['AM', 'AC', 'RO', 'PA'] as const;

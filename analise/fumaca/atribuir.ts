@@ -62,7 +62,7 @@ export async function parteV1(
       trajetorias: trajs.length,
       chegadas: new Set(chegadas).size,
       concordancia_km: c.km_medio,
-      // Hours each trajectory stayed inside the wind box (most leave by its east edge, 8° from Manaus, before 72 h).
+      // Hours each trajectory stayed inside the wind box (the east edge is 16° from Manaus since #56; it was 8°).
       horas_media: trajs.reduce((a, t) => a - t.pontos.at(-1)!.h, 0) / trajs.length,
       niveis: '950/900/850 hPa (modelo)',
     },

@@ -14,6 +14,7 @@ test('PRODES class → category relative to the year of the spot', () => {
   expect(categoriaProdes(24, '2024-07-31')).toBe('desm_ano'); // d2024, PRODES year 2024
   expect(categoriaProdes(24, '2024-08-01')).toBe('desm_1a3'); // same pixel, PRODES year 2025
   expect(categoriaProdes(24, '2023-07-01')).toBe('desm_depois'); // the forest was cut after the spot
+  expect(categoriaProdes(0, '2002-09-01')).toBe('desm_ate2007'); // d2000 is everything up to 2000, never recent
   expect(categoriaProdes(13, '2016-09-01')).toBe('desm_4mais');
   expect(categoriaProdes(3, '2012-09-01')).toBe('desm_ate2007');
   expect(categoriaProdes(55, '2020-09-01')).toBe('residuo');
@@ -46,6 +47,19 @@ test('one category per dimension: a spot in a TI that is also public forest coun
     cnfp: 'nao',
     prodes: 'sem_dado',
     deter: 'outro',
+  });
+});
+
+test('a spot east of the layers box (#56) is fora_caixa in every layer dimension, not "nao"; its state stays', () => {
+  const c = classificar({ uf: 'PA', ti: false, uc: [], faixa: false, cnfp: [], deter: [], prodes: null, foraDaCaixa: true }, '2026-09-10');
+  expect(c).toEqual({
+    uf: 'PA',
+    ti: 'fora_caixa',
+    uc: 'fora_caixa',
+    protegida: 'fora_caixa',
+    cnfp: 'fora_caixa',
+    prodes: 'fora_caixa',
+    deter: 'fora_caixa',
   });
 });
 

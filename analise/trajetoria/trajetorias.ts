@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import pg from 'pg';
 import { listKeys, openRaw } from '../../coleta/lib/baixar.ts';
-import { MANAUS } from '../../coleta/regiao.ts';
+import { MANAUS, SUFIXO_CAIXA } from '../../coleta/regiao.ts';
 import { integrar, type Ponto, type Vento } from './integrador.ts';
 import { ventoDaGrade } from './grade.ts';
 import { lerGribs } from './vento.ts';
@@ -32,11 +32,22 @@ export function janela(dia: string, ate?: number): [number, number] {
 
 const diaUtc = (t: number) => new Date(t).toISOString().slice(0, 10);
 
+/**
+ * The two wind boxes never mix in one window (the reader needs one grid): the grown box (#56, files with SUFIXO_CAIXA)
+ * when it covers the whole window, else the first box.
+ */
+const porCaixa = (chaves: string[], escolher: (c: string[]) => string[] | null) => {
+  const da = (nova: boolean) => chaves.filter((k) => k.replace(/\.meta\.json$/, '').endsWith(`${SUFIXO_CAIXA}.grib`) === nova);
+  return escolher(da(true)) ?? escolher(da(false));
+};
+
+export const arquivosEra5 = (chaves: string[], dia: string, ate?: number) => porCaixa(chaves, (c) => era5DaCaixa(c, dia, ate));
+
 /** ERA5 raw keys that cover every UTC day of the window (the newest download of a day wins), or null. */
-export function arquivosEra5(chaves: string[], dia: string, ate?: number): string[] | null {
+function era5DaCaixa(chaves: string[], dia: string, ate?: number): string[] | null {
   const porDia = new Map<string, string>();
   for (const k of [...chaves].sort()) {
-    const m = k.match(/era5-pl_(\d{4}-\d\d-\d\d)(?:_(\d{4}-\d\d-\d\d))?\.grib$/);
+    const m = k.match(/era5-pl_(\d{4}-\d\d-\d\d)(?:_(\d{4}-\d\d-\d\d))?(?:_\w+)?\.grib$/);
     if (!m) continue;
     for (let t = Date.parse(m[1]); t <= Date.parse(m[2] ?? m[1]); t += 24 * H) porDia.set(diaUtc(t), k);
   }
@@ -51,10 +62,12 @@ export function arquivosEra5(chaves: string[], dia: string, ate?: number): strin
 }
 
 /** GFS raw keys, one per 3 h of the window (valid time = run + step), or null when one is missing. */
-export function arquivosGfs(chaves: string[], dia: string, ate?: number): string[] | null {
+export const arquivosGfs = (chaves: string[], dia: string, ate?: number) => porCaixa(chaves, (c) => gfsDaCaixa(c, dia, ate));
+
+function gfsDaCaixa(chaves: string[], dia: string, ate?: number): string[] | null {
   const porHora = new Map<number, string>();
   for (const k of [...chaves].sort()) {
-    const m = k.match(/gfs_(\d{4})(\d\d)(\d\d)(\d\d)_f(\d{3})\.grib$/);
+    const m = k.match(/gfs_(\d{4})(\d\d)(\d\d)(\d\d)_f(\d{3})(?:_\w+)?\.grib$/);
     if (m) porHora.set(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4]) + Number(m[5]) * H, k);
   }
   const [ini, fim] = janela(dia, ate);
