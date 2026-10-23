@@ -16,3 +16,4 @@ teste: 'curl -sS -H "PRIVATE-TOKEN: $ECMWF_KEY" "https://ads.atmosphere.copernic
 ---
 - Mesma conta e chave do CDS. O teste lista os pedidos da conta (200). Ainda não baixei dado.
 - Confiabilidade média: modelo de aerossol em grade grossa (~40 km), pode errar a fumaça local. Sempre rotular como modelado.
+- Reanálise EAC4 (`cams-global-reanalysis-eac4`, #89): um pedido de `particulate_matter_2.5um` de um dia em Manaus ficou pronto em ~80 s (25 KB, netCDF) em 2026-10-23; a licença do CAMS já está aceita na conta. É o mesmo modelo do SISAM do INPE.

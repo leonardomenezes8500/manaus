@@ -15,6 +15,8 @@ escrita_em: '2026-10-22'
 Pulmão de criança pequena e de idoso aguenta menos partícula fina. A taxa precisa da população por idade (#63) no denominador.
 
 ## Como testar
+Definições fixadas em 2026-10-23 (#87), antes de olhar o SIH: "dia de fumaça" é o dia de Manaus com pelo menos um FU no METAR de SBEG, como na série (#55); internação respiratória é a de diagnóstico principal de J00 a J99, de morador de Manaus (`MUNIC_RES` 130260), pela data da internação. O teste e o efeito esperado não mudam.
+
 População por idade e sexo (#63) e internações do SIH (M4). Exploratório: homem × mulher em cada faixa.
 
 ## Resultado

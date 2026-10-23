@@ -15,6 +15,8 @@ escrita_em: '2026-10-22'
 Na escola o vírus respiratório passa de criança para criança. Se isso não for separado, o M4 pode pôr na conta da fumaça o que é a volta às aulas.
 
 ## Como testar
+Definições fixadas em 2026-10-23 (#87), antes de olhar o SIH: "dia de fumaça" é o dia de Manaus com pelo menos um FU no METAR de SBEG, como na série (#55); internação respiratória é a de diagnóstico principal de J00 a J99, de morador de Manaus (`MUNIC_RES` 130260), pela data da internação. O teste e o efeito esperado não mudam.
+
 Calendário escolar (#61) e internações do SIH (M4). A volta de fevereiro, fora da fumaça, é o teste principal; a de agosto é exploratória.
 
 ## Resultado

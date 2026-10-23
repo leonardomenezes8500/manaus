@@ -16,4 +16,5 @@ teste: 'curl -sS -H "chave-api-dados: $TRANSPARENCIA_API_KEY" "https://api.porta
 ---
 - O teste devolveu a 1ª página de órgãos SIAFI.
 - Tem limite de requisições por minuto (ver a documentação) e paginação em quase toda rota.
-- Só gasto federal. Estado e Prefeitura têm portais próprios (M4).
+- Só gasto federal. Estado e Prefeitura: os portais próprios não têm exportação utilizável (ver `am-transparencia` e `manaus-transparencia`); o gasto deles vem do SICONFI (#65) e as compras do PNCP (#66).
+- Download sem chave (#90, testado em 2026-10-23): `portaldatransparencia.gov.br/download-de-dados/despesas-execucao/AAAAMM` (de 2014-01 em diante) e `orcamento-despesa/AAAA` redirecionam para zips da CGU em `dadosabertos-download.cgu.gov.br`.
