@@ -25,6 +25,9 @@ const SEM_DADOS = [
   'ibama.auto_infracao',
   'icmbio.embargo',
   'icmbio.auto_infracao',
+  'incra.sigef',
+  'incra.snci',
+  'incra.assentamento',
 ];
 
 const pasta = mkdtempSync(join(process.env.MANAUS_BUFFER || tmpdir(), 'pg-'));
