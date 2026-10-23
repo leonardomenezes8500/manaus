@@ -1,5 +1,13 @@
 import { permutacaoBlocos, sorteio } from '../cruzar.ts';
-import { atualizarHipotese, fecharRodada, grauDeConfianca, inicioTemporada, logRazaoPorBloco, residuoPostos } from './rodada.ts';
+import {
+  atualizarHipotese,
+  fecharRodada,
+  grauDeConfianca,
+  inicioTemporada,
+  logRazaoPorBloco,
+  razaoPorAnos,
+  residuoPostos,
+} from './rodada.ts';
 
 test('a round of 10 hypotheses where only 1 has a real effect: only it passes Benjamini-Hochberg', () => {
   const r = sorteio(42);
@@ -57,4 +65,15 @@ test('the result goes into the front matter and the Resultado section; the rest 
   expect(
     atualizarHipotese(novo, { status: 'testada', testada_em: '2026-10-23', confianca: 'media', resultado: 'r', detalhe: 'd' }),
   ).toMatch(/testada_em: '2026-10-23'\nconfianca: 'media'\nresultado: 'r'\n---/);
+});
+
+test('ratio of proportions by permuting whole years: the labelled year stands out only when its months are worse', () => {
+  const u = (efeito: number) =>
+    Array.from({ length: 10 }, (_, a) =>
+      [9, 10, 11].map((mes) => ({ ano: 2014 + a, mes, n: 100, fora: a === 9 ? efeito : 2, rotulo: a === 9 && mes >= 10 })),
+    ).flat();
+  const forte = razaoPorAnos(u(10), { n: 999, semente: 3 });
+  expect(Math.exp(forte.efeito)).toBeCloseTo(0.1 / (64 / 2800), 6); // 20/200 labelled against 27 months at 2 + one at 10 out of 2800
+  expect(forte.p).toBeLessThan(0.15); // 1 year in 10: the smallest p a permutation of years can give is about 0.1
+  expect(razaoPorAnos(u(2), { n: 199, semente: 3 }).p).toBeGreaterThan(0.5);
 });

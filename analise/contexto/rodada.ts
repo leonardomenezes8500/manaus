@@ -10,7 +10,7 @@ import pg from 'pg';
 import { lerFrontMatter } from '../../fontes/catalogo.ts';
 import { enviar, readRaw } from '../../coleta/lib/baixar.ts';
 import { lerCsvCalendario } from '../../coleta/calendario/regras.ts';
-import { benjaminiHochberg, mediana, permutacaoBlocos, permutacaoGrupos, spearman } from '../cruzar.ts';
+import { benjaminiHochberg, mediana, permutacaoBlocos, permutacaoGrupos, sorteio, spearman } from '../cruzar.ts';
 
 /** BH (FDR q) over the main tests of one round. */
 export function fecharRodada<T extends { id: string; p: number }>(resultados: T[], q = 0.1) {
@@ -91,6 +91,44 @@ export function atualizarHipotese(
   return `---\n${novo.join('\n')}\n---\n${corpo.replace(/## Resultado\n[\s\S]*$/, `## Resultado\n${r.detalhe.trim()}\n`)}`;
 }
 
+/**
+ * log of the ratio of proportions (out-of-standard ÷ analysed) between labelled and other months, p by permuting whole
+ * years: the labels of year A move to the same months of year B (the season stays, the years change places).
+ */
+export function razaoPorAnos(u: { ano: number; mes: number; n: number; fora: number; rotulo: boolean }[], { n = 999, semente = 1 } = {}) {
+  const anos = [...new Set(u.map((x) => x.ano))].sort();
+  const rot = new Map(u.map((x) => [`${x.ano}-${x.mes}`, x.rotulo]));
+  const est = (lab: (x: (typeof u)[number]) => boolean) => {
+    let a = 0,
+      an = 0,
+      b = 0,
+      bn = 0;
+    for (const x of u) {
+      if (lab(x)) {
+        a += x.fora;
+        an += x.n;
+      } else {
+        b += x.fora;
+        bn += x.n;
+      }
+    }
+    return Math.log(a / an / (b / bn));
+  };
+  const obs = est((x) => x.rotulo);
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) {
+    const p = [...anos];
+    for (let i = p.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [p[i], p[j]] = [p[j], p[i]];
+    }
+    const de = new Map(anos.map((a, i) => [a, p[i]]));
+    if (Math.abs(est((x) => rot.get(`${de.get(x.ano)}-${x.mes}`) ?? false)) >= Math.abs(obs)) fortes++;
+  }
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
+}
+
 // ---------- the main tests of round 1 (each one as its hypothesis wrote it) ----------
 
 type Teste = { efeito: number; p: number; n: number; anos: number; texto: (e: number) => string; unidade: string };
@@ -132,6 +170,15 @@ async function eventoContraVizinhos(db: pg.Client, eventos: { inicio: Date; hora
   const r = permutacaoGrupos(v, g, { blocos: b, n: N, semente: SEMENTE, estatistica: est });
   const base = mediana(v.filter((_, i) => !g[i]));
   return { efeito: razao ? Math.exp(r.efeito) - 1 : r.efeito / base, p: r.p, n: new Set(b).size };
+}
+
+const FUMACA = 'ano de fumaça = dias com FU de agosto a novembro acima da mediana de 2012–2025';
+/** Smoke years (round 2, written before looking at the data): FU days from August to November above the 2012-2025 median. */
+async function anosDeFumaca(db: pg.Client): Promise<Map<number, boolean>> {
+  const r = await db.query(`SELECT extract(year FROM dia)::int AS ano, count(*) FILTER (WHERE horas_fu > 0)::int AS fu
+    FROM analise.serie_dia WHERE extract(month FROM dia) BETWEEN 8 AND 11 AND dia < '2026-01-01' GROUP BY 1`);
+  const m = mediana(r.rows.map((l) => l.fu));
+  return new Map(r.rows.map((l) => [l.ano, l.fu > m]));
 }
 
 const TESTES: Record<string, (db: pg.Client) => Promise<Teste>> = {
@@ -284,6 +331,79 @@ const TESTES: Record<string, (db: pg.Client) => Promise<Teste>> = {
       anos: 1,
       unidade: 'relativo',
       texto: (e) => `PM2.5 do Centro nas 2 horas de jogo − mesmas horas sem jogo (${r.n} jogos de 2026): ${pct(e)}`,
+    };
+  },
+  // ---------- round 2 (S3.5.2) ----------
+  // Spending of the year after a smoke year − after a year without, permuting the years (both governments, real terms).
+  'gasto-ambiental-reativo': async (db) => {
+    const fumaca = await anosDeFumaca(db);
+    const r = (
+      await db.query(`SELECT ano, sum(valor_real)::float8 AS v FROM contexto.gasto_funcao
+        WHERE coluna = 'liquidado' AND codigo IN ('18', '06.182') GROUP BY ano ORDER BY ano`)
+    ).rows.filter((l) => fumaca.has(l.ano - 1));
+    const v = r.map((l) => l.v);
+    const g = r.map((l) => fumaca.get(l.ano - 1)!);
+    const t = permutacaoGrupos(v, g, { n: N, semente: SEMENTE });
+    return {
+      efeito: t.efeito / mediana(v.filter((_, i) => !g[i])),
+      p: t.p,
+      n: v.length,
+      anos: v.length,
+      unidade: 'relativo',
+      texto: (e) =>
+        `gasto real liquidado em gestão ambiental e defesa civil (Estado + Prefeitura) no ano seguinte a um ano de fumaça − no ano seguinte a um ano sem (${r[0].ano}–${r.at(-1).ano}, ${FUMACA}): ${pct(e)}`,
+    };
+  },
+  // Share of turbidity samples above 5 uT in months with the river under 15 m (that month or the one before) ÷ the
+  // same calendar months of other years, permuting the years.
+  'agua-seca': async (db) => {
+    const r = (
+      await db.query(`WITH c AS (SELECT date_trunc('month', dia)::date AS mes, min(cota_cm) AS cota FROM ana.cota_dia
+          WHERE estacao = 14990000 AND dia >= '2013-12-01' GROUP BY 1),
+        t AS (SELECT date_trunc('month', coletado_em AT TIME ZONE 'America/Manaus')::date AS mes, count(*)::int AS n,
+            count(*) FILTER (WHERE resultado > 5)::int AS fora
+          FROM sisagua.vigilancia WHERE parametro = 'Turbidez (uT)' AND resultado IS NOT NULL GROUP BY 1)
+        SELECT extract(year FROM t.mes)::int AS ano, extract(month FROM t.mes)::int AS mes, t.n, t.fora,
+          coalesce(c.cota < 1500 OR c0.cota < 1500, false) AS rotulo
+        FROM t LEFT JOIN c ON c.mes = t.mes LEFT JOIN c c0 ON c0.mes = (t.mes - interval '1 month')::date ORDER BY 1, 2`)
+    ).rows;
+    const meses = new Set(r.filter((x) => x.rotulo).map((x) => x.mes));
+    const u = r.filter((x) => meses.has(x.mes));
+    const t = razaoPorAnos(u, { n: N, semente: SEMENTE });
+    const anos = new Set(u.map((x) => x.ano)).size;
+    return {
+      efeito: Math.exp(t.efeito) - 1,
+      p: t.p,
+      n: u.length,
+      anos,
+      unidade: 'razão − 1',
+      texto: (e) =>
+        `proporção de amostras de turbidez acima de 5 uT (vigilância, Manaus) nos meses com o rio abaixo de 15 m ÷ os mesmos meses dos outros anos (${anos} anos, ${u.length} meses): ${pct(e)}`,
+    };
+  },
+  // Spearman between the FU days of the month and the DEC anomaly (same month of other years), permuting whole years.
+  // DEC = the sum of every part (dec_partes): the official DEC left out external outages from 2022 on.
+  'energia-fumaca': async (db) => {
+    const r = (
+      await db.query(`WITH fu AS (SELECT date_trunc('month', dia)::date AS mes, count(*) FILTER (WHERE horas_fu > 0)::int AS fu
+          FROM analise.serie_dia WHERE dia BETWEEN '2012-01-01' AND '2025-12-31' GROUP BY 1)
+        SELECT fu.mes::text, fu.fu, d.dec_partes FROM fu JOIN aneel.dec_manaus_mes d USING (mes) ORDER BY 1`)
+    ).rows;
+    if (r.length % 12) throw new Error('energia-fumaca: os anos precisam estar completos para permutar anos inteiros');
+    const media = (m: string, ano: string) => {
+      const o = r.filter((x) => x.mes.slice(5, 7) === m && x.mes.slice(0, 4) !== ano);
+      return o.reduce((a, x) => a + x.dec_partes, 0) / o.length;
+    };
+    const y = r.map((x) => x.dec_partes - media(x.mes.slice(5, 7), x.mes.slice(0, 4)));
+    const x = r.map((l) => l.fu);
+    return {
+      efeito: spearman(x, y),
+      p: permutacaoBlocos(x, y, { bloco: 12, n: N, semente: SEMENTE }),
+      n: r.length,
+      anos: r.length / 12,
+      unidade: 'Spearman',
+      texto: (e) =>
+        `Spearman entre os dias com FU do mês e a anomalia do DEC de Manaus (soma de todas as partes, derivado; mesmo mês dos outros anos), ${r.length / 12} anos: ${e.toFixed(2)}`,
     };
   },
 };

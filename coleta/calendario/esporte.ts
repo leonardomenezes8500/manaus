@@ -124,6 +124,7 @@ const OLIMPICO_2016: [number, string, number][] = [
 const CBF =
   /^(Copa do Brasil\|(Profissional|Feminino)|Campeonato Brasileiro\|Série [ABCD]|Brasileiro Feminino\|A[123]|Copa Verde\|Profissional|Copa do Nordeste\|Profissional|Supercopa do Brasil\|(Profissional|Feminino)|Copa América\|Profissional|Amistoso\|Seleção Brasileira( Feminina)?|Eliminat[oó]rias.*)$/;
 const CBF_API = 'https://www.cbf.com.br/api/cbf';
+const CBF_QUEBRADOS = new Set(['12622']); // the 2026 qualifiers: HTTP 500 since 2026-10-22
 
 const chaves = new Map<string, string[]>();
 /** The raw copy of an official document (downloaded once). */
@@ -166,7 +167,9 @@ async function principal() {
           const d = await documento('cbf', `${CBF_API}/jogos/tabela-detalhada/campeonato/${id}`);
           out.push(...jogosCbf(JSON.parse(d.texto), `${c.nome.trim()} ${cat.nome.trim()} ${anosCat[i]}`, id, d));
         } catch (e) {
-          console.error(`CBF ${id} (${c.nome} ${cat.nome} ${anosCat[i]}): ${(e as Error).message}`); // e.g. the 2026 qualifiers give HTTP 500
+          // The CSV is rewritten whole: any other failure would drop matches that were there, so it stops here.
+          if (!CBF_QUEBRADOS.has(id)) throw e;
+          console.error(`CBF ${id} (${c.nome} ${cat.nome} ${anosCat[i]}): ${(e as Error).message}`);
         }
       }
     }
