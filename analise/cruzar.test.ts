@@ -1,4 +1,14 @@
-import { anomalia, benjaminiHochberg, defasagens, permutacaoBlocos, permutacaoGrupos, sinaisPorAnos, sorteio, spearman } from './cruzar.ts';
+import {
+  anomalia,
+  benjaminiHochberg,
+  defasagens,
+  permutacaoBlocos,
+  permutacaoGrupos,
+  rotulosEmBlocos,
+  sinaisPorAnos,
+  sorteio,
+  spearman,
+} from './cruzar.ts';
 
 // Ten years of days with the same yearly cycle and independent noise: the trap the method exists for.
 function sazonal(semente: number) {
@@ -76,4 +86,20 @@ test('sign flips of whole years: 10 years all on one side give p near 2/1024; mi
   expect(forte.efeito).toBeCloseTo(0.51, 6);
   expect(forte.p).toBeLessThan(0.01); // only the all-positive and all-negative flips are as strong: 2 of 1024
   expect(sinaisPorAnos([0.5, -0.6, 0.4, -0.7, 0.5, -0.3, 0.6, -0.5, 0.4, -0.6], { n: 999, semente: 2 }).p).toBeGreaterThan(0.5);
+});
+
+test('labels moved in whole 7-day blocks: a shift on the labelled days gives a small p, labels unrelated to v a large p', () => {
+  const r = sorteio(5);
+  const n = 7 * 60;
+  const g = Array.from({ length: n }, (_, i) => Math.floor(i / 7) % 3 === 0); // whole labelled weeks, like smoke weeks
+  const ruido = Array.from({ length: n }, () => r());
+  const comEfeito = ruido.map((x, i) => x + (g[i] ? 0.4 : 0));
+  const dif = (v: number[]) => (gg: boolean[]) => {
+    const m = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+    return m(v.filter((_, i) => gg[i])) - m(v.filter((_, i) => !gg[i]));
+  };
+  const forte = rotulosEmBlocos(g, dif(comEfeito), { n: 999, semente: 1 });
+  expect(forte.efeito).toBeGreaterThan(0.3);
+  expect(forte.p).toBeLessThan(0.01);
+  expect(rotulosEmBlocos(g, dif(ruido), { n: 999, semente: 1 }).p).toBeGreaterThan(0.05);
 });

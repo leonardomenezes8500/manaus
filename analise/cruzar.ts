@@ -179,3 +179,28 @@ export function sinaisPorAnos(d: number[], { n = 999, semente = 1 } = {}): { efe
   for (let k = 0; k < n; k++) if (Math.abs(media(d.map((x) => (r() < 0.5 ? -x : x)))) >= Math.abs(obs)) fortes++;
   return { efeito: obs, p: (1 + fortes) / (n + 1) };
 }
+
+/**
+ * Two-sided p of a statistic of a boolean label series by moving the labels in whole blocks of `bloco` days (the order
+ * of the blocks is shuffled, each block stays intact): days in a row are not independent, nor are smoke days.
+ */
+export function rotulosEmBlocos(
+  g: boolean[],
+  estatistica: (g: boolean[]) => number,
+  { bloco = 7, n = 999, semente = 1 } = {},
+): { efeito: number; p: number } {
+  const obs = estatistica(g);
+  const blocos: boolean[][] = [];
+  for (let i = 0; i < g.length; i += bloco) blocos.push(g.slice(i, i + bloco));
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) {
+    const b = [...blocos];
+    for (let i = b.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [b[i], b[j]] = [b[j], b[i]];
+    }
+    if (Math.abs(estatistica(b.flat().slice(0, g.length))) >= Math.abs(obs)) fortes++;
+  }
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
+}

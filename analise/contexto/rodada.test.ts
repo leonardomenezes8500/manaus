@@ -1,9 +1,14 @@
-import { permutacaoBlocos, sorteio } from '../cruzar.ts';
+import { permutacaoBlocos, rotulosEmBlocos, sorteio } from '../cruzar.ts';
 import {
+  celula,
   atualizarHipotese,
   fecharRodada,
   grauDeConfianca,
   segundoConfirma,
+  exposto,
+  noAno,
+  razaoDeRazoes,
+  voltaAsAulas,
   direcaoContraria,
   inicioTemporada,
   logRazaoPorBloco,
@@ -94,4 +99,59 @@ test('the effect against the written direction is flagged; no direction written,
   expect(direcaoContraria({ efeito: 3.5, unidade: 'razão', espera: 1 })).toBe(false);
   expect(direcaoContraria({ efeito: -0.3, unidade: 'Spearman', espera: 1 })).toBe(true);
   expect(direcaoContraria({ efeito: -0.3, unidade: 'Spearman' })).toBe(false);
+});
+
+test('round 5: a day is exposed when it or one of the 7 before had smoke; effects as a share of the mean and as a ratio of ratios', () => {
+  const fu = [false, true, false, false, false, false, false, false, false, false];
+  expect(exposto(fu, 7)).toEqual([false, true, true, true, true, true, true, true, true, false]);
+  expect(exposto(fu, 0)).toEqual(fu);
+  const jovens = [10, 20, 20, 10];
+  const outros = [10, 15, 15, 10];
+  expect(razaoDeRazoes(jovens, outros, [false, true, true, false])).toBeCloseTo(2 / 1.5, 6);
+});
+
+test('round 5: the school start against the same windows moved by whole weeks (placebo starts), one start per year', () => {
+  // 3 years of a daily series that jumps 50% from the 7th day after each start on.
+  const dias: string[] = [];
+  for (let t = Date.UTC(2015, 0, 1); t < Date.UTC(2018, 0, 1); t += 86_400_000) dias.push(new Date(t).toISOString().slice(0, 10));
+  const voltas = ['2015-02-05', '2016-02-11', '2017-02-03'];
+  const v = dias.map((d) =>
+    voltas.some(
+      (x) =>
+        d.slice(0, 4) === x.slice(0, 4) &&
+        d >= x &&
+        Date.parse(d) - Date.parse(x) >= 7 * 86_400_000 &&
+        Date.parse(d) - Date.parse(x) <= 21 * 86_400_000,
+    )
+      ? 15
+      : 10,
+  );
+  const t = voltaAsAulas(dias, v, voltas, { n: 999, semente: 1 });
+  expect(Math.exp(t.efeito)).toBeCloseTo(1.5, 6); // geometric mean of (days 7-21 after ÷ 21 days before)
+  expect(t.p).toBeLessThan(0.05);
+});
+
+test('CSV cell: a label with a comma or a quote is quoted, the rest is left as is', () => {
+  expect(['CAMS PM2,5 > 25', 'diz "sim"', 0.5, '', undefined].map(celula)).toEqual(['"CAMS PM2,5 > 25"', '"diz ""sim"""', '0.5', '', '']);
+});
+
+test('a yearly trend with smoke days in the late years is no smoke effect once each day is compared within its year', () => {
+  const r = sorteio(7);
+  const dias: string[] = [];
+  const v: number[] = [];
+  const g: boolean[] = [];
+  for (let ano = 2012; ano <= 2024; ano++)
+    for (let d = 0; d < 122; d++) {
+      dias.push(new Date(Date.UTC(ano, 7, 1 + d)).toISOString().slice(0, 10));
+      v.push(100 * 1.04 ** (ano - 2012) + 10 * (r() - 0.5)); // grows 4% a year, no smoke effect at all
+      g.push(r() < (ano >= 2022 ? 0.5 : 0.05)); // smoke mostly in the last years
+    }
+  const dif = (x: number[]) => (gg: boolean[]) =>
+    x.filter((_, i) => gg[i]).reduce((a, b) => a + b, 0) / gg.filter(Boolean).length -
+    x.filter((_, i) => !gg[i]).reduce((a, b) => a + b, 0) / gg.filter((y) => !y).length;
+  expect(rotulosEmBlocos(g, dif(v), { n: 199 }).p).toBeLessThan(0.05); // the trap: the trend looks like an effect
+  const dentro = noAno(dias, v);
+  expect(Math.abs(dentro.slice(0, 122).reduce((a, b) => a + b, 0))).toBeLessThan(1e-9); // each year averages 0
+  expect(rotulosEmBlocos(g, dif(dentro), { n: 199 }).p).toBeGreaterThan(0.05);
+  expect(noAno(['2020-08-01', '2020-08-02'], [10, 30], '/')).toEqual([0.5, 1.5]);
 });
