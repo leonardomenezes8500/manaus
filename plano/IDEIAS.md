@@ -16,10 +16,11 @@ A linha triada sai da caixa de entrada e vai para "Triadas", com o destino escri
 - [2026-10-22] (#24) Tentar de novo o geoportal da Prefeitura/IMPLURB (estava fora do ar) antes de mexer na fusão de bairros.
 - [2026-10-22] (#49) HYSPLIT para conferir as trajetórias: o download pede e-mail e aceite dos termos da NOAA (proíbe redistribuir). Só se o usuário quiser fazer o cadastro; até lá a conferência é GFS × ERA5 (#51).
 - [2026-10-22] (#54) MAIAC: a fumaça densa vira "nuvem" no QA e o dado some nos piores dias. Testar aceitar também o QA "possivelmente nublado" só nos dias com FU, ou trocar pelo MAIAC do VIIRS quando o MODIS parar.
-- [2026-10-22] (#47) A fila do CDS (ERA5) passou de 1,5 h por pedido em 22/10 (o cron espera até 3 h). Se isso virar regra, ler o ERA5 do espelho público na nuvem (ARCO-ERA5, Zarr) em vez do CDS.
 - [2026-10-22] (#62) Épocas do rio no `contexto.dia` só andam quando alguém roda `coleta/calendario.ts`. Se forem usadas no dia a dia, pôr no cron da slice depois da carga da ANA.
+- [2026-10-23] (#57) O `coleta/saude.ts` lê os próprios logs na seção de erros e cita de novo, em cascata, um erro antigo do `teste-r2` de 21/10. Ignorar os `saude-*.log` nessa busca.
 
 ## Triadas
+- [2026-10-22] (#47) A fila do CDS (ERA5) passou de 1,5 h por pedido em 22/10 (o cron espera até 3 h). Se isso virar regra, ler o ERA5 do espelho público na nuvem (ARCO-ERA5, Zarr) em vez do CDS. → M4 / #56: o histórico agora é pedido semana a semana. Em 23/10 até a semana esperou mais de 1 h; o ARCO-ERA5 fica no backlog, para quando a fila travar o cron diário.
 - [2026-10-21] (#13) Manaus não tem rede oficial de qualidade do ar: 1 estação de referência (FioAres, Fiocruz) e ~34 PurpleAir de UEA/Sema/MPAM. O município vetou os pontos de monitoramento da Lei 3.699/2026 (9/9/2026). Coletores novos para a triagem: #40, #41, #42. → M4 (#41, #42)
 - [2026-10-22] (#49) A caixa da região termina em −52° de longitude, só 8° a leste de Manaus. Em 2026-10-18 (vento de leste), 17 das 24 trajetórias saíram da caixa antes das 72 h. Avaliar crescer a caixa para leste (vento e focos do FIRMS) junto com a região de influência (#8). → M4 / #56 (S4.2)
 - [2026-10-22] (M2) Backup diário do banco vai crescer com as edificações e a telemetria (banco de dev: 1,2 GB). Tirar do `pg_dump` diário os esquemas que se refazem do bruto (`overture`, `openbuildings`, `osm`, `ana.leitura`) para o R2 continuar abaixo dos 10 GB grátis. → M4 / S4.1 (#73)
