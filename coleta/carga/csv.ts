@@ -1,5 +1,5 @@
-// Minimal CSV line splitter (#15): commas, optional double quotes ("" inside quotes = one quote). No multi-line fields.
-export function splitCsv(line: string): string[] {
+// Minimal CSV line splitter (#15): commas (or `sep`), optional double quotes ("" inside quotes = one quote). No multi-line fields.
+export function splitCsv(line: string, sep = ','): string[] {
   const out: string[] = [];
   let field = '';
   let quoted = false;
@@ -12,7 +12,7 @@ export function splitCsv(line: string): string[] {
       } else if (c === '"') quoted = false;
       else field += c;
     } else if (c === '"') quoted = true;
-    else if (c === ',') {
+    else if (c === sep) {
       out.push(field);
       field = '';
     } else field += c;

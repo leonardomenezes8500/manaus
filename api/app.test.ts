@@ -142,4 +142,32 @@ comBanco('API v0 no banco', () => {
       VALUES ('2026-09-10', 'v1', 20, 6, '{}', 80, 40.1, '[]', 'alta', '{}', 'v1', 'era5')`);
     expect((await app.inject('/fumaca/2026-09-10')).json()).toMatchObject({ versao: 'v1', meteo: 'era5', focos_contados: 80 });
   });
+
+  test('/contexto/:dia: the calendar of the day with the act of each event; outside 1994-2030 is 404, bad date 400', async () => {
+    await db.query(`INSERT INTO contexto.periodo (tipo, nome, inicio, fim, abrangencia, fonte, ato, url) VALUES
+      ('feriado', 'Aniversário de Manaus', '2026-10-24', '2026-10-24', 'Manaus', 'cmm-manaus', 'Lei municipal X', 'https://exemplo.gov.br/lei')`);
+    const r = (await app.inject('/contexto/2026-10-24')).json();
+    expect(r).toMatchObject({ dia: '2026-10-24', fim_de_semana: true, feriado: 'Aniversário de Manaus' });
+    expect(r.eventos[0]).toMatchObject({ nome: 'Aniversário de Manaus', ato: 'Lei municipal X', fonte: 'cmm-manaus' });
+    expect((await app.inject('/contexto/1990-01-01')).statusCode).toBe(404);
+    expect((await app.inject('/contexto/amanha')).statusCode).toBe(400);
+  });
+
+  test('/bairros/:id: people by age band from the census tracts of the IBGE bairro', async () => {
+    const a = (await db.query('SELECT min(id) AS id FROM bruto.arquivo')).rows[0].id;
+    await db.query(`UPDATE ibge.setor SET bairro = '1302603005001', bairro_nome = 'Centro' WHERE codigo = '130260305000001'`);
+    await db.query(`INSERT INTO ibge.variavel (tabela, variavel, descricao, grupo) VALUES
+      ('demografia', 'v01031', '0 a 4 anos', 'idade:0-4'), ('demografia', 'v01040', '60 a 69 anos', 'idade:60+')`);
+    await db.query(
+      `INSERT INTO ibge.setor_agregado (setor, tabela, variavel, valor, arquivo) VALUES
+       ('130260305000001', 'demografia', 'v01031', 12, $1), ('130260305000001', 'demografia', 'v01040', 30, $1)`,
+      [a],
+    );
+    const id = (await app.inject('/bairros')).json()[0].id;
+    expect((await app.inject(`/bairros/${id}`)).json().properties.populacao).toMatchObject({
+      setores: 1,
+      idade_0_4: 12,
+      idade_60_mais: 30,
+    });
+  });
 });

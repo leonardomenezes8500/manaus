@@ -25,6 +25,9 @@
 # Na mesma linha (#50): refaz com ERA5 os dias dos últimos 30 cuja v1 ainda não usa ERA5 (trajetórias, v1 e produtos no R2).
 20 5 * * * coleta/rodar.sh era5; coleta/rodar.sh analise/fumaca/relatorio --refazer-era5
 
+# PNCP (#66): contratações de Manaus publicadas e atualizadas nos últimos 3 dias (~40 chamadas, 1 a cada 3 s).
+50 6 * * * coleta/rodar.sh pncp
+
 # GFS 0,5° (#48): vento em níveis de pressão, f000 e f003 de cada rodada pronta dos últimos 2 dias, 4h30 depois das rodadas de 00/06/12/18 UTC.
 30 0,6,12,18 * * * coleta/rodar.sh gfs
 

@@ -1,0 +1,95 @@
+{
+  "totalPaginas": 1,
+  "data": [
+    {
+      "numeroControlePNCP": "34570820000130-1-000001/2023",
+      "dataPublicacaoPncp": "2023-08-07T16:15:23",
+      "dataAtualizacaoGlobal": "2023-08-07T16:15:23",
+      "anoCompra": 2023,
+      "modalidadeId": 8,
+      "amparoLegal": { "codigo": 38, "nome": "Lei 14.133/2021, Art. 75, VIII" },
+      "situacaoCompraNome": "Divulgada no PNCP",
+      "objetoCompra": "AQ. MEIO DE CONTRASTE RADIOLÓGICO-FCECON",
+      "valorTotalEstimado": 0.0,
+      "valorTotalHomologado": null,
+      "orgaoEntidade": { "cnpj": "34570820000130", "razaoSocial": "FUNDACAO CENTRO DE CONTROLE DE ONCOLOGIA", "esferaId": "E" },
+      "unidadeOrgao": {
+        "codigoUnidade": "17301",
+        "nomeUnidade": "FUNDAÃ‡ÃƒO CENTRO DE CONTROLE DE ONCOLOGIA DO ESTADO DO AMAZONAS",
+        "codigoIbge": "1302603"
+      }
+    },
+    {
+      "numeroControlePNCP": "34570820000130-1-000060/2023",
+      "dataPublicacaoPncp": "2023-08-29T09:47:24",
+      "dataAtualizacaoGlobal": "2023-08-30T11:55:57",
+      "anoCompra": 2023,
+      "modalidadeId": 8,
+      "amparoLegal": { "codigo": 38, "nome": "Lei 14.133/2021, Art. 75, VIII" },
+      "situacaoCompraNome": "Anulada",
+      "objetoCompra": "AQ DE PRODUTOS PARA LAVANDERIA - FCECON",
+      "valorTotalEstimado": 0.0,
+      "valorTotalHomologado": null,
+      "orgaoEntidade": { "cnpj": "34570820000130", "razaoSocial": "FUNDACAO CENTRO DE CONTROLE DE ONCOLOGIA", "esferaId": "E" },
+      "unidadeOrgao": {
+        "codigoUnidade": "17301",
+        "nomeUnidade": "FUNDAÃ‡ÃƒO CENTRO DE CONTROLE DE ONCOLOGIA DO ESTADO DO AMAZONAS",
+        "codigoIbge": "1302603"
+      }
+    },
+    {
+      "numeroControlePNCP": "04312658000190-1-000006/2024",
+      "dataPublicacaoPncp": "2024-06-03T10:09:55",
+      "dataAtualizacaoGlobal": "2024-06-03T10:09:55",
+      "anoCompra": 2024,
+      "modalidadeId": 8,
+      "amparoLegal": { "codigo": 38, "nome": "Lei 14.133/2021, Art. 75, VIII" },
+      "situacaoCompraNome": "Divulgada no PNCP",
+      "objetoCompra": "Serviço de Link de Dados",
+      "valorTotalEstimado": 2091586.5,
+      "valorTotalHomologado": 2091586.5,
+      "orgaoEntidade": {
+        "cnpj": "04312658000190",
+        "razaoSocial": "SECRETARIA MUNICIPAL DE FINANCAS E TECNOLOGIA DA INFORMACAO - SEMEF",
+        "esferaId": "M"
+      },
+      "unidadeOrgao": {
+        "codigoUnidade": "160101",
+        "nomeUnidade": "Secretaria Municipal de Finanças e Tecnologia da Informação",
+        "codigoIbge": "1302603"
+      }
+    },
+    {
+      "numeroControlePNCP": "10792928000100-1-000001/2021",
+      "dataPublicacaoPncp": "2021-08-11T07:00:19",
+      "dataAtualizacaoGlobal": "2021-08-11T07:00:19",
+      "anoCompra": 2021,
+      "modalidadeId": 8,
+      "amparoLegal": { "codigo": 19, "nome": "Lei 14.133/2021, Art. 75, II" },
+      "situacaoCompraNome": "Divulgada no PNCP",
+      "objetoCompra": "Aquisição de gás de cozinha",
+      "valorTotalEstimado": 2340.0,
+      "valorTotalHomologado": null,
+      "orgaoEntidade": {
+        "cnpj": "10792928000100",
+        "razaoSocial": "INSTITUTO FEDERAL DE EDUCACAO, CIENCIA E TECNOLOGIA DO AMAZONAS",
+        "esferaId": "F"
+      },
+      "unidadeOrgao": { "codigoUnidade": "158446", "nomeUnidade": "INST.F.ED.,CIENC.E TEC.DO AM/C.MAN.D.INDUSTRI", "codigoIbge": "1302603" }
+    },
+    {
+      "numeroControlePNCP": "05562326000126-1-000006/2023",
+      "dataPublicacaoPncp": "2023-08-22T12:34:17",
+      "dataAtualizacaoGlobal": "2023-08-22T12:34:17",
+      "anoCompra": 2023,
+      "modalidadeId": 8,
+      "amparoLegal": { "codigo": 19, "nome": "Lei 14.133/2021, Art. 75, II" },
+      "situacaoCompraNome": "Divulgada no PNCP",
+      "objetoCompra": "AQUISICAO DE CAFE - SEMA",
+      "valorTotalEstimado": 9520.0,
+      "valorTotalHomologado": 8904.0,
+      "orgaoEntidade": { "cnpj": "05562326000126", "razaoSocial": "SECRETARIA DE ESTADO DO MEIO AMBIENTE", "esferaId": "E" },
+      "unidadeOrgao": { "codigoUnidade": "30101", "nomeUnidade": "SECRETARIA DE ESTADO DO MEIO AMBIENTE", "codigoIbge": "1302603" }
+    }
+  ]
+}

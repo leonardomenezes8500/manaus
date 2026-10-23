@@ -1,0 +1,60 @@
+{
+  "Results": [
+    {
+      "Date": "2014-06-12T20:00:00Z",
+      "Home": { "IdCountry": "BRA", "TeamName": [{ "Locale": "en-GB", "Description": "Brazil" }], "Score": 3 },
+      "Away": { "IdCountry": "CRO", "TeamName": [{ "Locale": "en-GB", "Description": "Croatia" }], "Score": 1 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "São Paulo" }] }
+    },
+    {
+      "Date": "2014-06-14T22:00:00Z",
+      "Home": { "IdCountry": "ENG", "TeamName": [{ "Locale": "en-GB", "Description": "England" }], "Score": 1 },
+      "Away": { "IdCountry": "ITA", "TeamName": [{ "Locale": "en-GB", "Description": "Italy" }], "Score": 2 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Manaus" }] }
+    },
+    {
+      "Date": "2014-06-18T22:00:00Z",
+      "Home": { "IdCountry": "CMR", "TeamName": [{ "Locale": "en-GB", "Description": "Cameroon" }], "Score": 0 },
+      "Away": { "IdCountry": "CRO", "TeamName": [{ "Locale": "en-GB", "Description": "Croatia" }], "Score": 4 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Manaus" }] }
+    },
+    {
+      "Date": "2014-06-22T22:00:00Z",
+      "Home": { "IdCountry": "USA", "TeamName": [{ "Locale": "en-GB", "Description": "United States" }], "Score": 2 },
+      "Away": { "IdCountry": "POR", "TeamName": [{ "Locale": "en-GB", "Description": "Portugal" }], "Score": 2 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Manaus" }] }
+    },
+    {
+      "Date": "2014-06-25T20:00:00Z",
+      "Home": { "IdCountry": "HON", "TeamName": [{ "Locale": "en-GB", "Description": "Honduras" }], "Score": 0 },
+      "Away": { "IdCountry": "SUI", "TeamName": [{ "Locale": "en-GB", "Description": "Switzerland" }], "Score": 3 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Manaus" }] }
+    },
+    {
+      "Date": "2014-06-28T16:00:00Z",
+      "Home": { "IdCountry": "BRA", "TeamName": [{ "Locale": "en-GB", "Description": "Brazil" }], "Score": 1 },
+      "Away": { "IdCountry": "CHI", "TeamName": [{ "Locale": "en-GB", "Description": "Chile" }], "Score": 1 },
+      "HomeTeamPenaltyScore": 3,
+      "AwayTeamPenaltyScore": 2,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Belo Horizonte" }] }
+    },
+    {
+      "Date": "2014-07-13T19:00:00Z",
+      "Home": { "IdCountry": "GER", "TeamName": [{ "Locale": "en-GB", "Description": "Germany" }], "Score": 1 },
+      "Away": { "IdCountry": "ARG", "TeamName": [{ "Locale": "en-GB", "Description": "Argentina" }], "Score": 0 },
+      "HomeTeamPenaltyScore": null,
+      "AwayTeamPenaltyScore": null,
+      "Stadium": { "CityName": [{ "Locale": "en-GB", "Description": "Rio de Janeiro" }] }
+    }
+  ]
+}
