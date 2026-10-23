@@ -7,7 +7,7 @@ defasagem: '7 a 21 dias'
 epoca: 'volta de fevereiro e de agosto separadas; agosto coincide com o começo da fumaça e por isso é testado à parte'
 comparacao: 'as 3 semanas antes da volta, em anomalia sazonal'
 teste: 'razão das internações (3 semanas depois ÷ 3 semanas antes) na volta de fevereiro, permutação em blocos de 7 dias'
-rodada: 'M4'
+rodada: '5'
 status: 'escrita'
 escrita_em: '2026-10-22'
 ---

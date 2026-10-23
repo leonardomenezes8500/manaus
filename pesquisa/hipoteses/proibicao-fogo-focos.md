@@ -19,3 +19,5 @@ Atos de proibição (#62) e focos do arquivo FIRMS por estado. Exploratório: se
 
 ## Resultado
 Sem teste na rodada 1 (2026-10-22). O teste escrito compara anos com e sem proibição, mas no período dos focos (2012 em diante) todo ano tem a proibição de agosto a outubro da Portaria IPAAM 127/2010 (#62): não há ano sem proibição no AM. A suspensão federal (2019–2022) e os decretos do AM de 2024 e 2026 mudam só a janela em volta. E o banco não tem focos por estado (só os anéis de 800 km e da região), que a diferença das diferenças pede. Volta a ter teste com focos por estado e uma comparação que a regra do IPAAM permita, escrita como hipótese nova.
+
+A rodada 3 testa a pergunta com outra comparação: `proibicao-ipaam-2010` (#72).

@@ -7,7 +7,7 @@ defasagem: '0 a 7 dias'
 epoca: 'anomalia sazonal da taxa'
 comparacao: 'dias sem fumaça na mesma época'
 teste: 'razão das taxas (fumaça ÷ sem fumaça) por faixa de idade, permutação em blocos de 7 dias'
-rodada: 'M4'
+rodada: '5'
 status: 'escrita'
 escrita_em: '2026-10-22'
 ---
