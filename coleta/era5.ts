@@ -84,9 +84,17 @@ export const periodosDiarios = (faltam: string[]) => (faltam.length ? meses(falt
 const cabecalhos = () => ({ 'PRIVATE-TOKEN': process.env.ECMWF_KEY ?? '', 'Content-Type': 'application/json' });
 
 /** Submits the request; the job id, or null when the period is not published yet (CDS answers 400). */
-export async function submeter(corpo: ReturnType<typeof pedido>, f: typeof fetch = fetch): Promise<string | null> {
+/** The CDS by default; CAMS (#89) passes the ADS, which has the same API, account and key. */
+export type Servico = { api: string; dataset: string };
+const CDS: Servico = { api: API, dataset: DATASET };
+
+export async function submeter(
+  corpo: { inputs: object },
+  f: typeof fetch = fetch,
+  { api, dataset }: Servico = CDS,
+): Promise<string | null> {
   const r = await tentar(async () => {
-    const r = await f(`${API}/processes/${DATASET}/execution`, { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo) });
+    const r = await f(`${api}/processes/${dataset}/execution`, { method: 'POST', headers: cabecalhos(), body: JSON.stringify(corpo) });
     if (r.status >= 500) throw new Error(`HTTP ${r.status} no CDS`);
     return r;
   });
@@ -99,7 +107,12 @@ export async function submeter(corpo: ReturnType<typeof pedido>, f: typeof fetch
 /** Polls the job until it is done; the link and size of the result. */
 export async function esperarJob(
   job: string,
-  { f = fetch, intervaloMs = 15_000, maxMs = 40 * 60_000 }: { f?: typeof fetch; intervaloMs?: number; maxMs?: number } = {},
+  {
+    f = fetch,
+    intervaloMs = 15_000,
+    maxMs = 40 * 60_000,
+    api = API,
+  }: { f?: typeof fetch; intervaloMs?: number; maxMs?: number; api?: string } = {},
 ): Promise<{ href: string; bytes: number }> {
   const json = async (u: string) => (await f(u, { headers: cabecalhos() })).json();
   const fim = Date.now() + maxMs;
@@ -108,7 +121,7 @@ export async function esperarJob(
     for (;;) {
       let status: string;
       try {
-        status = (await json(`${API}/jobs/${job}`)).status;
+        status = (await json(`${api}/jobs/${job}`)).status;
         errosSeguidos = 0;
       } catch (e) {
         if (++errosSeguidos > 5) throw e; // a network blip is tolerated, a network that stays down is not
@@ -116,7 +129,7 @@ export async function esperarJob(
         continue;
       }
       if (status === 'successful') {
-        const { asset } = await json(`${API}/jobs/${job}/results`);
+        const { asset } = await json(`${api}/jobs/${job}/results`);
         return { href: asset.value.href, bytes: asset.value['file:size'] };
       }
       if (status === 'failed' || status === 'rejected' || status === 'dismissed') throw new Error(`job ${job}: ${status}`);
@@ -125,7 +138,7 @@ export async function esperarJob(
     }
   } catch (e) {
     // Cancelled: a job left in the queue makes the CDS reject the next request ("maximum number queued").
-    await f(`${API}/jobs/${job}`, { method: 'DELETE', headers: cabecalhos() }).catch(() => {});
+    await f(`${api}/jobs/${job}`, { method: 'DELETE', headers: cabecalhos() }).catch(() => {});
     throw e;
   }
 }
