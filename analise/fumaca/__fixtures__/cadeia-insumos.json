@@ -1,0 +1,90 @@
+{
+  "dia": "2026-10-17",
+  "ar": { "fu_horas": 10, "pm25_centro": { "media": 61.2, "max": 112.5, "horas": 24 }, "iqar_fioares_max": null, "cams_pm25": 48.3 },
+  "focos_total": 3,
+  "focos": [
+    {
+      "foco": 1,
+      "peso": 50.5,
+      "lat": -3.9,
+      "lon": -59.1,
+      "municipio": "Autazes",
+      "uf": "AM",
+      "fora_caixa": false,
+      "urbano": false,
+      "uc_esfera": null,
+      "ti": false,
+      "assentamento": "PA PANELAO",
+      "cnfp": "nao",
+      "prodes": "desm_1a3",
+      "deter": "corte_raso",
+      "sigef": null,
+      "alerta": 123456,
+      "arquivo_foco": "bruto/nasa-firms/2026/10/17/120000Z_VIIRS_NOAA20_NRT.csv",
+      "embargos": [
+        {
+          "orgao": "IBAMA",
+          "numero": "AAA1",
+          "data": "2025-08-02",
+          "pessoa": "PF",
+          "nome": "FULANO",
+          "arquivo": "bruto/ibama-embargos/x.csv.gz"
+        },
+        {
+          "orgao": "IBAMA",
+          "numero": "AAA2",
+          "data": "2024-09-10",
+          "pessoa": "PJ",
+          "nome": "EMPRESA EXEMPLO LTDA",
+          "arquivo": "bruto/ibama-embargos/x.csv.gz"
+        }
+      ],
+      "autos": []
+    },
+    {
+      "foco": 2,
+      "peso": 20,
+      "lat": -4.5,
+      "lon": -48,
+      "municipio": "Paragominas",
+      "uf": "PA",
+      "fora_caixa": true,
+      "urbano": false,
+      "uc_esfera": null,
+      "ti": false,
+      "assentamento": null,
+      "cnfp": null,
+      "prodes": null,
+      "deter": null,
+      "sigef": null,
+      "alerta": null,
+      "arquivo_foco": "bruto/nasa-firms/2026/10/17/120000Z_VIIRS_NOAA20_NRT.csv",
+      "embargos": [],
+      "autos": []
+    },
+    {
+      "foco": 3,
+      "peso": 5,
+      "lat": -2.5,
+      "lon": -61,
+      "municipio": "Novo Airão",
+      "uf": "AM",
+      "fora_caixa": false,
+      "urbano": false,
+      "uc_esfera": "Federal",
+      "ti": false,
+      "assentamento": null,
+      "cnfp": "A",
+      "prodes": "floresta",
+      "deter": "nao",
+      "sigef": null,
+      "alerta": null,
+      "arquivo_foco": "bruto/nasa-firms/2026/10/17/120000Z_VIIRS_SNPP_NRT.csv",
+      "embargos": [],
+      "autos": []
+    }
+  ],
+  "saude": { "publicado": false, "esperado_em": "2026-12", "efeito_rodada5": null },
+  "gasto": { "mes": [{ "acao": "214M", "uf": null, "liquidado": 1200000 }], "ano": [{ "acao": "214M", "uf": null, "liquidado": 9000000 }] },
+  "contratos": [{ "sigla": "CBMAM", "contratos": 2, "valor": 350000 }]
+}

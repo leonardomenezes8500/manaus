@@ -8,8 +8,11 @@ import { consultarCep as consultarCepReal } from '../coleta/brasilapi.ts';
 import { MAPBIOMAS, mapbiomasChave, r2Raster, RELEVO, valorNoPonto } from '../coleta/lib/raster.ts';
 import { RMM_BBOX as B } from '../coleta/regiao.ts';
 import { lerCatalogo } from '../fontes/catalogo.ts';
+import { montarCadeia } from '../analise/fumaca/cadeia.ts';
 
 type Db = Pick<pg.ClientBase, 'query'>;
+// AAAA-MM-DD of a real calendar day from 1900 to 2099 (2026-02-30 is not): the database would answer 500.
+const diaValido = (d: string) => /^(19|20)\d{2}-\d{2}-\d{2}$/.test(d) && new Date(Date.parse(d) || 0).toISOString().slice(0, 10) === d;
 export type Dependencias = {
   db: Db;
   // Rasters on R2 (gdallocationinfo) and BrasilAPI (network): injected so the tests run without them.
@@ -194,13 +197,19 @@ export function criarApp(deps: Dependencias): FastifyInstance {
   });
 
   app.get<{ Params: { dia: string } }>('/fumaca/:dia', async (req, rep) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD (dia de Manaus)' });
+    if (!diaValido(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD (dia de Manaus)' });
     const r = await db.query(`SELECT *, dia::text FROM analise.fumaca_dia WHERE dia = $1 ORDER BY versao DESC LIMIT 1`, [req.params.dia]);
     return r.rows[0] ?? rep.code(404).send({ erro: 'sem atribuição para esse dia' });
   });
 
+  // The chain of the day (#93): the same JSON as produtos/fumaca/cadeia/AAAA-MM-DD.json, built from the database.
+  app.get<{ Params: { dia: string } }>('/cadeia/:dia', async (req, rep) => {
+    if (!diaValido(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD (dia de Manaus)' });
+    return montarCadeia(db, req.params.dia);
+  });
+
   app.get<{ Params: { dia: string } }>('/contexto/:dia', async (req, rep) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD' });
+    if (!diaValido(req.params.dia)) return rep.code(400).send({ erro: 'dia no formato AAAA-MM-DD' });
     const r = await db.query(`SELECT *, dia::text FROM contexto.dia WHERE dia = $1`, [req.params.dia]);
     return r.rows[0] ?? rep.code(404).send({ erro: 'fora do calendário (1994 a 2030)' });
   });

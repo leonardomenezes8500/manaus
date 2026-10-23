@@ -135,12 +135,28 @@ comBanco('API v0 no banco', () => {
     expect(f).toMatchObject({ dia: '2026-09-10', versao: 'v0', confianca: 'media', focos_contados: 120, nota: 'heurística v0' });
     expect((await app.inject('/fumaca/2026-09-11')).statusCode).toBe(404);
     expect((await app.inject('/fumaca/ontem')).statusCode).toBe(400);
+    expect((await app.inject('/fumaca/2026-02-30')).statusCode).toBe(400);
+    expect((await app.inject('/fumaca/0000-01-01')).statusCode).toBe(400);
   });
 
   test('/fumaca/:dia: with v0 and v1 stored, the newest version (v1) comes back, with the wind it used', async () => {
     await db.query(`INSERT INTO analise.fumaca_dia (dia, versao, pm25_medido_horas, horas_fu_hz, vento, focos_contados, peso_total, ranking, confianca, sinais, nota, meteo)
       VALUES ('2026-09-10', 'v1', 20, 6, '{}', 80, 40.1, '[]', 'alta', '{}', 'v1', 'era5')`);
     expect((await app.inject('/fumaca/2026-09-10')).json()).toMatchObject({ versao: 'v1', meteo: 'era5', focos_contados: 80 });
+  });
+
+  test('/cadeia/:dia: the six links of the day, each item with label and source; a day with nothing says so; bad date 400', async () => {
+    const c = (await app.inject('/cadeia/2026-09-10')).json();
+    expect(c.elos.map((e: { titulo: string }) => e.titulo)).toEqual([
+      'Dia',
+      'Focos',
+      'Áreas e imóveis',
+      'Embargos e autos',
+      'Internações',
+      'Órgãos e gastos',
+    ]);
+    expect(c.elos[4].itens[0].texto).toContain('ainda não publicado');
+    expect((await app.inject('/cadeia/ontem')).statusCode).toBe(400);
   });
 
   test('/contexto/:dia: the calendar of the day with the act of each event; outside 1994-2030 is 404, bad date 400', async () => {
