@@ -20,10 +20,10 @@ A linha triada sai da caixa de entrada e vai para "Triadas", com o destino escri
 - [2026-10-22] (#49) HYSPLIT para conferir as trajetórias: o download pede e-mail e aceite dos termos da NOAA (proíbe redistribuir). Só se o usuário quiser fazer o cadastro; até lá a conferência é GFS × ERA5 (#51).
 - [2026-10-22] (#54) MAIAC: a fumaça densa vira "nuvem" no QA e o dado some nos piores dias. Testar aceitar também o QA "possivelmente nublado" só nos dias com FU, ou trocar pelo MAIAC do VIIRS quando o MODIS parar.
 - [2026-10-22] (#47) A fila do CDS (ERA5) passou de 1,5 h por pedido em 22/10 (o cron espera até 3 h). Se isso virar regra, ler o ERA5 do espelho público na nuvem (ARCO-ERA5, Zarr) em vez do CDS.
-- [2026-10-22] (#64) Focos do arquivo FIRMS por estado (AM e vizinhos), não só nos anéis de Manaus: a hipótese `proibicao-fogo-focos` ficou sem teste por falta deles e porque a regra do IPAAM vale todo ano desde 2010.
 - [2026-10-22] (#62) Épocas do rio no `contexto.dia` só andam quando alguém roda `coleta/calendario.ts`. Se forem usadas no dia a dia, pôr no cron da slice depois da carga da ANA.
 
 ## Triadas
+- [2026-10-22] (#64) Focos do arquivo FIRMS por estado (AM e vizinhos), não só nos anéis de Manaus: a hipótese `proibicao-fogo-focos` ficou sem teste por falta deles e porque a regra do IPAAM vale todo ano desde 2010. → M4 / S4.1
 - [2026-10-21] Conta de energia: tarifa, quedas de luz (DEC/FEC) e comparação com outras capitais. → M3.5 / #68 (DEC/FEC e tarifa; outras capitais ficam para depois)
 - [2026-10-21] Licitações: quais empresas ganham em cada setor e como isso muda com o tempo (PNCP, TCE-AM, Prefeitura, Estado). → M3.5 / #66 (PNCP; TCE-AM e Prefeitura só se uma hipótese pedir)
 - [2026-10-21] Alerta diário de fumaça para a população → M5 / S5.2
