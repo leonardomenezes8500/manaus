@@ -1,6 +1,6 @@
 # Roadmap — REA de Manaus
 
-**Sprint atual: M3.5 em revisão** (#59–#69 no PR do M3.5; a conferência pós-merge é a [#70](https://github.com/leonardomenezes8500/manaus/issues/70)). Depois vem o M4/S4.1, com as issues a criar. A conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fecha com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: S4.1** (M4). O M3.5 foi mergeado no PR #71; a conferência pós-merge é a [#70](https://github.com/leonardomenezes8500/manaus/issues/70). A conferência do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fecha com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
 Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o M3.5 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
@@ -153,11 +153,25 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 **Objetivo:** para cada foco relevante, dizer onde ele caiu (desmatamento, imóvel, área protegida), quem é o dono ou responsável, qual o efeito na saúde e quem deveria agir e quanto gastou.
 **Pronto quando:** existe o relatório "cadeia completa" de um dia (dia → focos → áreas/imóveis → embargos/autos → internações → órgãos e gastos), com fonte em cada elo.
 
-- **S4.1 — Onde queimou:** PRODES e DETER (TerraBrasilis), MapBiomas Alerta, florestas públicas (CNFP/SFB); cruzar com TIs e UCs (039). Focos do arquivo FIRMS por estado (AM e vizinhos), para dar teste à hipótese `proibicao-fogo-focos` (#64). Área queimada vinda do M3: MapBiomas Fogo primeiro (menos trabalho), depois MCD64A1 e INPE AQ1km.
-- Vindas do M3: [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (só depois de 2 semanas de coleta da #40 na slice); [#41](https://github.com/leonardomenezes8500/manaus/issues/41) Coletor PurpleAir (espera a decisão do usuário); [#56](https://github.com/leonardomenezes8500/manaus/issues/56) Crescer a caixa da região para leste (as trajetórias param a 8° de Manaus).
-- **S4.2 — De quem é:** CAR/SICAR (AM, RO, AC, PA), SIGEF/SNCI (INCRA), embargos e autos de infração do IBAMA e do ICMBio. Sai a lista de imóveis com fogo recorrente que já foram embargados.
+- **S4.1 — Onde queimou** (cada fonte com a hipótese escrita na #72 antes de coletar):
+  - [#72](https://github.com/leonardomenezes8500/manaus/issues/72) Hipóteses do S4.1 (rodada 3) antes de coletar: desmatamento, florestas públicas, áreas protegidas, área queimada e a proibição do IPAAM antes e depois de 2010 (vem antes de todas)
+  - [#73](https://github.com/leonardomenezes8500/manaus/issues/73) Backup diário sem os dados que se refazem do bruto, antes das camadas grandes (vem do `IDEIAS.md`)
+  - [#74](https://github.com/leonardomenezes8500/manaus/issues/74) Desmatamento do INPE: DETER (alertas desde 2016, coleta semanal leve na slice) e PRODES (mapa anual em COG, fora do PostGIS)
+  - [#75](https://github.com/leonardomenezes8500/manaus/issues/75) Florestas públicas: CNFP 2025 do SFB na região e a conferência com TIs e UCs (#30)
+  - [#76](https://github.com/leonardomenezes8500/manaus/issues/76) Área queimada por mês: MapBiomas Fogo (30 m) e INPE AQ1km (1 km), no anel de 800 km e por estado; MCD64A1 fica no backlog
+  - [#77](https://github.com/leonardomenezes8500/manaus/issues/77) Onde caiu cada foco: estado, TI, UC, floresta pública, PRODES e DETER, no arquivo FIRMS desde 2001 (focos por estado da #64) e nos focos da v1 de cada dia
+  - [#78](https://github.com/leonardomenezes8500/manaus/issues/78) Rodada 3 de cruzamentos, com o mesmo método e a mesma correção
+- Vindas do M3, no S4.2: [#42](https://github.com/leonardomenezes8500/manaus/issues/42) Calibrar sensores baratos com a FioAres (depois de 2 semanas de coleta da #40, ~05/11); [#56](https://github.com/leonardomenezes8500/manaus/issues/56) Crescer a caixa da região para leste (as trajetórias param a 8° de Manaus; ao crescer, refazer #74–#77). [#41](https://github.com/leonardomenezes8500/manaus/issues/41) Coletor PurpleAir continua esperando a decisão do usuário.
+- **S4.2 — De quem é:** CAR/SICAR (AM, RO, AC, PA), SIGEF/SNCI (INCRA), embargos e autos de infração do IBAMA e do ICMBio, MapBiomas Alerta (shapefile público; a ligação com o CAR pede token da API, numa conta do usuário). Sai a lista de imóveis com fogo recorrente que já foram embargados.
 - **S4.3 — Saúde e poder público:** DATASUS SIH/SIM (respiratório, Manaus), SISAM; Portal da Transparência (Prevfogo, ICMBio, GLO), PNCP, transparência do AM (SEMA, IPAAM, CBMAM), Prefeitura. Fecha com o relatório "cadeia completa". O PNCP e o SICONFI já vêm do M3.5 (aqui só se filtram os órgãos do fogo). Internações × fumaça seguem o método da #59: hipótese escrita, defasagem, época, taxa por idade (população da #63) e calendário escolar (#61).
 - Toda fonte nova do M4 entra com hipótese escrita (portão da #59).
+
+**Decisões do S4.1 (2026-10-23, provisórias; o usuário pode mudar):**
+- **R2 mais cheio do que se pensava:** 6,95 GiB em 23/10, e o backup diário tem 103 MB (14 dias = ~1,4 GB). A #73 tira do backup o que se refaz do bruto. O S4.1 soma ~0,5 a 0,65 GB e termina perto de 8,5 a 9 GB. O CAR do S4.2 não cabe nos 10 GB grátis: aí o usuário decide se paga (~US$ 0,015 por GB por mês acima de 10 GB). Conferir a regra de 14 dias do `backup/pg/` contando os dumps a partir de 05/11.
+- MapBiomas Alerta vai para o S4.2; MCD64A1 vai para o backlog (o AQ1km já dá a segunda visão, mais leve).
+- PRODES em COG fora do PostGIS; MapBiomas Fogo não é guardado, só os totais. CNFP só na edição 2025.
+- DETER com cron semanal na slice; AQ1km à mão uma vez por mês.
+- Rodadas: 3 = S4.1, 4 = S4.2, 5 = S4.3. Todas as camadas usam a caixa atual da região.
 
 ## [M5](https://github.com/leonardomenezes8500/manaus/milestone/6) — Pesquisa: problemas e soluções da fumaça (2 sprints)
 **Objetivo:** ter a lista de problemas com evidência e a lista de soluções propostas, avaliadas com critério escrito.
