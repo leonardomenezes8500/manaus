@@ -1,0 +1,132 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "deter_amz.31311_curr",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-60.8983, -11.8102],
+              [-60.8954, -11.8104],
+              [-60.895, -11.8096],
+              [-60.8942, -11.8096],
+              [-60.8942, -11.8107],
+              [-60.8948, -11.8107],
+              [-60.8983, -11.8102]
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "gid": "31311_curr",
+        "classname": "DESMATAMENTO_CR",
+        "quadrant": null,
+        "path_row": "037017",
+        "view_date": "2026-09-01",
+        "sensor": "WFI",
+        "satellite": "AMAZONIA-1",
+        "areauckm": 0,
+        "uc": null,
+        "areamunkm": 0.09536748323036381,
+        "municipality": "Pimenta Bueno",
+        "mun_geocod": "1100189",
+        "uf": "RO",
+        "publish_month": "2026-09-01"
+      },
+      "bbox": [-60.8983, -11.8128, -60.8942, -11.8096]
+    },
+    {
+      "type": "Feature",
+      "id": "deter_amz.31312_curr",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-60.4382, -10.2111],
+              [-60.4364, -10.2089],
+              [-60.435, -10.2075],
+              [-60.4368, -10.2043],
+              [-60.4379, -10.2003],
+              [-60.4357, -10.1996],
+              [-60.4382, -10.2111]
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "gid": "31312_curr",
+        "classname": "CS_DESORDENADO",
+        "quadrant": null,
+        "path_row": "037017",
+        "view_date": "2026-09-01",
+        "sensor": "WFI",
+        "satellite": "AMAZONIA-1",
+        "areauckm": 0,
+        "uc": null,
+        "areamunkm": 5.862364781425983,
+        "municipality": "Aripuana",
+        "mun_geocod": "5101407",
+        "uf": "MT",
+        "publish_month": "2026-09-01"
+      },
+      "bbox": [-60.4382, -10.2201, -60.412, -10.1917]
+    },
+    {
+      "type": "Feature",
+      "id": "deter_amz.31313_curr",
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [
+          [
+            [
+              [-60.0482, -12.9375],
+              [-60.0457, -12.9413],
+              [-60.0461, -12.9413],
+              [-60.0461, -12.9418],
+              [-60.0471, -12.9418],
+              [-60.0471, -12.9424],
+              [-60.0482, -12.9375]
+            ]
+          ]
+        ]
+      },
+      "geometry_name": "geom",
+      "properties": {
+        "gid": "31313_curr",
+        "classname": "DESMATAMENTO_CR",
+        "quadrant": null,
+        "path_row": "037017",
+        "view_date": "2026-09-01",
+        "sensor": "WFI",
+        "satellite": "AMAZONIA-1",
+        "areauckm": 0,
+        "uc": null,
+        "areamunkm": 0.15843032978319,
+        "municipality": "Comodoro",
+        "mun_geocod": "5103304",
+        "uf": "MT",
+        "publish_month": "2026-09-01"
+      },
+      "bbox": [-60.0509, -12.9429, -60.0457, -12.9375]
+    }
+  ],
+  "totalFeatures": 4749,
+  "numberMatched": 4749,
+  "numberReturned": 3,
+  "timeStamp": "2026-10-23T02:13:00.461Z",
+  "links": [
+    {
+      "title": "next page",
+      "type": "application/json",
+      "rel": "next",
+      "href": "https://terrabrasilis.dpi.inpe.br/geoserver/deter-amz/wfs?REQUEST=GetFeature&SORTBY=gid&SRSNAME=EPSG%3A4326&OUTPUTFORMAT=application%2Fjson&VERSION=2.0.0&TYPENAMES=deter-amz%3Adeter_amz&COUNT=3&SERVICE=WFS&CQL_FILTER=BBOX%28geom%2C-15%2C-74%2C3%2C-52%29%20AND%20view_date%20%3E%3D%20%272026-09-01%27&STARTINDEX=3"
+    }
+  ],
+  "bbox": [-60.8983, -12.9429, -60.0457, -10.1917]
+}

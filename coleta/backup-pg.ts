@@ -19,6 +19,7 @@ const SEM_DADOS = [
   'ibge.cnefe_endereco',
   'ibge.setor',
   'ibge.setor_agregado',
+  'inpe_desmatamento.deter',
 ];
 
 const pasta = mkdtempSync(join(process.env.MANAUS_BUFFER || tmpdir(), 'pg-'));
