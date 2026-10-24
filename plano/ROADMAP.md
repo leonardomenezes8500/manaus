@@ -1,4 +1,4 @@
-**Sprint atual: M4 em revisão** (PR único do M4, aberto em 2026-10-23). S4.2 e S4.3 fecharam em 2026-10-23, menos o que espera o CAR ([#83](https://github.com/leonardomenezes8500/manaus/issues/83) a #86 e o elo do imóvel na #93, download à mão do usuário), a #42 (a partir de ~05/11) e a #41 (decisão do usuário). A conferência do M4 é a [#94](https://github.com/leonardomenezes8500/manaus/issues/94); a do M3 ([#57](https://github.com/leonardomenezes8500/manaus/issues/57)) fechou com 24 h de cron. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: M4 mergeado** (PR [#96](https://github.com/leonardomenezes8500/manaus/pull/96), 2026-10-23); a conferência pós-merge é a [#94](https://github.com/leonardomenezes8500/manaus/issues/94). Do M4 ficou aberto só o que espera o CAR (lista abaixo, no M4), a #42 (a partir de ~05/11) e a #41 (decisão do usuário). O M5 começa quando o usuário quiser; o CAR não bloqueia o M5. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
 Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o M3.5 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
@@ -196,6 +196,14 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 - **SISAM** trocado pelo CAMS EAC4 (mesmo modelo; o SISAM só exporta por e-mail). Portais de transparência do AM e de Manaus ficam de fora (pedem token ou sessão): o gasto estadual e municipal vem do SICONFI por subfunção e as compras de cada órgão do PNCP.
 - **Achados do M4 (2026-10-23):** o gasto federal do fogo quase nunca vem com o estado no localizador (em 2024, R$ 3,5 mil com AM contra R$ 500 milhões "nacional"), então a `gasto-federal-fogo-reativo` ficou sem teste. Na rodada 5, a fumaça não aparece nas internações nem nos óbitos dos dias seguintes depois de comparar cada dia com o próprio ano (a primeira versão confundia a tendência dos anos com efeito, achado da revisão); a volta às aulas de fevereiro aparece nas internações de crianças. A caixa do vento até −44 (#56) faz 59% das trajetórias chegarem às 72 h (eram 19%).
 - SIH, SIM, embargos e alertas atualizados à mão neste PC; cron mensal ou semanal na slice fica em aberto. O dia de exemplo da cadeia completa é 17/10/2026: agosto de 2026 não teve nenhum dia com FU, e 17/10 é o dia com FU e mais focos na v1 (as internações dele saem em dezembro).
+
+**Aguardando o CAR (download à mão do usuário, [#83](https://github.com/leonardomenezes8500/manaus/issues/83); registrado em 2026-10-23):**
+- #83 CAR de AM, AC, RO e PA no bruto e no banco (o passo a passo do download está na issue).
+- [#84](https://github.com/leonardomenezes8500/manaus/issues/84) Onde caiu cada foco (2): imóvel do CAR, título do INCRA, embargo e alerta. INCRA, embargos e alertas já estão no banco (#80, #81, #82); falta só o imóvel.
+- [#85](https://github.com/leonardomenezes8500/manaus/issues/85) Imóveis com fogo recorrente que já foram embargados.
+- [#86](https://github.com/leonardomenezes8500/manaus/issues/86) Rodada 4. As 6 hipóteses já estão escritas (#79): `car-em-floresta-publica`, `sigef-menos-fogo`, `fogo-recorrente-embargado`, `embargo-fogo-depois`, `alerta-vira-fogo` e `autos-por-foco-conciliacao`. As três últimas não precisam do CAR e podem ser testadas antes, se o usuário preferir não esperar.
+- O elo do imóvel do CAR na cadeia completa ([#93](https://github.com/leonardomenezes8500/manaus/issues/93), fechada; a rota `/cadeia/:dia` já responde na slice): hoje sai "pendente (#83)" e entra com a #84.
+- R2: o CAR não cabe nos 10 GB grátis (decisão do usuário, nas decisões do S4.2 acima).
 
 ## [M5](https://github.com/leonardomenezes8500/manaus/milestone/6) — Pesquisa: problemas e soluções da fumaça (2 sprints)
 **Objetivo:** ter a lista de problemas com evidência e a lista de soluções propostas, avaliadas com critério escrito.

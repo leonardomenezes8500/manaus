@@ -28,14 +28,19 @@ async function newest(fonte: string, expectedHours: number, now: Date): Promise<
     const found = pick(await listKeys(`bruto/${fonte}/${d}/`));
     if (found) return found;
   }
-  return pick(await listKeys(`bruto/${fonte}/`));
+  return pick(await listKeys(`bruto/${fonte}/`)) ?? pick(await listKeys(`normalizado/${fonte}/`)); // PRODES keeps only the COG
 }
+
+// Reads a versioned public url and keeps only totals in the database (#76): nothing in R2 to date.
+const FORA_DO_R2 = new Set(['mapbiomas-fogo']);
 
 const fmtAge = (h: number | null) => (h === null ? '—' : h < 48 ? `${h.toFixed(1)} h` : `${(h / 24).toFixed(1)} d`);
 
-async function recentErrors(logs: string, now: Date): Promise<string[]> {
+export async function recentErrors(logs: string, now: Date): Promise<string[]> {
   const days = [0, 1].map((i) => new Date(now.getTime() - 4 * 3600_000 - i * 86_400_000).toISOString().slice(0, 10)); // Manaus days
-  const files = (await readdir(logs).catch(() => [] as string[])).filter((f) => days.some((d) => f.endsWith(`-${d}.log`))).sort();
+  const files = (await readdir(logs).catch(() => [] as string[]))
+    .filter((f) => !f.startsWith('saude-') && days.some((d) => f.endsWith(`-${d}.log`)))
+    .sort(); // own logs quote older errors
   const out: string[] = [];
   for (const f of files) {
     const errors = (await readFile(join(logs, f), 'utf8')).split('\n').filter((l) => /ERRO|NOVO SENSOR/.test(l));
@@ -66,6 +71,10 @@ async function main() {
   for (const { card } of lerCatalogo()
     .filter((c) => c.card.status === 'coletando')
     .sort((a, b) => a.card.id.localeCompare(b.card.id))) {
+    if (FORA_DO_R2.has(card.id)) {
+      rows.push(`| ${card.id} | (url pública, nada no R2) | — | ${card.coleta} | fora do R2 |`);
+      continue;
+    }
     const expected = hoursOf(card.coleta);
     const last = await newest(card.id, expected, now);
     const age = last ? (now.getTime() - last.modified.getTime()) / 3600_000 : null;
