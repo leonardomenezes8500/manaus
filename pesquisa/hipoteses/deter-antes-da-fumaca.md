@@ -10,7 +10,7 @@ teste: 'Spearman entre o resíduo dos dias com FU depois da cota mínima (residu
 rodada: '3'
 status: 'testada'
 escrita_em: '2026-10-23'
-testada_em: '2026-10-23'
+testada_em: '2026-10-26'
 confianca: 'baixa'
 resultado: 'Spearman entre o corte raso do DETER de janeiro a julho a até 800 km e os dias com FU de agosto a novembro sem o efeito da cota mínima (postos), 9 anos (2017–2025): 0.25; p = 0.5331, p ajustado (BH da rodada 3) = 0.6397, não passa na correção'
 ---
@@ -21,4 +21,4 @@ A floresta derrubada no começo do ano é queimada na seca. Se o corte cresce, a
 Alertas de corte raso do DETER (desde 2016) dentro do anel de 800 km, somados de janeiro a julho. Dias com FU no METAR de SBEG e cota mínima de agosto a novembro (`analise.serie_dia`, #55). A seca já explica muito (rodada 1), por isso o teste usa o resíduo. Poucos anos: confiança baixa.
 
 ## Resultado
-Spearman entre o corte raso do DETER de janeiro a julho a até 800 km e os dias com FU de agosto a novembro sem o efeito da cota mínima (postos), 9 anos (2017–2025): 0.25; p = 0.5331, p ajustado (BH da rodada 3) = 0.6397, não passa na correção. Segundo recorte (PRODES): 0.23, p = 0.5600, não confirma. Confiança baixa: não passa na correção. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-23. Números em produtos/contexto/rodada-3.csv.
+Spearman entre o corte raso do DETER de janeiro a julho a até 800 km e os dias com FU de agosto a novembro sem o efeito da cota mínima (postos), 9 anos (2017–2025): 0.25; p = 0.5331, p ajustado (BH da rodada 3) = 0.6397, não passa na correção. Segundo recorte (PRODES): 0.23, p = 0.5600, não confirma. Confiança baixa: não passa na correção. Dado medido; 9999 permutações, semente 64, banco manaus em 2026-10-26. Números em produtos/contexto/rodada-3.csv.

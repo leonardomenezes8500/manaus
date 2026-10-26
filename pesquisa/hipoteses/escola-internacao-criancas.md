@@ -10,7 +10,7 @@ teste: 'razão das internações (3 semanas depois ÷ 3 semanas antes) na volta 
 rodada: '5'
 status: 'testada'
 escrita_em: '2026-10-22'
-testada_em: '2026-10-23'
+testada_em: '2026-10-26'
 confianca: 'media'
 resultado: 'internações respiratórias de 0 a 9 anos de 1 a 3 semanas depois da volta às aulas de fevereiro ÷ as 3 semanas antes, 11 anos (2014, 2015, 2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024, 2025), média geométrica: 1.46×; p = 0.0044, p ajustado (BH da rodada 5) = 0.0176, passa na correção'
 ---
@@ -23,4 +23,4 @@ Definições fixadas em 2026-10-23 (#87), antes de olhar o SIH: "dia de fumaça"
 Calendário escolar (#61) e internações do SIH (M4). A volta de fevereiro, fora da fumaça, é o teste principal; a de agosto é exploratória.
 
 ## Resultado
-internações respiratórias de 0 a 9 anos de 1 a 3 semanas depois da volta às aulas de fevereiro ÷ as 3 semanas antes, 11 anos (2014, 2015, 2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024, 2025), média geométrica: 1.46×; p = 0.0044, p ajustado (BH da rodada 5) = 0.0176, passa na correção. Confiança media: falta um segundo recorte independente. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-23. Números em produtos/contexto/rodada-5.csv.
+internações respiratórias de 0 a 9 anos de 1 a 3 semanas depois da volta às aulas de fevereiro ÷ as 3 semanas antes, 11 anos (2014, 2015, 2016, 2017, 2018, 2019, 2020, 2022, 2023, 2024, 2025), média geométrica: 1.46×; p = 0.0044, p ajustado (BH da rodada 5) = 0.0176, passa na correção. Confiança media: falta um segundo recorte independente. Dado medido; 9999 permutações, semente 64, banco manaus em 2026-10-26. Números em produtos/contexto/rodada-5.csv.

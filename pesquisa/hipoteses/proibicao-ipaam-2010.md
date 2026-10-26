@@ -10,7 +10,7 @@ teste: 'diferença das diferenças da fatia de agosto a outubro (AM menos a méd
 rodada: '3'
 status: 'testada'
 escrita_em: '2026-10-23'
-testada_em: '2026-10-23'
+testada_em: '2026-10-26'
 confianca: 'media'
 resultado: 'fatia dos focos do ano de agosto a outubro, AM menos a média de RO e AC (MODIS), 2010–2025 menos 2003–2009: 7.1 pontos percentuais; p = 0.0055, p ajustado (BH da rodada 3) = 0.0083, passa na correção, na direção contrária à esperada: a hipótese não se confirma'
 ---
@@ -21,4 +21,4 @@ A Portaria IPAAM 127/2010 proíbe a queima no AM de agosto a outubro. Se a regra
 Focos MODIS do arquivo FIRMS (desde 2000-11) por estado. Começa em 2003 porque o Aqua só entra em 2002-07 e mudaria a fatia daquele ano. RO e AC também têm proibições próprias, o que pode diminuir a diferença. Exploratório: se o fogo foi para julho ou novembro, e o decreto do AM de 2024 (RMM e Sul do AM).
 
 ## Resultado
-fatia dos focos do ano de agosto a outubro, AM menos a média de RO e AC (MODIS), 2010–2025 menos 2003–2009: 7.1 pontos percentuais; p = 0.0055, p ajustado (BH da rodada 3) = 0.0083, passa na correção, na direção contrária à esperada: a hipótese não se confirma. Confiança media: falta um segundo recorte independente. Dado medido; 9999 permutações, semente 64, banco manaus_dev_novo em 2026-10-23. Números em produtos/contexto/rodada-3.csv.
+fatia dos focos do ano de agosto a outubro, AM menos a média de RO e AC (MODIS), 2010–2025 menos 2003–2009: 7.1 pontos percentuais; p = 0.0055, p ajustado (BH da rodada 3) = 0.0083, passa na correção, na direção contrária à esperada: a hipótese não se confirma. Confiança media: falta um segundo recorte independente. Dado medido; 9999 permutações, semente 64, banco manaus em 2026-10-26. Números em produtos/contexto/rodada-3.csv.
