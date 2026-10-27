@@ -936,6 +936,8 @@ async function principal(args: string[]) {
     .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
     .map((f) => ({ f, card: lerFrontMatter(readFileSync(join(dir, f), 'utf8')) }))
     .filter((h) => h.card.rodada === rodada && h.card.status === 'escrita');
+  // Without this, an already tested round would overwrite its csv in the R2 with only the header.
+  if (!hips.length) throw new Error(`rodada ${rodada}: nenhuma hipótese com status 'escrita'`);
   const db = new pg.Client();
   await db.connect();
   const feitos = [];
