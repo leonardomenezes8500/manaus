@@ -26,15 +26,9 @@ type Parte = { weighted: Weighted[]; vento: object; conf: { level: string; signa
 
 const toSpot = (r: any): Spot => ({ id: Number(r.id), lat: r.lat, lon: r.lon, at: r.adquirido_em, frp: r.frp, municipio: r.municipio });
 
-/** v1: the day's trajectories (ERA5 when there, else GFS, or the one forced) and the spots seen while that air was on its way. */
-export async function parteV1(
-  db: pg.ClientBase,
-  dia: string,
-  measured: number | null,
-  model: number | null,
-  forcado?: 'era5' | 'gfs',
-): Promise<Parte> {
-  const meteo = (
+/** The day's trajectories (ERA5 when there, else GFS, or the one forced) and the spots seen while that air was on its way. */
+export async function dadosV1(db: pg.ClientBase, dia: string, forcado?: 'era5' | 'gfs') {
+  const meteo: string | undefined = (
     await db.query(
       `SELECT meteo FROM analise.trajetoria WHERE dia = $1 AND ($2::text IS NULL OR meteo = $2) GROUP BY meteo ORDER BY meteo = 'era5' DESC LIMIT 1`,
       [dia, forcado ?? null],
@@ -53,7 +47,19 @@ export async function parteV1(
     `SELECT id, lat, lon, adquirido_em, coalesce(frp, 0) AS frp, municipio FROM firms.foco WHERE adquirido_em >= $1 AND adquirido_em <= $2`,
     [new Date(Math.min(...chegadas) - (horasAtras + PARAMS_V1.janelaH) * H), new Date(Math.max(...chegadas) + PARAMS_V1.janelaH * H)],
   );
-  const weighted = pesarFocosV1(MANAUS, trajs, spots.rows.map(toSpot));
+  return { meteo, trajs, chegadas, spots: spots.rows.map(toSpot) };
+}
+
+/** v1: spots near the day's trajectories (dadosV1). */
+export async function parteV1(
+  db: pg.ClientBase,
+  dia: string,
+  measured: number | null,
+  model: number | null,
+  forcado?: 'era5' | 'gfs',
+): Promise<Parte> {
+  const { meteo, trajs, chegadas, spots } = await dadosV1(db, dia, forcado);
+  const weighted = pesarFocosV1(MANAUS, trajs, spots);
   const c = concordancia(trajs);
   return {
     weighted,

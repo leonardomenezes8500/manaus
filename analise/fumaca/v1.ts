@@ -11,7 +11,9 @@ export const PARAMS_V1 = {
   janelaH: 12, // ± hours around the time the air passed by the spot
   decaimentoH: 24, // weight falls as 1 / (1 + τ / 24 h)
   concordamKm: 250, // the −24 h positions agree when their mean distance to the centre is below this
+  diluicao: 0, // #99: weight × (corridor at the start ÷ corridor there)^diluicao; 0 = no dilution with distance
 } as const;
+export type ParamsV1 = { [K in keyof typeof PARAMS_V1]: number };
 
 export type Traj = { chegada: number; pontos: Ponto[] };
 const H = 3_600_000;
@@ -40,10 +42,11 @@ export function passagem(t: Traj, s: { lat: number; lon: number }) {
 
 /**
  * For each trajectory, a spot counts if it is inside the corridor and was seen ±janelaH around the time the air passed.
- * Weight = Σ over the trajectories where it counted of FRP / (1 + τ/24 h), divided by the number of trajectories.
+ * Weight = Σ over the trajectories where it counted of FRP / (1 + τ/24 h), divided by the number of trajectories
+ * (and, with `diluicao`, by how much the corridor widened there: the smoke is spread over a wider band).
  * `hours` = in how many trajectories it counted (same field the v0 uses for hours).
  */
-export function pesarFocosV1(origem: { lat: number; lon: number }, trajs: Traj[], spots: Spot[], p = PARAMS_V1): Weighted[] {
+export function pesarFocosV1(origem: { lat: number; lon: number }, trajs: Traj[], spots: Spot[], p: ParamsV1 = PARAMS_V1): Weighted[] {
   const out: Weighted[] = [];
   for (const s of spots) {
     const d = distanceKm(origem.lat, origem.lon, s.lat, s.lon);
@@ -52,9 +55,10 @@ export function pesarFocosV1(origem: { lat: number; lon: number }, trajs: Traj[]
     let n = 0;
     for (const t of trajs) {
       const ps = passagem(t, s);
-      if (ps.distanciaKm > p.corredorKm + p.corredorFracao * ps.caminhoKm) continue;
+      const largura = p.corredorKm + p.corredorFracao * ps.caminhoKm;
+      if (ps.distanciaKm > largura) continue;
       if (Math.abs(s.at.getTime() - (t.chegada - ps.tauH * H)) > p.janelaH * H) continue;
-      soma += s.frp / (1 + ps.tauH / p.decaimentoH);
+      soma += (s.frp / (1 + ps.tauH / p.decaimentoH)) * (p.corredorKm / largura) ** p.diluicao;
       n++;
     }
     if (n)
@@ -70,7 +74,7 @@ export function pesarFocosV1(origem: { lat: number; lon: number }, trajs: Traj[]
 }
 
 /** Do the trajectories agree? Mean distance of their −24 h positions to the centre of them. */
-export function concordancia(trajs: Traj[], p = PARAMS_V1) {
+export function concordancia(trajs: Traj[], p: ParamsV1 = PARAMS_V1) {
   const em24 = trajs.map((t) => t.pontos.find((x) => x.h === -24)).filter((x): x is Ponto => !!x);
   if (em24.length < Math.max(2, trajs.length / 2)) return { km_medio: null, concordam: false };
   const lat = em24.reduce((a, x) => a + x.lat, 0) / em24.length;
