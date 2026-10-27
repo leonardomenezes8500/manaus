@@ -1,4 +1,4 @@
-import { concordancia, confiancaV1, passagem, pesarFocosV1, type Traj } from './v1.ts';
+import { concordancia, confiancaV1, PARAMS_V1, passagem, pesarFocosV1, type Traj } from './v1.ts';
 
 const H = 3_600_000;
 const CHEGADA = Date.parse('2026-09-23T12:00:00Z');
@@ -68,4 +68,28 @@ test('confiancaV1: "trajectories agree" takes the place of "steady wind"', () =>
   const c = confiancaV1({ trajetoriasConcordam: true, spotsInSector: 9, measuredPm25: 40, modelPm25: 30 });
   expect(c).toEqual({ level: 'alta', signals: { trajetoriasConcordam: true, spotsInSector: true, measuredAndModelAgree: true } });
   expect(confiancaV1({ trajetoriasConcordam: false, spotsInSector: 1, measuredPm25: null, modelPm25: 30 }).level).toBe('baixa');
+});
+
+test('diluicao 0 is v1 as it was; with 1, the weight is divided by how much the corridor widened (25 km → 25 + 20% of the path)', () => {
+  const t = [sul()];
+  const s = [foco(MANAUS.lat - 0.2 * 10, MANAUS.lon, 10, 10, 1), foco(MANAUS.lat - 0.2 * 40, MANAUS.lon, 40, 10, 2)];
+  const v1 = pesarFocosV1(MANAUS, t, s);
+  expect(pesarFocosV1(MANAUS, t, s, { ...PARAMS_V1, diluicao: 0 })).toEqual(v1);
+  const d = pesarFocosV1(MANAUS, t, s, { ...PARAMS_V1, diluicao: 1 });
+  const largura = (h: number) => (25 + 0.2 * 0.2 * h * KM) / 25;
+  for (const x of d) {
+    const base = v1.find((y) => y.id === x.id)!;
+    expect(x.weight).toBeCloseTo(base.weight / largura(x.id === 1 ? 10 : 40), 1);
+  }
+  // Same FRP: the far one (40 h, ~890 km of path) now weighs much less than the near one.
+  expect(d.find((x) => x.id === 2)!.weight / d.find((x) => x.id === 1)!.weight).toBeLessThan(
+    v1.find((x) => x.id === 2)!.weight / v1.find((x) => x.id === 1)!.weight / 2,
+  );
+});
+
+test('narrower corridor (10% of the path): the spot 60 km to the side at 222 km of path no longer counts', () => {
+  const lat = MANAUS.lat - 0.2 * 10;
+  const s = [foco(lat, MANAUS.lon + 60 / (KM * Math.cos((lat * Math.PI) / 180)), 10)];
+  expect(pesarFocosV1(MANAUS, [sul()], s)).toHaveLength(1);
+  expect(pesarFocosV1(MANAUS, [sul()], s, { ...PARAMS_V1, corredorFracao: 0.1 })).toHaveLength(0);
 });
