@@ -28,3 +28,9 @@ O estado (e, pela lei municipal, a Prefeitura) mede o ar de Manaus com estação
 - [registro] O Amazonas declarou ao MMA não ter estação de referência e operar só rede indicativa de sensores baratos: 64 estações indicativas e nenhuma de referência em 2024 (Relatório 2025 do MMA, p. 17 e Tabela 7; `bruto/monitorar-mma/2026/10/28/221834Z_c0ec80f5_relatorio-anual-qualidade-do-ar-2025.pdf.gz`).
 - [registro] Lei 14.850/2024 art. 7º § 2º e art. 18: rede, relatório anual e IQAr são do órgão ambiental estadual; Conama 506/2024 art. 5º: só método de referência ou equivalente serve para verificar o padrão e para informação de saúde (`bruto/dou-in/2026/10/28/215649Z_f743b031_index.php.gz`; a lei, ver o problema `manaus-sem-medicao-do-ar`).
 - [medido] Hoje há 1 estação de referência em Manaus (FioAres, Fiocruz, no MonitorAr desde ~jul/2026) e 69 sensores baratos da rede SELVA, 39 no ar em 28/10/2026 (problema `manaus-sem-medicao-do-ar`).
+
+## Como avaliar
+Escrito em 2026-10-28 (#110), antes de baixar o INEP e o CNES. É uma conta de cobertura, não um cruzamento: não tem hipótese nem p-valor.
+- Sensor "no ar": com leitura em 80% ou mais das horas dos últimos 14 dias. Entram a FioAres (referência), o AirGradient do Centro e os sensores da rede SELVA (indicativos, sem correção), contados à parte.
+- Cobertura: pessoas, crianças de 0 a 4 anos e idosos de 60 anos ou mais nos setores censitários cujo centro fica a até 2 km de um sensor no ar (Censo 2022, #63), separado entre referência e indicativo.
+- Onde pôr os próximos 10: escolhidos um a um entre as escolas públicas e as UBS do universo das salas de ar limpo, sempre o ponto que cobre mais pessoas ainda sem sensor a 2 km.

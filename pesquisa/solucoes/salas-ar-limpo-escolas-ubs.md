@@ -27,3 +27,13 @@ Uma sala por escola ou UBS, fechada, com purificador HEPA (ou filtro no ar-condi
 - [terceiros] Aprendizagem: filtro de ar em sala de aula subiu as notas em 0,1 a 0,2 desvio-padrão, num caso de vazamento de gás, não de fumaça (Gilraine, J. Human Resources 2025; https://jhr.uwpress.org/content/60/5/1469, acesso em 2026-10-28).
 - [medido] No nosso dado, as internações respiratórias de moradores de Manaus não subiram depois de dias com fumaça (rodada 5, confiança baixa; problema `fumaca-seca-2026`). O ganho de saúde só tem evidência de fora.
 - [terceiros] Limite: ar-condicionado split, comum nas escolas, recircula o ar mas filtra pouco. A queda de ~70% medida com climatização é de um prédio com sistema central (Wheeler et al. 2021, ver `abrigos-ar-limpo`).
+
+## Como avaliar
+Escrito em 2026-10-28 (#110), antes de baixar o INEP e o CNES. É uma conta de cobertura, não um cruzamento: não tem hipótese nem p-valor.
+- Universo: escolas públicas (municipais, estaduais e federais) em atividade em Manaus com educação infantil ou ensino fundamental (Censo Escolar 2024 do INEP, #111); UBS de gestão municipal (CNES, tipo de unidade 02 e gestão M, #112).
+- Ordem: escolas pelo número de matrículas de 0 a 14 anos (creche, pré-escola e fundamental); UBS pelo número de crianças de 0 a 4 anos e de idosos de 60 anos ou mais nos setores censitários cujo centro fica a até 1 km da UBS (Censo 2022, #63). A fumaça é tratada como igual na cidade toda, porque o CAMS é uma célula só.
+- N: as 10, 50 e 100 primeiras escolas; as 10 e 30 primeiras UBS. Para cada N, quantas matrículas e quantas crianças e idosos ficam cobertos, e que parte do total de Manaus isso é.
+- Dias letivos com fumaça por ano, 2012–2026: dias do calendário escolar oficial (#61) com 1 hora ou mais de FU no METAR do aeroporto (medido).
+- Horas-aluno em dias de fumaça, 2025–2026: dias letivos com PM2,5 médio do sensor do Centro (AirGradient) acima do limiar do dia de fumaça, vezes as matrículas.
+- Limiar do dia de fumaça (Em aberto, provisório): 50 µg/m³ na média de 24 h, o padrão diário em vigor da Conama 506/2024 (PI-2); a conta sai também com 15 µg/m³, o valor da OMS e padrão final da mesma resolução. Na temporada de 2026, 15 dias passaram de 50 e 61 passaram de 15 (já visto em #105, antes desta escolha).
+- O quanto a sala reduz o PM2,5 dentro entra como faixa `[terceiros]` (48 a 78%), nunca como medido.
