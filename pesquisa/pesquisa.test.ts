@@ -3,14 +3,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkFields, lerCatalogo, lerFrontMatter } from '../fontes/catalogo.ts';
 import { semHipotese, validarHipotese } from './hipoteses.ts';
+import { validarSolucao } from './solucoes.ts';
 
 const STATUS = ['rascunho', 'com-evidencia', 'revisado'];
 const RULES = {
   problemas: { required: ['id', 'titulo', 'tema', 'status', 'atualizado_em'], allowed: { status: STATUS } },
-  solucoes: {
-    required: ['id', 'titulo', 'problemas', 'proposta_por', 'fonte', 'status'],
-    allowed: { status: STATUS, classificacao: ['pratica', 'paliativa', 'especulativa'] },
-  },
 };
 
 for (const [folder, rule] of Object.entries(RULES)) {
@@ -22,11 +19,9 @@ for (const [folder, rule] of Object.entries(RULES)) {
     });
 }
 
-test('the models themselves pass the rule (empty classificacao is allowed)', () => {
-  for (const folder of ['problemas', 'solucoes'] as const) {
-    const doc = lerFrontMatter(readFileSync(join(import.meta.dirname, folder, '_modelo.md'), 'utf8'));
-    expect(checkFields(doc, doc.id + '.md', RULES[folder].required, RULES[folder].allowed)).toEqual([]);
-  }
+test('the problem model passes the rule', () => {
+  const doc = lerFrontMatter(readFileSync(join(import.meta.dirname, 'problemas', '_modelo.md'), 'utf8'));
+  expect(checkFields(doc, doc.id + '.md', RULES.problemas.required, RULES.problemas.allowed)).toEqual([]);
 });
 
 test('a problem without status or with an unknown one fails', () => {
@@ -103,5 +98,69 @@ describe('hipóteses', () => {
     expect(semHipotese([card], [ok])).toEqual(['fonte-nova']);
     expect(semHipotese([card], [{ ...ok, fontes: 'fonte-nova' }])).toEqual([]);
     expect(semHipotese([{ id: 'nasa-firms', status: 'coletando' }], [])).toEqual([]); // collecting before the method
+  });
+});
+
+// Solutions (#104): classified only by the written criterion, after its date.
+describe('soluções', () => {
+  const ler = (...p: string[]) => readFileSync(join(import.meta.dirname, ...p), 'utf8');
+  const criterioEm = lerFrontMatter(ler('criterio-solucoes.md')).escrito_em;
+  const dir = join(import.meta.dirname, 'solucoes');
+  const sols = lerCatalogo(dir).map((d) => ({ ...d, texto: ler('solucoes', d.arquivo) }));
+
+  test('the criterion has a date', () => expect(criterioEm).toMatch(/^\d{4}-\d{2}-\d{2}$/));
+
+  if (sols.length)
+    test.each(sols.map((d) => [d.arquivo, d] as const))('solucoes/%s follows the criterion', (_, d) => {
+      expect(validarSolucao(d.card, d.texto, d.arquivo, criterioEm)).toEqual([]);
+    });
+
+  test('the model passes (classificacao empty)', () => {
+    const texto = ler('solucoes', '_modelo.md');
+    const card = lerFrontMatter(texto);
+    expect(validarSolucao(card, texto, card.id + '.md', criterioEm)).toEqual([]);
+  });
+
+  const base = { id: 's', titulo: 't', problemas: 'p', proposta_por: 'MPF', fonte: 'https://x.org', status: 'rascunho' };
+  const classificada = {
+    ...base,
+    classificacao: 'pratica',
+    atua_em: 'causa',
+    teste_local: 'nenhum: só evidência de fora',
+    classificada_em: '2026-11-05',
+  };
+  const corpo = '## Evidências\n- [terceiros] Caiu 30% onde foi feito (estudo, 2024).\n';
+  const v = (c: Record<string, string>, t = corpo) => validarSolucao(c, `---\n---\n${t}`, 's.md', '2026-10-28');
+
+  test('a draft without classificacao needs only the base fields', () => {
+    expect(v(base)).toEqual([]);
+    expect(v({ ...base, proposta_por: '' })).toEqual(['falta proposta_por']);
+  });
+
+  test('a classified solution needs atua_em, teste_local and classificada_em', () => {
+    expect(v(classificada)).toEqual([]);
+    expect(v({ ...base, classificacao: 'pratica' })).toEqual(['falta atua_em', 'falta teste_local', 'falta classificada_em']);
+    expect(v({ ...classificada, atua_em: 'meio' })).toEqual(['atua_em inválido: meio']);
+  });
+
+  test('classified before the criterion was written fails', () => {
+    expect(v({ ...classificada, classificada_em: '2026-10-27' })).toEqual(['classificada_em antes do critério (2026-10-28)']);
+    expect(v({ ...classificada, classificada_em: '2026-10-28' })).toEqual([]);
+  });
+
+  test('efeito cannot be pratica and causa cannot be paliativa; especulativa goes with both', () => {
+    expect(v({ ...classificada, atua_em: 'efeito' })).toEqual(['pratica com atua_em efeito']);
+    expect(v({ ...classificada, classificacao: 'paliativa' })).toEqual(['paliativa com atua_em causa']);
+    expect(v({ ...classificada, classificacao: 'paliativa', atua_em: 'efeito' })).toEqual([]);
+    expect(v({ ...classificada, classificacao: 'especulativa' })).toEqual([]);
+    expect(v({ ...classificada, classificacao: 'especulativa', atua_em: 'efeito' })).toEqual([]);
+  });
+
+  test('every line under Evidências starts with a label', () => {
+    expect(v(base, '## Evidências\n- [medido] 54 dias acima da OMS.\n\n## Outra\n- sem rótulo aqui pode\n')).toEqual([]);
+    expect(v(base, '## Evidências\n- [medido] ok\n- Caiu 30% (estudo).\n- [achismo] x\n')).toEqual([
+      'evidência sem rótulo: - Caiu 30% (estudo).',
+      'evidência sem rótulo: - [achismo] x',
+    ]);
   });
 });

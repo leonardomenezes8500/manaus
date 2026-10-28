@@ -1,4 +1,4 @@
-**Sprint atual: M4 mergeado** (PR [#96](https://github.com/leonardomenezes8500/manaus/pull/96), 2026-10-23); a conferência pós-merge é a [#94](https://github.com/leonardomenezes8500/manaus/issues/94). Do M4 ficou aberto só o que espera o CAR (lista abaixo, no M4), a #42 (a partir de ~05/11) e a chave da PurpleAir da #41 (decisão do usuário). O M5 começa quando o usuário quiser; o CAR não bloqueia o M5. Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
+**Sprint atual: S5.1** (M5, branch `m5-solucoes`, desde 2026-10-28): levantar problemas e soluções, com o critério escrito antes ([#104](https://github.com/leonardomenezes8500/manaus/issues/104)). O M4 foi mergeado (PR [#96](https://github.com/leonardomenezes8500/manaus/pull/96)); do M4 ficou aberto só o que espera o CAR (lista abaixo, no M4), a #42 (a partir de ~05/11) e a chave da PurpleAir da #41 (decisão do usuário). Atualizar ao fim de cada sprint, depois da triagem do `IDEIAS.md`.
 
 Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/leonardomenezes8500/manaus/milestones) M0–M7, [issues](https://github.com/leonardomenezes8500/manaus/issues) com uma label por sprint (`S0.1`...). Sprint = ~1 semana de trabalho de agente. M0–M3 e o M3.5 já têm issues; do M4 em diante são só linhas aqui, que viram issues quando chegar a vez.
 
@@ -212,8 +212,26 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
 **Objetivo:** ter a lista de problemas com evidência e a lista de soluções propostas, avaliadas com critério escrito.
 **Pronto quando:** cada solução tem classificação (prática / paliativa / especulativa), quem se beneficia e quais recursos e dados existentes a sustentam.
 
-- **S5.1:** levantar problemas e soluções já propostas (governo, MP, academia, ONGs, imprensa), cada uma com fonte.
-- **S5.2:** avaliar com os dados do M1–M4. Na cidade: alerta diário (CAMS + sensores) e salas de ar limpo em escolas (INEP/CNEFE) e UBS (CNES), por ordem de exposição (população por idade da #63).
+- **Rota (2026-10-28):** levantar primeiro e avaliar depois. O critério de classificação vem antes de tudo e tem teste; o levantamento tem teto de ~25 soluções; o teto de efeito na origem, que não pede dado novo, sobe para o S5.1; as hipóteses da rodada 6 e a requisição real das fontes novas fecham o S5.1, antes de qualquer download. Um PR só para o M5, no fim do S5.2.
+- **S5.1 — Levantar problemas e soluções:**
+  - [#104](https://github.com/leonardomenezes8500/manaus/issues/104) Critério escrito para classificar soluções (vem antes de todas)
+  - [#105](https://github.com/leonardomenezes8500/manaus/issues/105) Problemas com evidência: atualizar os 2 que existem e abrir os que o M1 a M4 provou
+  - [#106](https://github.com/leonardomenezes8500/manaus/issues/106) Soluções propostas (1): na origem do fogo
+  - [#107](https://github.com/leonardomenezes8500/manaus/issues/107) Soluções propostas (2): na cidade (exposição e saúde) e rascunhos LAI
+  - [#108](https://github.com/leonardomenezes8500/manaus/issues/108) Soluções propostas (3): informação e governança
+  - [#109](https://github.com/leonardomenezes8500/manaus/issues/109) Teto de efeito na origem: quanto da fumaça cada solução poderia tocar
+  - [#110](https://github.com/leonardomenezes8500/manaus/issues/110) Hipóteses da rodada 6 e o jeito de avaliar o S5.2, antes de baixar (fecha o S5.1)
+- **S5.2 — Avaliar com dado local e classificar:**
+  - [#111](https://github.com/leonardomenezes8500/manaus/issues/111) Escolas públicas de Manaus (INEP Censo Escolar)
+  - [#112](https://github.com/leonardomenezes8500/manaus/issues/112) UBS e unidades públicas de saúde de Manaus (CNES)
+  - [#113](https://github.com/leonardomenezes8500/manaus/issues/113) Previsão do CAMS arquivada no ADS, 2015 a 2025 (só se a requisição da #110 funcionar)
+  - [#114](https://github.com/leonardomenezes8500/manaus/issues/114) Salas de ar limpo: ordem e cobertura (escolas e UBS)
+  - [#115](https://github.com/leonardomenezes8500/manaus/issues/115) Rede de sensores: quem está coberto hoje e onde faltam (a primeira a cortar)
+  - [#116](https://github.com/leonardomenezes8500/manaus/issues/116) Rodada 6: alerta (CAMS × fumaça medida) e v1 × SELVA
+  - [#117](https://github.com/leonardomenezes8500/manaus/issues/117) Classificar todas as soluções e a tabela-resumo
+  - [#118](https://github.com/leonardomenezes8500/manaus/issues/118) Conferência pós-merge do M5
+- **Em aberto (provisório):** o critério v1 (`pesquisa/criterio-solucoes.md`, o usuário lê e diz se concorda); o limiar do dia de fumaça, OMS (15 µg/m³) ou Conama 506/2024 (#110); INEP e CNES como carga única, sem hipótese própria (#110).
+- **Fica de fora:** leis com histórico de versões ([M5.5](https://github.com/leonardomenezes8500/manaus/milestone/11), planejado à parte na [#119](https://github.com/leonardomenezes8500/manaus/issues/119); o usuário decide se vem antes ou depois do M6); construir o alerta ou as salas; o que depende do CAR (#83 a #86).
 
 ## [M6](https://github.com/leonardomenezes8500/manaus/milestone/7) — API pública v1 (2 sprints)
 - Documentação OpenAPI, versão e limite de uso; licença de cada fonte respeitada (OSM é ODbL: exige atribuição e compartilhamento); revisão de segurança; R2 para servir o bruto público; decidir onde hospedar.
