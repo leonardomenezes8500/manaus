@@ -157,6 +157,13 @@ describe('soluções', () => {
     expect(v({ ...classificada, classificacao: 'especulativa', atua_em: 'efeito' })).toEqual([]);
   });
 
+  test('an issue number with # in the front matter fails (the reader would cut the value there)', () => {
+    expect(validarSolucao(base, '---\nteste_local: pendente #84\n---\n', 's.md', '2026-10-28')).toEqual([
+      '# antes de número corta o valor: teste_local: pendente #84',
+    ]);
+    expect(validarSolucao(base, '---\nteste_local: pendente: issue 84 # comentário\n---\n', 's.md', '2026-10-28')).toEqual([]);
+  });
+
   test('every line under Evidências starts with a label', () => {
     expect(v(base, '## Evidências\n- [medido] 54 dias acima da OMS.\n\n## Outra\n- sem rótulo aqui pode\n')).toEqual([]);
     expect(v(base, '## Evidências\n- [medido] ok\n- Caiu 30% (estudo).\n- [achismo] x\n')).toEqual([

@@ -21,6 +21,9 @@ export function validarSolucao(s: Card, texto: string, arquivo: string, criterio
     if (s.classificacao === 'pratica' && s.atua_em === 'efeito') erros.push('pratica com atua_em efeito');
     if (s.classificacao === 'paliativa' && s.atua_em === 'causa') erros.push('paliativa com atua_em causa');
   }
+  // `#` starts a comment in the front matter reader, so "issue #84" would silently lose the rest of the value.
+  for (const l of (texto.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').split('\n'))
+    if (/\s#\d/.test(l)) erros.push(`# antes de número corta o valor: ${l}`);
   return [...erros, ...evidenciasSemRotulo(texto)];
 }
 
