@@ -11,7 +11,7 @@ import { concordancia, confiancaV1, PARAMS_V1, pesarFocosV1, type Traj } from '.
 export const VERSION = 'v0';
 export const NOTE = 'Heurística v0: vento sobre Manaus (925/850 hPa, modelo) em linha reta até os focos; não é trajetória.';
 export const NOTE_V1 =
-  'Atribuição v1: retrotrajetórias de até 72 h saindo de Manaus a ~500, 1000 e 1500 m, com vento de modelo; contam os focos perto do caminho do ar, na hora em que ele passou.';
+  'Atribuição v1: retrotrajetórias de até 72 h saindo de Manaus a ~500, 1000 e 1500 m, com vento de modelo; contam os focos perto do caminho do ar, na hora em que ele passou, e o peso de cada foco cai com a largura do corredor até ali (#101).';
 export type Versao = 'v0' | 'v1';
 
 /** UTC bounds of a Manaus day (UTC-4, no daylight saving). */

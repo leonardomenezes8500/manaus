@@ -1,5 +1,5 @@
 import { resumoPeso, rhoContraBase, VARIANTES } from './peso-distancia.ts';
-import { PARAMS_V1 } from './v1.ts';
+import { PARAMS_V1, PARAMS_V1_SEM_DILUICAO } from './v1.ts';
 
 const w = (lon: number, weight: number) => ({
   id: 1,
@@ -14,8 +14,9 @@ const w = (lon: number, weight: number) => ({
   weight,
 });
 
-test('the base is v1 untouched; total weight and the part east of −52', () => {
-  expect(VARIANTES.v1).toBe(PARAMS_V1);
+test('the base is v1 before #101 (no dilution) and dilui is v1 now; total weight and the part east of −52', () => {
+  expect(VARIANTES.v1).toBe(PARAMS_V1_SEM_DILUICAO);
+  expect(VARIANTES.dilui).toEqual(PARAMS_V1);
   expect(resumoPeso([w(-60, 2), w(-48, 3), w(-52.5, 1)])).toEqual({ total: 6, leste: 3 });
 });
 

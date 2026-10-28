@@ -1,4 +1,4 @@
-import { concordancia, confiancaV1, PARAMS_V1, passagem, pesarFocosV1, type Traj } from './v1.ts';
+import { concordancia, confiancaV1, PARAMS_V1, PARAMS_V1_SEM_DILUICAO, passagem, pesarFocosV1, type Traj } from './v1.ts';
 
 const H = 3_600_000;
 const CHEGADA = Date.parse('2026-09-23T12:00:00Z');
@@ -49,7 +49,12 @@ test('synthetic day: under the path counts, 300 km away does not, 2 of 3 traject
   const longe = MANAUS.lon + 300 / (KM * Math.cos((lat * Math.PI) / 180));
   // Third trajectory goes north: the spot to the south only counts in 2 of 3.
   const norte: Traj = { chegada: CHEGADA, pontos: sul().pontos.map((p) => ({ ...p, lat: 2 * MANAUS.lat - p.lat })) };
-  const r = pesarFocosV1(MANAUS, [sul(), sul(), norte], [foco(lat, MANAUS.lon, 24, 30, 1), foco(lat, longe, 24, 30, 2)]);
+  const r = pesarFocosV1(
+    MANAUS,
+    [sul(), sul(), norte],
+    [foco(lat, MANAUS.lon, 24, 30, 1), foco(lat, longe, 24, 30, 2)],
+    PARAMS_V1_SEM_DILUICAO,
+  );
   expect(r.map((s) => s.id)).toEqual([1]);
   expect(r[0].hours).toBe(2); // in how many trajectories it counted
   expect(r[0].weight).toBeCloseTo((30 / (1 + 24 / 24)) * (2 / 3), 3);
@@ -70,12 +75,12 @@ test('confiancaV1: "trajectories agree" takes the place of "steady wind"', () =>
   expect(confiancaV1({ trajetoriasConcordam: false, spotsInSector: 1, measuredPm25: null, modelPm25: 30 }).level).toBe('baixa');
 });
 
-test('diluicao 0 is v1 as it was; with 1, the weight is divided by how much the corridor widened (25 km → 25 + 20% of the path)', () => {
+test('v1 dilutes by default (#101): the weight is divided by how much the corridor widened (25 km → 25 + 20% of the path); diluicao 0 is v1 before #101', () => {
   const t = [sul()];
   const s = [foco(MANAUS.lat - 0.2 * 10, MANAUS.lon, 10, 10, 1), foco(MANAUS.lat - 0.2 * 40, MANAUS.lon, 40, 10, 2)];
-  const v1 = pesarFocosV1(MANAUS, t, s);
-  expect(pesarFocosV1(MANAUS, t, s, { ...PARAMS_V1, diluicao: 0 })).toEqual(v1);
-  const d = pesarFocosV1(MANAUS, t, s, { ...PARAMS_V1, diluicao: 1 });
+  const v1 = pesarFocosV1(MANAUS, t, s, PARAMS_V1_SEM_DILUICAO);
+  const d = pesarFocosV1(MANAUS, t, s);
+  expect(d).toEqual(pesarFocosV1(MANAUS, t, s, { ...PARAMS_V1, diluicao: 1 }));
   const largura = (h: number) => (25 + 0.2 * 0.2 * h * KM) / 25;
   for (const x of d) {
     const base = v1.find((y) => y.id === x.id)!;
