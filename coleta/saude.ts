@@ -7,11 +7,11 @@ import { join } from 'node:path';
 import { lerCatalogo } from '../fontes/catalogo.ts';
 import { enviar, listKeys } from './lib/baixar.ts';
 
-/** "3h", "1d", "365d" → hours. */
+/** "10min", "3h", "1d", "365d" → hours. */
 export function hoursOf(freq: string): number {
-  const m = freq.match(/^(\d+)\s*(h|d)$/);
+  const m = freq.match(/^(\d+)\s*(min|h|d)$/);
   if (!m) throw new Error(`bad frequency: ${freq}`);
-  return Number(m[1]) * (m[2] === 'd' ? 24 : 1);
+  return Number(m[1]) * { min: 1 / 60, h: 1, d: 24 }[m[2] as 'min' | 'h' | 'd'];
 }
 
 /** OK while the newest file is younger than twice the expected interval. */

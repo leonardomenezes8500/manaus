@@ -4,7 +4,14 @@ import { join } from 'node:path';
 import { hoursOf, recentErrors, status } from './saude.ts';
 
 test('frequency in hours', () => {
-  expect([hoursOf('1h'), hoursOf('3h'), hoursOf('6h'), hoursOf('1d'), hoursOf('365d')]).toEqual([1, 3, 6, 24, 8760]);
+  expect([hoursOf('10min'), hoursOf('1h'), hoursOf('3h'), hoursOf('6h'), hoursOf('1d'), hoursOf('365d')]).toEqual([
+    1 / 6,
+    1,
+    3,
+    6,
+    24,
+    8760,
+  ]);
   expect(() => hoursOf('semanal')).toThrow('bad frequency');
 });
 
