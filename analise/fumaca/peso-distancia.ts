@@ -12,13 +12,14 @@ import { sorteio, spearman } from '../cruzar.ts';
 import { dadosV1 } from './atribuir.ts';
 import { separacao } from './comparar.ts';
 import type { Weighted } from './heuristica.ts';
-import { PARAMS_V1, pesarFocosV1, type ParamsV1 } from './v1.ts';
+import { PARAMS_V1_SEM_DILUICAO, pesarFocosV1, type ParamsV1 } from './v1.ts';
 
+// v1 = before #101; since #101 the report uses dilui.
 export const VARIANTES: Record<string, ParamsV1> = {
-  v1: PARAMS_V1,
-  dilui: { ...PARAMS_V1, diluicao: 1 },
-  estreito: { ...PARAMS_V1, corredorFracao: 0.1 },
-  'dilui+estreito': { ...PARAMS_V1, diluicao: 1, corredorFracao: 0.1 },
+  v1: PARAMS_V1_SEM_DILUICAO,
+  dilui: { ...PARAMS_V1_SEM_DILUICAO, diluicao: 1 },
+  estreito: { ...PARAMS_V1_SEM_DILUICAO, corredorFracao: 0.1 },
+  'dilui+estreito': { ...PARAMS_V1_SEM_DILUICAO, diluicao: 1, corredorFracao: 0.1 },
 };
 const LESTE = -52; // the old east edge of the box: east of it is the Cerrado of MA, PI and TO
 
@@ -76,8 +77,8 @@ async function principal(args: string[]) {
       linhas.push({ dia: d.dia, pm: Number(d.pm25_medido_media), fu: d.horas_fu_hz, guardado: Number(d.peso_total), v });
       console.log(d.dia, nomes.map((k) => `${k} ${v[k].total.toFixed(1)}`).join(' '));
     }
-    // The base recomputed here must be the v1 stored in the database.
-    const desvio = Math.max(...linhas.map((l) => Math.abs(l.v.v1.total - l.guardado) / Math.max(1, l.guardado)));
+    // The current v1 (dilui since #101) recomputed here must be the one stored in the database.
+    const desvio = Math.max(...linhas.map((l) => Math.abs(l.v.dilui.total - l.guardado) / Math.max(1, l.guardado)));
     const pm = linhas.map((l) => l.pm);
     const base = linhas.map((l) => l.v.v1.total);
     const agosto = linhas.filter((l) => l.dia.slice(5, 7) === '08');
@@ -92,8 +93,8 @@ async function principal(args: string[]) {
       '# Fumaça: peso da v1 pela distância (#99)',
       '',
       `De ${linhas[0]?.dia ?? '—'} a ${linhas.at(-1)?.dia ?? '—'}: ${linhas.length} dias com v1 e PM2.5 medido (12 h ou mais), ${linhas.filter((l) => l.fu > 0).length} com FU/HZ no aeroporto Eduardo Gomes.`,
-      'Variantes calculadas só para comparar; o relatório segue com a v1. dilui = o peso de cada foco é dividido por quanto o corredor alargou até ali (25 km na saída, 25 km + 20% do caminho depois). estreito = corredor de 25 km + 10% do caminho (a v1 usa 20%).',
-      `A v1 recalculada aqui difere da guardada no banco em até ${pct(desvio)} num dia.`,
+      'v1 = como era até a #101 (sem diluição); desde a #101 o relatório usa dilui. dilui = o peso de cada foco é dividido por quanto o corredor alargou até ali (25 km na saída, 25 km + 20% do caminho depois). estreito = corredor de 25 km + 10% do caminho (a v1 usa 20%).',
+      `A dilui recalculada aqui difere da guardada no banco em até ${pct(desvio)} num dia.`,
       '',
       '| versão | ρ com PM2.5 medido | ρ − ρ da v1 (IC 95%) | peso mediano FU ÷ sem FU | dias FU no quarto de cima | peso a leste de −52 | idem, agosto |',
       '|---|---|---|---|---|---|---|',
