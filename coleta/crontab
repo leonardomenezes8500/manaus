@@ -57,3 +57,8 @@
 
 # AERONET (#53): AOD diária do ATTO (fotômetro), últimos 7 dias, níveis 1.5 e 2.0.
 0 6 * * * coleta/rodar.sh aeronet
+
+# SELVA / PurpleAir (#41): leitura atual dos sensores baratos (UEA, Sema-AM, MPAM, UFAM...) pelo mapa do SELVA; sem histórico na fonte.
+3-59/10 * * * * coleta/rodar.sh selva
+# API PurpleAir (#41), com canais A/B: só quando houver PURPLEAIR_API_KEY (cada chamada gasta pontos; frequência = decisão do usuário).
+# 35 * * * * coleta/rodar.sh purpleair
