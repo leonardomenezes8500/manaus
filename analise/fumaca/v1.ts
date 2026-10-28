@@ -11,9 +11,11 @@ export const PARAMS_V1 = {
   janelaH: 12, // ± hours around the time the air passed by the spot
   decaimentoH: 24, // weight falls as 1 / (1 + τ / 24 h)
   concordamKm: 250, // the −24 h positions agree when their mean distance to the centre is below this
-  diluicao: 0, // #99: weight × (corridor at the start ÷ corridor there)^diluicao; 0 = no dilution with distance
+  diluicao: 1, // weight × (corridor at the start ÷ corridor there)^diluicao: far spots are spread over a wider band (#99, default since #101)
 } as const;
 export type ParamsV1 = { [K in keyof typeof PARAMS_V1]: number };
+/** v1 before #101 (no dilution with distance): kept to compare and to redo old numbers. */
+export const PARAMS_V1_SEM_DILUICAO: ParamsV1 = { ...PARAMS_V1, diluicao: 0 };
 
 export type Traj = { chegada: number; pontos: Ponto[] };
 const H = 3_600_000;
