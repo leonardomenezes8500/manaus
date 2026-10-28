@@ -65,6 +65,38 @@ Colar depois do item 5 do texto comum.
 > 6. Autorização para coletar de forma automática, a cada 10 minutos, as leituras públicas do mapa do SELVA (appselva.com.br), para um projeto aberto de dados sobre a fumaça em Manaus, com crédito à UEA e ao projeto EducAIR.
 > 7. O histórico das leituras dos sensores do projeto EducAIR e parceiros (UEA_EducAIR_*, MPAM_*, FAS-Ar e outros) desde 2019, em CSV, e o termo de uso desses dados.
 
+## Pedidos sobre escolas, saúde e alerta (M5, #107)
+
+Rascunhos de 2026-10-28, ligados às soluções na cidade (`pesquisa/solucoes/`). Estes não usam o texto comum dos sensores: cada um é o pedido inteiro. Mesmo canal, prazo e recurso de cima.
+
+### SEDUC-AM e SEMED Manaus (um pedido para cada)
+> Com base na Lei nº 12.527/2011 (Lei de Acesso à Informação), solicito:
+>
+> 1. A íntegra da Nota Técnica Conjunta SES-AM/FVS-RCP nº 22/2026 e do procedimento (POP) usado para suspender aulas por causa da fumaça: o valor de material particulado (MP2,5) ou de índice que leva à suspensão, a fonte da medição, o horário da leitura e quem decide.
+> 2. A lista de dias e turnos com aula suspensa ou atividade ao ar livre cancelada por causa da fumaça de 2023 a 2026, por escola ou para a rede inteira, com o ato que determinou cada suspensão.
+> 3. Por escola da rede em Manaus: o número de salas com ar-condicionado e o tipo do equipamento (split, janela ou central), e o número de purificadores de ar com filtro HEPA, se houver.
+> 4. Se há compra prevista ou em andamento de purificadores de ar ou de climatização para as escolas, com o número do processo.
+> 5. Se o órgão não tiver alguma dessas informações, a indicação de quem as tenha (art. 11, § 1º, III).
+>
+> Peço a resposta por meio eletrônico, em planilha quando for lista.
+
+### SEMSA Manaus e SES-AM/FVS-RCP (um pedido para cada)
+> Com base na Lei nº 12.527/2011 (Lei de Acesso à Informação), solicito:
+>
+> 1. O protocolo, plano de contingência ou nota técnica para o atendimento à população nos dias de fumaça em Manaus (inclusive a Nota Técnica Conjunta SES-AM/FVS-RCP nº 22/2026), com a data de cada versão.
+> 2. Quais unidades de saúde de Manaus são sentinela do programa Vigiar (Vigilância em Saúde de Populações Expostas a Poluentes Atmosféricos), desde quando, e os relatórios produzidos com esses dados desde 2019.
+> 3. O número de atendimentos por problema respiratório por dia nas UBS, SPA e UPA de Manaus de setembro a novembro de 2019 a 2026, por unidade e faixa de idade, em planilha, sem dado que identifique paciente.
+> 4. Quais unidades de saúde de Manaus têm sala de espera ou de observação climatizada.
+> 5. Se o órgão não tiver alguma dessas informações, a indicação de quem as tenha (art. 11, § 1º, III).
+
+### Defesa Civil de Manaus e Defesa Civil do Amazonas (um pedido para cada; cópia ao IPAAM)
+> Com base na Lei nº 12.527/2011 (Lei de Acesso à Informação), solicito:
+>
+> 1. O critério numérico (valor de material particulado MP2,5 ou de índice de qualidade do ar, fonte da medição e período de média) que leva a cidade a cada estágio ou nível de alerta por fumaça, e quem declara cada um.
+> 2. A lista de estágios ou níveis declarados por causa da fumaça desde 2019, com a data, o ato e a medição que motivou cada um.
+> 3. Se existe o Plano para Episódios Críticos de Poluição do Ar previsto no art. 10 da Resolução CONAMA nº 491/2018 e no art. 13, III, da Lei nº 14.850/2024 para Manaus ou para o Amazonas, e a íntegra dele.
+> 4. Se o órgão não tiver alguma dessas informações, a indicação de quem as tenha (art. 11, § 1º, III).
+
 ## Registro de envio
 
 | órgão | canal | enviado em | protocolo | resposta |
@@ -79,3 +111,9 @@ Colar depois do item 5 do texto comum.
 | INPA | Fala.BR | | | |
 | UFAM | Fala.BR | | | |
 | UEA | e-SIC AM | | | |
+| SEDUC-AM (escolas) | e-SIC AM | | | |
+| SEMED Manaus (escolas) | e-SIC Manaus | | | |
+| SEMSA Manaus (saúde) | e-SIC Manaus | | | |
+| SES-AM/FVS-RCP (saúde) | e-SIC AM | | | |
+| Defesa Civil de Manaus (alerta) | e-SIC Manaus | | | |
+| Defesa Civil do AM (alerta) | e-SIC AM | | | |
