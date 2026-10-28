@@ -21,8 +21,15 @@ export function validarSolucao(s: Card, texto: string, arquivo: string, criterio
     if (s.classificacao === 'pratica' && s.atua_em === 'efeito') erros.push('pratica com atua_em efeito');
     if (s.classificacao === 'paliativa' && s.atua_em === 'causa') erros.push('paliativa com atua_em causa');
   }
-  const evidencias = texto.split(/^## /m).find((sec) => sec.startsWith('Evidências')) ?? '';
-  for (const linha of evidencias.split('\n').slice(1))
-    if (linha.startsWith('- ') && !ROTULO.test(linha)) erros.push(`evidência sem rótulo: ${linha}`);
-  return erros;
+  return [...erros, ...evidenciasSemRotulo(texto)];
+}
+
+/** Lines under "## Evidências" that do not start with a label (problems and solutions). */
+export function evidenciasSemRotulo(texto: string): string[] {
+  const secao = texto.split(/^## /m).find((sec) => sec.startsWith('Evidências')) ?? '';
+  return secao
+    .split('\n')
+    .slice(1)
+    .filter((l) => l.startsWith('- ') && !ROTULO.test(l))
+    .map((l) => `evidência sem rótulo: ${l}`);
 }

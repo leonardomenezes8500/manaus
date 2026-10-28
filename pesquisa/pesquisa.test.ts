@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkFields, lerCatalogo, lerFrontMatter } from '../fontes/catalogo.ts';
 import { semHipotese, validarHipotese } from './hipoteses.ts';
-import { validarSolucao } from './solucoes.ts';
+import { evidenciasSemRotulo, validarSolucao } from './solucoes.ts';
 
 const STATUS = ['rascunho', 'com-evidencia', 'revisado'];
 const RULES = {
@@ -16,6 +16,7 @@ for (const [folder, rule] of Object.entries(RULES)) {
     test.each(docs.map((d) => [`${folder}/${d.arquivo}`, d] as const))('%s has the required fields', (_, d) => {
       expect(checkFields(d.card, d.arquivo, rule.required, rule.allowed)).toEqual([]);
       if (d.card.atualizado_em) expect(d.card.atualizado_em).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(evidenciasSemRotulo(readFileSync(join(import.meta.dirname, folder, d.arquivo), 'utf8'))).toEqual([]);
     });
 }
 
