@@ -231,6 +231,7 @@ Visão geral. O trabalho em si está no GitHub: [milestones](https://github.com/
   - [#117](https://github.com/leonardomenezes8500/manaus/issues/117) Classificar todas as soluções e a tabela-resumo
   - [#118](https://github.com/leonardomenezes8500/manaus/issues/118) Conferência pós-merge do M5
 - **Em aberto (provisório):** o critério v1 (`pesquisa/criterio-solucoes.md`, o usuário lê e diz se concorda); o limiar do dia de fumaça, provisório em 50 µg/m³ (padrão diário em vigor da Conama 506/2024), com a conta repetida em 15 µg/m³ (OMS) (#110); INEP e CNES como carga única, sem hipótese própria (#110); se o M5.5 vem antes ou depois do M6 (#119).
+- **Banco de trabalho do S5.2 (2026-10-29, provisório):** `manaus_m5`, cópia da produção de 29/10 na slice (pg_dump/pg_restore no container `db`, como o `manaus_dev_novo` do M3), com as migrações novas do M5. As cargas e análises do S5.2 rodam nele; na produção, só depois do merge (#118). Os bancos antigos (`manaus_dev`, `manaus_dev_novo`) seguem lá: apagar pede ok do usuário.
 - **Fica de fora:** leis com histórico de versões ([M5.5](https://github.com/leonardomenezes8500/manaus/milestone/11), planejado à parte na [#119](https://github.com/leonardomenezes8500/manaus/issues/119); o usuário decide se vem antes ou depois do M6); construir o alerta ou as salas; o que depende do CAR (#83 a #86).
 
 ## [M6](https://github.com/leonardomenezes8500/manaus/milestone/7) — API pública v1 (2 sprints)
