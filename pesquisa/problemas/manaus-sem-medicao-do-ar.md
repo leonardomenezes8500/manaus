@@ -28,4 +28,4 @@ A população de Manaus: 2.063.689 pessoas no Censo 2022 (IBGE, SIDRA tabela 470
 - [registro] Município: na lei federal, só o inventário de emissões quando o estado pedir (Lei 14.850/2024 art. 11, parágrafo único). Pela Lei municipal 3.699/2026, com o veto derrubado em 26/10/2026, a Prefeitura passa a ter de pôr pontos de monitoramento (ver acima).
 
 ## Soluções ligadas
-`rede-oficial-medicao-ar`, `calibrar-sensores-baratos`, `alerta-diario-fumaca`, `plano-episodios-criticos-am`.
+`rede-oficial-medicao-ar`, `calibrar-sensores-baratos`, `alerta-diario-fumaca`, `plano-episodios-criticos-am`, `sensores-escolas-dado-aberto`.
