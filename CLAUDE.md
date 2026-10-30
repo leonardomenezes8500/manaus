@@ -5,7 +5,7 @@ Mais tarde: uma Manaus 3D simplificada no navegador, ligando todas as camadas.
 Foco atual: **fumaça**. "De onde veio a fumaça de hoje?" = focos × vento × PM2.5, e depois desmatamento, donos, saúde e quem deveria agir.
 
 ## Leia primeiro
-- `plano/COMO-TRABALHAR.md`: fluxo e regras. **Um PR por milestone** (uma branch por milestone, um commit por issue com `Closes #N`); antes de cada commit, rodar aqui tudo que o CI roda; milestone pronto = PR aberto com CI verde + resumo por issue e riscos, e parar: **o merge é do usuário**.
+- `plano/COMO-TRABALHAR.md`: fluxo e regras. **Um PR por milestone** (uma branch por milestone, um commit por issue com `Closes #N`); antes de cada commit, rodar aqui tudo que o CI roda; milestone pronto = PR aberto com CI verde + resumo por issue e riscos; o executor faz o merge com o CI verde, depois do `/ponytail-review` e da segunda visão do Codex (o usuário não aprova PR; ele cuida da ideia e da regra de negócio).
 - `plano/ROADMAP.md`: visão geral, decisões e pendências do usuário, com links para as milestones e issues.
 - Issues e sprints no GitHub (`leonardomenezes8500/manaus`): milestones M0–M7, uma label por sprint (`S0.1`...). `gh issue list --label S0.1`.
 - `plano/IDEIAS.md`: caixa de entrada de ideias (não mexe no sprint atual).
