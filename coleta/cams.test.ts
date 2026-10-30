@@ -1,9 +1,11 @@
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
-import { lerGrib, mediaDiaria, pedidoAno } from './cams.ts';
+import { lerGrib, mediaDiaria, mediaPrevisao, pedidoAno, pedidoPrevisao } from './cams.ts';
 
 // A real EAC4 request (2024-09-01 and 02, every 3 h, PM2.5 and PM10, 2° around Manaus), as it came from the ADS.
 const fixture = join(import.meta.dirname, 'carga', '__fixtures__', 'cams-eac4_2024-09-01_2024-09-02.grib');
+// A real archived forecast request (#113): runs of 2015-09-14 and 15 at 00 UTC, PM2.5, leads 30 to 75 h.
+const previsao = join(import.meta.dirname, 'carga', '__fixtures__', 'cams-previsao_2015-09-14_2015-09-15.grib');
 let temGdal = true;
 try {
   execFileSync('gdalinfo', ['--version'], { stdio: 'ignore' });
@@ -34,3 +36,20 @@ test('one request per year: PM2.5 and PM10 every 3 h, 2° around Manaus (N, W, S
     expect(dias[0].pm10).toBeGreaterThan(dias[0].pm25);
   },
 );
+
+test('forecast: one request per season, 00 UTC runs from 2 days before Aug 1, leads 30 to 75 h every 3 h', () => {
+  const p = pedidoPrevisao(2015).inputs;
+  expect(p).toMatchObject({ date: ['2015-07-30/2015-11-29'], time: ['00:00'], area: pedidoAno(2015).inputs.area, data_format: 'grib' });
+  expect([p.leadtime_hour[0], p.leadtime_hour.at(-1), p.leadtime_hour.length]).toEqual(['30', '75', 16]);
+});
+
+(temGdal ? test : test.skip)('forecast: mean of the Manaus day per days ahead (day minus the run date), 8 values each', () => {
+  const r = lerGrib(previsao);
+  expect(r).toHaveLength(32); // 2 runs × 16 leads
+  expect(new Date(r[0].rodada).toISOString()).toBe('2015-09-14T00:00:00.000Z');
+  const dias = mediaPrevisao(r);
+  expect(dias.map((d) => `${d.dia} ${d.antecedencia}`)).toEqual(['2015-09-15 1', '2015-09-16 1', '2015-09-16 2', '2015-09-17 2']);
+  const um = r.filter((x) => x.rodada === Date.UTC(2015, 8, 14) && x.t <= Date.UTC(2015, 8, 16, 3));
+  expect(dias[0].pm25).toBeCloseTo(um.reduce((s, x) => s + x.valor, 0) / 8, 6);
+  expect(mediaPrevisao(r.slice(1))).toHaveLength(3); // a day missing one time is dropped
+});
