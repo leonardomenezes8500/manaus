@@ -8,11 +8,11 @@ epoca: 'só a temporada do fogo (agosto a novembro)'
 comparacao: 'repetir hoje: as horas com FU do dia D−1 como previsão do dia D'
 teste: 'diferença de AUC entre a previsão do CAMS (PM2,5 médio previsto para o dia D) e as horas com FU de D−1, para separar os dias D com 1 hora ou mais de FU; os dois escores em postos dentro da temporada; p por permutação pareada em blocos de 7 dias (troca, bloco a bloco, os postos dos dois escores)'
 rodada: '6'
-status: 'escrita'
+status: 'testada'
 escrita_em: '2026-10-28'
-testada_em:
-confianca:
-resultado:
+testada_em: '2026-10-30'
+confianca: 'media'
+resultado: 'AUC da previsão do CAMS para o dia seguinte 0.72 contra 0.63 de repetir as horas com FU de hoje, 1342 dias de agosto a novembro, 11 temporadas (2015–2025), postos dentro de cada temporada; diferença +0.09 (importa a partir de 0,05); p = 0.0190, p ajustado (BH da rodada 6) = 0.0190, passa na correção'
 ---
 ## Por quê
 O alerta só serve se avisar antes. A base mais simples para avisar é repetir hoje: se hoje teve fumaça, amanhã também. A fumaça dura dias seguidos, então essa base já acerta muito. A previsão do CAMS só vale a pena se acertar mais do que ela.
@@ -25,4 +25,6 @@ Plano B, se o plano A não andar: a previsão do CAMS guardada pelo Open-Meteo d
 Exploratório (e diz isso): a mesma conta com 48 h de antecedência; acertos e alarmes falsos no limiar do dia de fumaça (para a solução do alerta, #116).
 
 ## Resultado
-Vazio até testar.
+AUC da previsão do CAMS para o dia seguinte 0.72 contra 0.63 de repetir as horas com FU de hoje, 1342 dias de agosto a novembro, 11 temporadas (2015–2025), postos dentro de cada temporada; diferença +0.09 (importa a partir de 0,05); p = 0.0190, p ajustado (BH da rodada 6) = 0.0190, passa na correção. Confiança media: falta um segundo recorte independente. Previsão do CAMS modelada contra FU medido no METAR; 9999 permutações, semente 64, banco manaus_m5 em 2026-10-30. Números em produtos/contexto/rodada-6.csv.
+
+Exploratório (2026-10-30, mesmos dias, não entra na correção): com 2 dias de antecedência a AUC cai para 0,70. Como alerta de dia com FU (93 dias com FU), a previsão para o dia seguinte acima de 50 µg/m³ dá 44 alertas, 13 acertos (14% dos dias com FU) e 31 alarmes falsos (70% dos alertas); acima de 15 µg/m³, 661 alertas, 87 acertos (94%) e 574 alarmes falsos (87%). O valor absoluto do CAMS não serve de limiar: ele ordena bem os dias, mas erra o nível.

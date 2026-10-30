@@ -1,5 +1,8 @@
 import {
   anomalia,
+  auc,
+  aucPareadoBlocos,
+  postosDentro,
   benjaminiHochberg,
   defasagens,
   permutacaoBlocos,
@@ -102,4 +105,31 @@ test('labels moved in whole 7-day blocks: a shift on the labelled days gives a s
   expect(forte.efeito).toBeGreaterThan(0.3);
   expect(forte.p).toBeLessThan(0.01);
   expect(rotulosEmBlocos(g, dif(ruido), { n: 999, semente: 1 }).p).toBeGreaterThan(0.05);
+});
+
+test('AUC: 1 when the score splits the labels, 0.5 at random, ties count half, nulls left out', () => {
+  expect(auc([1, 2, 3, 4], [false, false, true, true])).toBe(1);
+  expect(auc([4, 3, 2, 1], [false, false, true, true])).toBe(0);
+  expect(auc([1, 1, 1, 1], [false, true, false, true])).toBe(0.5);
+  expect(auc([1, 3, 2, null], [false, true, true, false])).toBe(1);
+  expect(auc([1, 2], [true, true])).toBeNaN();
+  // Mann–Whitney by hand: true {2, 5}, false {1, 3, 4}: pairs won 1 + 3 = 4 of 6
+  expect(auc([1, 2, 3, 4, 5], [false, true, false, false, true])).toBeCloseTo(4 / 6, 12);
+});
+
+test('paired AUC: a score that splits beats one that does not; equal scores give p = 1', () => {
+  const r = sorteio(7);
+  const dias = 140;
+  const fu = Array.from({ length: dias }, (_, i) => Math.floor(i / 10) % 2 === 0);
+  const bom = fu.map((f) => (f ? 1 : 0) + r());
+  const ruim = fu.map(() => r());
+  const d = aucPareadoBlocos(bom, ruim, fu);
+  expect(d.efeito).toBeGreaterThan(0.4);
+  expect(d.p).toBeLessThan(0.01);
+  expect(aucPareadoBlocos(bom, bom, fu)).toEqual({ efeito: 0, p: 1 });
+});
+
+test('ranks inside each group (e.g. each season), ties averaged; nulls stay null', () => {
+  expect(postosDentro([5, 1, 9, 30, 10, null], [2015, 2015, 2015, 2016, 2016, 2016])).toEqual([2, 1, 3, 2, 1, null]);
+  expect(postosDentro([1, 1, 2], [0, 0, 0])).toEqual([1.5, 1.5, 3]);
 });
