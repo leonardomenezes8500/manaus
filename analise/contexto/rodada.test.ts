@@ -91,6 +91,11 @@ test('the second cut confirms with the same direction and p < 0.05; a ratio is r
   expect(segundoConfirma({ efeito: 0.4, unidade: 'Spearman' }, { efeito: 0.5, p: 0.2 })).toBe(false);
   expect(segundoConfirma({ efeito: -0.4, unidade: 'Spearman' }, { efeito: -0.5, p: 0.03 })).toBe(true);
   expect(segundoConfirma({ efeito: 0.4, unidade: 'Spearman' })).toBe(false);
+  // an AUC is read against 0.5
+  expect(segundoConfirma({ efeito: 0.7, unidade: 'AUC' }, { efeito: 0.6, p: 0.01 })).toBe(true);
+  expect(segundoConfirma({ efeito: 0.7, unidade: 'AUC' }, { efeito: 0.4, p: 0.01 })).toBe(false);
+  expect(direcaoContraria({ efeito: 0.45, unidade: 'AUC', espera: 1 })).toBe(true);
+  expect(direcaoContraria({ efeito: 0.55, unidade: 'AUC', espera: 1 })).toBe(false);
 });
 
 test('the effect against the written direction is flagged; no direction written, never flagged', () => {

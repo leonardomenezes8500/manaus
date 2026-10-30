@@ -9,8 +9,8 @@ atualizado_em: 2026-10-21   # AAAA-MM-DD
 Três linhas, no máximo, em português simples.
 
 ## Evidências
-Uma linha por evidência: fato + número + fonte + data + caminho no bruto. **Nenhum número sem fonte e data.**
-- Fato com número (fonte, AAAA-MM-DD; `bruto/<fonte>/AAAA/MM/DD/<arquivo>`).
+Uma linha por evidência, começando pelo rótulo ([medido], [modelado], [registro] ou [terceiros], ver `pesquisa/criterio-solucoes.md`): fato + número + fonte + data + caminho no bruto. **Nenhum número sem fonte e data.**
+- [medido] Fato com número (fonte, AAAA-MM-DD; `bruto/<fonte>/AAAA/MM/DD/<arquivo>`).
 
 ## Quem é afetado
 Quem e quantos, se souber (com fonte).

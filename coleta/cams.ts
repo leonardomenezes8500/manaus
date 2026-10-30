@@ -2,6 +2,8 @@
 // as the CDS of the ERA5, #47), one request per year in GRIB through baixar(), then the daily mean of the Manaus day at
 // the grid point nearest the Centre in cams.pm25_dia. MODELED (it is the model behind the INPE SISAM), never measured.
 //   node coleta/cams.ts --history 2012      this PC, by hand; the ADS queue can take long (the wait runs in the background)
+// Archived forecast (#113): one request per fire season, PM2.5 of the Manaus day 1 and 2 days ahead in cams.previsao_dia.
+//   node coleta/cams.ts --previsao 2015
 import { execFileSync } from 'node:child_process';
 import pg from 'pg';
 import { esperarJob, submeter } from './era5.ts';
@@ -31,7 +33,26 @@ export function pedidoAno(ano: number) {
   };
 }
 
-export type Registro = { t: number; campo: 'pm25' | 'pm10'; valor: number };
+/**
+ * Archived CAMS forecast (#113): the 00 UTC runs that cover the Manaus days of the fire season (Aug to Nov) of `ano`
+ * with 1 and 2 days ahead, PM2.5 only. Lead 30 to 51 h = the Manaus day after the run (06Z to 03Z, as the EAC4 day);
+ * 54 to 75 h = two days after.
+ */
+export function pedidoPrevisao(ano: number) {
+  return {
+    inputs: {
+      variable: ['particulate_matter_2.5um'],
+      date: [`${ano}-07-30/${ano}-11-29`],
+      time: ['00:00'],
+      leadtime_hour: Array.from({ length: 16 }, (_, i) => String(30 + 3 * i)),
+      type: ['forecast'],
+      area: pedidoAno(ano).inputs.area,
+      data_format: 'grib',
+    },
+  };
+}
+
+export type Registro = { t: number; campo: 'pm25' | 'pm10'; valor: number; rodada: number };
 
 /** The value of every band at the grid point nearest Manaus (gdallocationinfo picks the pixel), in µg/m³. */
 export function lerGrib(arquivo: string): Registro[] {
@@ -47,7 +68,9 @@ export function lerGrib(arquivo: string): Registro[] {
   return info.bands.flatMap((b: { metadata: { '': Record<string, string> } }, i: number) => {
     const m = b.metadata[''];
     const campo = CAMPO[m.GRIB_ELEMENT];
-    return campo && Number.isFinite(valores[i]) ? [{ t: parseInt(m.GRIB_VALID_TIME) * 1000, campo, valor: valores[i] * 1e9 }] : [];
+    return campo && Number.isFinite(valores[i])
+      ? [{ t: parseInt(m.GRIB_VALID_TIME) * 1000, campo, valor: valores[i] * 1e9, rodada: parseInt(m.GRIB_REF_TIME) * 1000 }]
+      : [];
   });
 }
 
@@ -67,24 +90,46 @@ export function mediaDiaria(r: Registro[]) {
     .sort((a, b) => a.dia.localeCompare(b.dia));
 }
 
+/** Mean PM2.5 forecast of each Manaus day per days ahead (Manaus day minus the run's date), only with all 8 times. */
+export function mediaPrevisao(r: Registro[]) {
+  const grupos = new Map<string, { dia: string; antecedencia: number; v: number[] }>();
+  for (const x of r) {
+    if (x.campo !== 'pm25') continue;
+    const dia = new Date(x.t - 4 * H - 2 * H).toISOString().slice(0, 10);
+    const antecedencia = (Date.parse(dia) - Date.parse(new Date(x.rodada).toISOString().slice(0, 10))) / (24 * H);
+    const g = grupos.get(`${dia}|${antecedencia}`) ?? { dia, antecedencia, v: [] };
+    g.v.push(x.valor);
+    grupos.set(`${dia}|${antecedencia}`, g);
+  }
+  return [...grupos.values()]
+    .filter((g) => g.v.length === 8)
+    .map(({ dia, antecedencia, v }) => ({ dia, antecedencia, pm25: v.reduce((s, x) => s + x, 0) / 8 }))
+    .sort((a, b) => a.dia.localeCompare(b.dia) || a.antecedencia - b.antecedencia);
+}
+
 async function principal(args: string[]) {
   if (!process.env.ECMWF_KEY) throw new Error('falta ECMWF_KEY');
-  const de = Number(args[args.indexOf('--history') + 1] ?? 2012);
-  const nome = (ano: number) => `cams-eac4_pm_${ano}.grib`;
-  const noBruto = () => listKeys('bruto/ecmwf-ads/').then((l) => l.map((k) => k.key).filter((k) => k.endsWith('.grib')));
+  const prev = args.includes('--previsao');
+  const de = Number(args[args.indexOf(prev ? '--previsao' : '--history') + 1] ?? (prev ? 2015 : 2012));
+  const ads = prev ? { ...ADS, dataset: 'cams-global-atmospheric-composition-forecasts' } : ADS;
+  const pedido = prev ? pedidoPrevisao : pedidoAno;
+  const nome = (ano: number) => (prev ? `cams-previsao_pm25_${ano}.grib` : `cams-eac4_pm_${ano}.grib`);
+  const prefixo = prev ? 'cams-previsao_' : 'cams-eac4_';
+  const noBruto = () =>
+    listKeys('bruto/ecmwf-ads/').then((l) => l.map((k) => k.key).filter((k) => k.endsWith('.grib') && k.includes(`Z_${prefixo}`)));
   const ja = await noBruto();
   // One request at a time, newest year last: a year not published yet answers 400 and is skipped.
   for (let ano = de; ano <= new Date().getUTCFullYear() - 1; ano++) {
     if (ja.some((k) => k.endsWith(nome(ano)))) continue;
-    const job = await submeter(pedidoAno(ano), fetch, ADS);
+    const job = await submeter(pedido(ano), fetch, ads);
     if (!job) {
       console.log(`${ano}: ainda não publicado`);
       continue;
     }
-    const { href } = await esperarJob(job, { api: ADS.api, maxMs: 3 * 60 * 60_000 });
+    const { href } = await esperarJob(job, { api: ads.api, maxMs: 3 * 60 * 60_000 });
     // The object store drops a connection now and then ("fetch failed" twice on 2026-10-23): retried.
     const b = await tentar(() =>
-      baixar({ fonte: 'ecmwf-ads', coletor: 'cams', nome: nome(ano), url: href, parametros: pedidoAno(ano).inputs }),
+      baixar({ fonte: 'ecmwf-ads', coletor: 'cams', nome: nome(ano), url: href, parametros: pedido(ano).inputs }),
     );
     console.log(b.chave, b.bytes);
   }
@@ -104,17 +149,30 @@ async function principal(args: string[]) {
   } finally {
     await rm(tmp, { recursive: true, force: true });
   }
-  const linhas = mediaDiaria(registros);
   const db = new pg.Client();
   await db.connect();
   try {
     await db.query('BEGIN');
-    await db.query("DELETE FROM cams.pm25_dia WHERE produto = 'eac4'");
-    await db.query(`INSERT INTO cams.pm25_dia SELECT * FROM json_populate_recordset(NULL::cams.pm25_dia, $1::json)`, [
-      JSON.stringify(linhas),
-    ]);
+    if (prev) {
+      const linhas = mediaPrevisao(registros);
+      await db.query('DELETE FROM cams.previsao_dia');
+      await db.query(`INSERT INTO cams.previsao_dia SELECT * FROM json_populate_recordset(NULL::cams.previsao_dia, $1::json)`, [
+        JSON.stringify(linhas),
+      ]);
+      const porAno = Object.groupBy(linhas, (l) => `${l.dia.slice(0, 4)} ${l.antecedencia} dia(s)`);
+      console.log(
+        `cams.previsao_dia: ${linhas.length} linhas`,
+        Object.entries(porAno).map(([k, v]) => `${k}: ${v!.length}`),
+      );
+    } else {
+      const linhas = mediaDiaria(registros);
+      await db.query("DELETE FROM cams.pm25_dia WHERE produto = 'eac4'");
+      await db.query(`INSERT INTO cams.pm25_dia SELECT * FROM json_populate_recordset(NULL::cams.pm25_dia, $1::json)`, [
+        JSON.stringify(linhas),
+      ]);
+      console.log(`cams.pm25_dia: ${linhas.length} dias (${linhas[0]?.dia} a ${linhas.at(-1)?.dia})`);
+    }
     await db.query('COMMIT');
-    console.log(`cams.pm25_dia: ${linhas.length} dias (${linhas[0]?.dia} a ${linhas.at(-1)?.dia})`);
   } finally {
     await db.end();
   }

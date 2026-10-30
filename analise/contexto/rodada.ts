@@ -20,6 +20,8 @@ import {
   sinaisPorAnos,
   sorteio,
   spearman,
+  auc,
+  aucPareadoBlocos,
 } from '../cruzar.ts';
 import { MANAUS } from '../../coleta/regiao.ts';
 
@@ -47,19 +49,22 @@ export function grauDeConfianca(s: { passa: boolean; segundoRecorte: boolean; me
   return s.segundoRecorte && s.mecanismo ? 'alta' : 'media';
 }
 
+/** The value of no effect: 1 for a ratio, 0.5 for an AUC, 0 for the rest. */
+const semEfeito = (unidade: string) => (unidade === 'razão' ? 1 : unidade === 'AUC' ? 0.5 : 0);
+
 /**
  * The second independent cut (round 3: MODIS for VIIRS, AQ1km for MapBiomas Fogo, PRODES for DETER) shows the effect:
  * same direction as the main test (a ratio against 1, the rest against 0) and p < 0.05 on its own.
  */
 export function segundoConfirma(principal: { efeito: number; unidade: string }, segundo?: { efeito: number; p: number }): boolean {
   if (!segundo) return false;
-  const zero = principal.unidade === 'razão' ? 1 : 0;
+  const zero = semEfeito(principal.unidade);
   return segundo.p < 0.05 && Math.sign(principal.efeito - zero) === Math.sign(segundo.efeito - zero) && segundo.efeito !== zero;
 }
 
-/** The effect went the other way from the one the hypothesis wrote (a ratio is read against 1, the rest against 0). */
+/** The effect went the other way from the one the hypothesis wrote. */
 export function direcaoContraria(r: { efeito: number; unidade: string; espera?: 1 | -1 }): boolean {
-  const zero = r.unidade === 'razão' ? 1 : 0;
+  const zero = semEfeito(r.unidade);
   return !!r.espera && Math.sign(r.efeito - zero) === -r.espera;
 }
 
@@ -226,6 +231,7 @@ type Teste = {
   unidade: string;
   segundo?: { nome: string; efeito: number; p: number }; // the same test on the second cut (round 3 on)
   espera?: 1 | -1; // the direction the hypothesis wrote (round 3 on): above or below no effect
+  dado?: string; // what the data are, when not all measured (round 6: a model against a measurement)
 };
 const N = 9999;
 const SEMENTE = 64;
@@ -929,6 +935,84 @@ Object.assign(TESTES, {
   },
 });
 
+// ---------- round 6: the CAMS as base of a smoke alert (#116) ----------
+
+/** Fire-season days (August to November) of `de` to `ate`, with the FU hours and the visibility of the METAR. */
+async function temporada(db: pg.Client, extra: string, de: string, ate: string) {
+  return (
+    await db.query(
+      `SELECT s.dia::text AS dia, s.horas_fu, s.vis_min_sem_chuva_m AS vis, ${extra}
+       FROM (SELECT *, CASE WHEN lag(dia) OVER w = dia - 1 AND lag(metar_obs) OVER w > 0 THEN lag(horas_fu) OVER w END AS ontem
+             FROM analise.serie_dia WINDOW w AS (ORDER BY dia)) s
+       WHERE extract(month FROM s.dia) BETWEEN 8 AND 11 AND s.dia BETWEEN $1 AND $2 AND s.metar_obs > 0
+       ORDER BY s.dia`,
+      [de, ate],
+    )
+  ).rows;
+}
+
+Object.assign(TESTES, {
+  // AUC of the EAC4 PM2.5 of the day between days with FU and the rest, Aug-Nov 2012-2025; labels moved in 7-day blocks.
+  'cams-separa-dias-fumaca': async (db: pg.Client): Promise<Teste> => {
+    const d = (
+      await temporada(db, `(SELECT pm25 FROM cams.pm25_dia c WHERE c.dia = s.dia AND produto = 'eac4') AS cams`, '2012-01-01', '2025-12-31')
+    ).filter((x) => x.cams !== null);
+    const x = d.map((r) => r.cams as number);
+    const teste = (g: boolean[]) => rotulosEmBlocos(g, (h) => auc(x, h) - 0.5, { bloco: 7, n: N, semente: SEMENTE });
+    const fu = d.map((r) => r.horas_fu >= 1);
+    const t = teste(fu);
+    const vis = d.filter((r) => r.vis !== null);
+    const xv = vis.map((r) => r.cams as number);
+    const sv = rotulosEmBlocos(
+      vis.map((r) => r.vis < 5000),
+      (h) => auc(xv, h) - 0.5,
+      { bloco: 7, n: N, semente: SEMENTE },
+    );
+    const anos = new Set(d.map((r) => r.dia.slice(0, 4))).size;
+    return {
+      efeito: t.efeito + 0.5,
+      p: t.p,
+      n: d.length,
+      anos,
+      unidade: 'AUC',
+      espera: 1,
+      dado: 'CAMS EAC4 modelado contra FU e visibilidade medidos no METAR',
+      segundo: { nome: 'visibilidade abaixo de 5 km sem chuva nem névoa', efeito: sv.efeito + 0.5, p: sv.p },
+      texto: (e) =>
+        `AUC do PM2,5 do CAMS EAC4 (modelado) entre os ${fu.filter(Boolean).length} dias com FU e os outros ${fu.filter((f) => !f).length} dias de agosto a novembro, ${anos} temporadas (2012–2025): ${e.toFixed(2)} (importa a partir de 0,80; abaixo de 0,65 contradiz o CAMS como base de alerta)`,
+    };
+  },
+  // Paired AUC difference: CAMS forecast for day D (00 UTC run of D-1) against the FU hours of D-1 ("repeat today"),
+  // both ranked inside each season; the two scores swapped in whole 7-day blocks.
+  'previsao-cams-amanha': async (db: pg.Client): Promise<Teste> => {
+    const d = (
+      await temporada(
+        db,
+        `(SELECT pm25 FROM cams.previsao_dia c WHERE c.dia = s.dia AND antecedencia = 1) AS prev, s.ontem`,
+        '2015-01-01',
+        '2025-12-31',
+      )
+    ).filter((x) => x.prev !== null && x.ontem !== null);
+    const ano = d.map((r) => r.dia.slice(0, 4));
+    const fu = d.map((r) => r.horas_fu >= 1);
+    const a = d.map((r) => r.prev);
+    const b = d.map((r) => r.ontem);
+    const t = aucPareadoBlocos(a, b, fu, { bloco: 7, n: N, semente: SEMENTE, grupo: ano });
+    const anos = new Set(ano).size;
+    return {
+      efeito: t.efeito,
+      p: t.p,
+      n: d.length,
+      anos,
+      unidade: 'diferença de AUC',
+      espera: 1,
+      dado: 'Previsão do CAMS modelada contra FU medido no METAR',
+      texto: (e) =>
+        `AUC da previsão do CAMS para o dia seguinte ${auc(a, fu, ano).toFixed(2)} contra ${auc(b, fu, ano).toFixed(2)} de repetir as horas com FU de hoje, ${d.length} dias de agosto a novembro, ${anos} temporadas (2015–2025), só pares de dias da mesma temporada; diferença ${e >= 0 ? '+' : ''}${e.toFixed(2)} (importa a partir de 0,05)`,
+    };
+  },
+});
+
 async function principal(args: string[]) {
   const rodada = args[args.indexOf('--rodada') + 1];
   const dir = join(import.meta.dirname, '../../pesquisa/hipoteses');
@@ -981,7 +1065,7 @@ async function principal(args: string[]) {
             : r.segundo
               ? 'o segundo recorte não confirma'
               : 'falta um segundo recorte independente';
-    const detalhe = `${frase}.${seg} Confiança ${confianca}: ${porque}. Dado medido; ${N} permutações, semente ${SEMENTE}, banco ${process.env.PGDATABASE} em ${hoje}. Números em produtos/contexto/rodada-${rodada}.csv.`;
+    const detalhe = `${frase}.${seg} Confiança ${confianca}: ${porque}. ${r.dado ?? 'Dado medido'}; ${N} permutações, semente ${SEMENTE}, banco ${process.env.PGDATABASE} em ${hoje}. Números em produtos/contexto/rodada-${rodada}.csv.`;
     const p = join(dir, r.f);
     writeFileSync(
       p,

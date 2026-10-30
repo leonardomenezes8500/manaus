@@ -71,7 +71,9 @@ type Rotulo = 'medido' | 'modelado' | 'registro oficial' | 'regra' | 'sem dado';
 export type Elo = { titulo: string; itens: { texto: string; rotulo: Rotulo; fonte: string }[] };
 
 /** The type of area of a spot, in the order of the rule (#91): the first that applies wins. */
-export function areaDoFoco(f: Foco): Area {
+export function areaDoFoco(
+  f: Pick<Foco, 'fora_caixa' | 'uf' | 'prodes' | 'uc_esfera' | 'ti' | 'municipio' | 'urbano' | 'assentamento' | 'cnfp'>,
+): Area {
   if (f.fora_caixa || !f.uf || f.uf === 'fora') return 'sem_regra';
   // The rule (#91) names AM agencies and laws; a spot not classified by onde-queimou has no area at all.
   if (f.uf !== 'AM' || f.prodes === null) return 'sem_regra';

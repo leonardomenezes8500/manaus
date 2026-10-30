@@ -204,3 +204,67 @@ export function rotulosEmBlocos(
   }
   return { efeito: obs, p: (1 + fortes) / (n + 1) };
 }
+
+/**
+ * AUC of a score separating the true labels from the false (Mann–Whitney U / (n1 n0), ties count half). Nulls left out.
+ * With `grupo` (e.g. the season of each day), only pairs inside the same group count: sum of U / sum of n1 n0.
+ */
+export function auc(score: Num[], rotulo: boolean[], grupo?: unknown[]): number {
+  let u = 0;
+  let pares = 0;
+  for (const k of new Set(grupo ?? [undefined])) {
+    const s: number[] = [];
+    const g: boolean[] = [];
+    score.forEach((x, i) => {
+      if (x === null || !Number.isFinite(x) || (grupo && grupo[i] !== k)) return;
+      s.push(x);
+      g.push(rotulo[i]);
+    });
+    const n1 = g.filter(Boolean).length;
+    const n0 = g.length - n1;
+    const r = postos(s);
+    u += r.reduce((t, x, i) => t + (g[i] ? x : 0), 0) - (n1 * (n1 + 1)) / 2;
+    pares += n1 * n0;
+  }
+  return pares ? u / pares : NaN;
+}
+
+/**
+ * Two scores for the same days: effect = AUC(a) − AUC(b), two-sided p by swapping a and b in whole blocks of `bloco` days
+ * at random (under no difference each block's pair is a coin toss). Both scores are ranked first (inside each `grupo`,
+ * when given), so the swap is fair; with `grupo` the AUCs count only pairs inside the same group.
+ */
+export function aucPareadoBlocos(
+  a: Num[],
+  b: Num[],
+  rotulo: boolean[],
+  { bloco = 7, n = 999, semente = 1, grupo }: { bloco?: number; n?: number; semente?: number; grupo?: unknown[] } = {},
+) {
+  const ok = a.map((x, i) => x !== null && b[i] !== null);
+  const so = <T>(v: T[]) => v.filter((_, i) => ok[i]);
+  const gr = grupo ? so(grupo) : so(a).map(() => 0);
+  const ra = postosDentro(so(a), gr) as number[];
+  const rb = postosDentro(so(b), gr) as number[];
+  const g = so(rotulo);
+  const obs = auc(ra, g, gr) - auc(rb, g, gr);
+  const r = sorteio(semente);
+  let fortes = 0;
+  for (let k = 0; k < n; k++) {
+    const x = [...ra];
+    const y = [...rb];
+    for (let i = 0; i < x.length; i += bloco)
+      if (r() < 0.5) for (let j = i; j < Math.min(i + bloco, x.length); j++) [x[j], y[j]] = [y[j], x[j]];
+    if (Math.abs(auc(x, g, gr) - auc(y, g, gr)) >= Math.abs(obs)) fortes++;
+  }
+  return { efeito: obs, p: (1 + fortes) / (n + 1) };
+}
+
+/** Ranks inside each group (e.g. the season of each day), ties averaged; a null stays null. */
+export function postosDentro(v: Num[], grupo: unknown[]): Num[] {
+  const r: Num[] = v.map(() => null);
+  for (const g of new Set(grupo)) {
+    const idx = v.map((x, i) => i).filter((i) => grupo[i] === g && v[i] !== null && Number.isFinite(v[i]));
+    postos(idx.map((i) => v[i] as number)).forEach((x, k) => (r[idx[k]] = x));
+  }
+  return r;
+}
