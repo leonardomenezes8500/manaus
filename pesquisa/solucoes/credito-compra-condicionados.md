@@ -4,13 +4,13 @@ titulo: Crédito rural e compra de gado condicionados a não desmatar nem queima
 problemas: fumaca-seca-2026
 proposta_por: Conselho Monetário Nacional (Resolução 5.193/2024); MPF (TAC da Carne, Carne Legal); CPI/PUC-Rio (crítica e ajustes)
 fonte: https://normativos.bcb.gov.br/Votos/CMN/202494/Voto_do_CMN_94_2024.pdf
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus, se o dinheiro deixar de ir para quem desmata e queima
-recursos_existentes: a conferir (#117): Manual de Crédito Rural, Seção 2-9 (Voto CMN 94/2024); TACs do MPF com frigoríficos
+status: com-evidencia
+classificacao: especulativa
+atua_em: causa
+teste_local: desmatamento-recente-focos
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus pela fumaça (2.063.689 pessoas no Censo 2022 (issue 63)); 5,4% do peso da v1 de 2026 caiu em desmatamento de 1 a 3 anos (modelado, issue 109)
+recursos_existentes: [registro] Voto CMN 94/2024, Seção 2-9 do Manual de Crédito Rural
 evidencia_de_que_funciona: a Resolução CMN 3.545/2008 evitou ~2.700 km² de desmatamento em 2009–2011 (Assunção et al. 2020); nada medido sobre fogo
 ---
 Negar crédito rural a imóvel com CAR irregular, embargo ou em floresta pública, e frigorífico só comprar de quem não desmata. Hoje a regra do crédito fala de desmatamento, não de fogo. Depende do CAR (pendente: issue 84).
@@ -25,3 +25,6 @@ Negar crédito rural a imóvel com CAR irregular, embargo ou em floresta públic
 - [terceiros] Assunção et al. (Economic Journal 2020): a Resolução CMN 3.545/2008 cortou ~R$ 2,9 bilhões de crédito e evitou ~2.700 km² de desmatamento em 2009–2011 (−15%) (https://ideas.repec.org/a/oup/econjl/v130y2020i626p290-330..html, acesso em 2026-10-28).
 - [terceiros] Gibbs et al. 2016: fornecedores da JBS no PA com desmatamento recente caíram de 36% para 4% de 2009 a 2013, com lavagem de gado pelos fornecedores indiretos (https://international.nwf.org/wp-content/uploads/2016/12/Gibbs-2015-Did-ranchers-respond-to-ZD-initiatives.pdf, acesso em 2026-10-28).
 - [terceiros] Contra, sobre fogo: 78% dos frigoríficos com SIF de MT e PA compraram direto de imóvel com fogo em 2019, e 98% por fornecedor indireto (Gibbs lab 2020; https://gibbs-lab.wisc.edu/assets/Cattle_sector_fire_report_2020.pdf, acesso em 2026-10-28).
+
+## Classificação
+Especulativa: o efeito medido do corte de crédito é no desmatamento, não no fogo, e a única evidência sobre fogo vai contra (78% dos frigoríficos com SIF de MT e PA compraram de imóvel com fogo); condicionar o crédito a não queimar pediria regra nova do CMN. (critério v1, 2026-10-30, #117)

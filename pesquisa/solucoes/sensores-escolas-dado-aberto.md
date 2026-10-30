@@ -4,13 +4,13 @@ titulo: Sensores baratos de PM2,5 em escolas e faculdades, com dado aberto e pro
 problemas: manaus-sem-medicao-do-ar, fumaca-seca-2026
 proposta_por: este projeto
 fonte: https://appselva.com.br/
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a conferir (issue 115): alunos e vizinhos das escolas que ganharem sensor; quem analisa o dado (estudantes, pesquisadores, imprensa)
-recursos_existentes: a conferir (issue 117): rede SELVA (UEA/EducAIR, com MPAM, Sema-AM e UFAM); Lei municipal 3.699/2026 art. 3º II
+status: com-evidencia
+classificacao: especulativa
+atua_em: causa
+teste_local: sensores-cobertura
+classificada_em: 2026-10-30
+quem_se_beneficia: 53 de 544 escolas públicas (7,9% dos alunos) estão hoje a até 2 km de um sensor no ar; 10 sensores em escolas cobririam mais 253.631 alunos (issue 115)
+recursos_existentes: [registro] Lei municipal 3.699/2026 art. 3º II; o AM declarou ao MMA 64 estações indicativas (Relatório 2025)
 evidencia_de_que_funciona: redes abertas de sensores baratos existem e o dado delas é usado por terceiros (mapa de fumaça da EPA, Qualiar-Ufam, rede do Acre); nenhum estudo achado sobre o efeito de pôr sensor em escola na exposição ou na política
 ---
 Ampliar a rede SELVA com sensores baratos de PM2,5 em escolas e faculdades de Manaus e publicar o dado aberto e documentado: histórico, licença, posição, modelo do sensor e correção aplicada. Junto, chamar gente para usar o dado: feira ou olimpíada de dados nas escolas, projeto de hobby e análise de terceiros. A ideia é do usuário (2026-10-29).
@@ -37,6 +37,7 @@ O que pode dar errado: sensor parado sem manutenção (o AirGradient do Centro f
 - [terceiros] Sensor barato sem correção superestima o PM2,5 em cerca de 40% (PurpleAir, EUA); a correção da EPA baixa o erro de 8 para 3 µg/m³ (Barkjohn et al., AMT 2021; https://amt.copernicus.org/articles/14/4617/2021/, acesso em 2026-10-28). Nunca foi validada no aerossol de Manaus.
 - [registro] Conama 506/2024 art. 5º: para verificar o padrão e para a informação de saúde, só método de referência ou equivalente (`bruto/dou-in/2026/10/28/215649Z_f743b031_index.php.gz`).
 - [registro] O Amazonas declarou ao MMA 64 estações indicativas e nenhuma de referência em 2024 (Relatório 2025 do MMA, Tabela 7; `bruto/monitorar-mma/2026/10/28/221834Z_c0ec80f5_relatorio-anual-qualidade-do-ar-2025.pdf.gz`).
+- [registro] Cobertura em 29/10/2026 (#115): 53 de 544 escolas públicas com ponto (7,9% dos alunos) e 26 de 232 privadas (13,4%) ficam a até 2 km do único sensor "no ar"; os próximos 10 sensores em escolas, escolhidos um a um, cobririam mais 253.631 alunos (`produtos/solucoes/sensores-cobertura.md`).
 
 ## Como avaliar
 Escrito em 2026-10-29, antes de cruzar escolas e sensores. É conta de cobertura, como em `rede-oficial-medicao-ar`, sem hipótese nem p-valor. Entra na #115:
@@ -52,3 +53,6 @@ Onde discordamos:
 - Escolha dos próximos 10 por alunos novos cobertos: ele sugeriu pesar fumaça e vulnerabilidade. Fica por alunos (a #115 usa pessoas, com a mesma regra) porque o CAMS é uma célula só e a fumaça é tratada como igual na cidade; pesar vulnerabilidade fica em aberto.
 - "No ar" = 80% das horas em 14 dias: ele achou que pode não representar a seca. Fica igual ao da #115, para as duas contas baterem.
 - Classe: ele previu especulativa (ou prática na causa, se verba e órgão forem conferidos). Não gravamos: a classe sai na #117, com o critério, para todas de uma vez.
+
+## Classificação
+Especulativa: o dado aberto do SELVA não existe hoje (pedido LAI pendente), o único registro de verba é o parecer da PGM que diz "sem dotação", e o sensor barato segue indicativo (Conama 506 art. 5º). A cobertura de 29/10 reflete também a nossa coleta com menos de 14 dias. (critério v1, 2026-10-30, #117)

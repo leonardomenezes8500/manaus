@@ -22,4 +22,5 @@ A população de Manaus: 2.063.689 pessoas no Censo 2022 (IBGE, SIDRA tabela 470
 - Fora do AM: os órgãos ambientais do PA e dos outros estados, e a União (IBAMA, ICMBio, FUNAI, SFB) nas áreas federais. Ainda não está escrito aqui com a lei de cada um.
 
 ## Soluções ligadas
-Nenhuma ainda (levantamento na #106).
+- `cooperacao-interestadual-fogo` (especulativa, problema principal)
+- `proibicao-sazonal-fogo` (especulativa)

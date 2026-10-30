@@ -4,13 +4,13 @@ titulo: Protocolo de atendimento e vigilância respiratória em dia de fumaça (
 problemas: fumaca-seca-2026
 proposta_por: Ministério da Saúde (VIGIAR); FVS-RCP (Programa Estadual Vigiar); Semsa Manaus
 fonte: https://www.gov.br/saude/pt-br/composicao/svsa/saude-ambiental/vigiar
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: quem procura UBS, SPA ou UPA com problema respiratório nos dias de fumaça
-recursos_existentes: a conferir (#117): VIGIAR do Ministério da Saúde e o Programa Estadual Vigiar da FVS-RCP
+status: com-evidencia
+classificacao: especulativa
+atua_em: efeito
+teste_local: nenhum: o atendimento em UBS e pronto-atendimento não está no nosso dado (pedido LAI)
+classificada_em: 2026-10-30
+quem_se_beneficia: quem procura UBS, SPA ou UPA com problema respiratório nos dias de fumaça; Manaus tem 206 UBS municipais (CNES, set/2026, issue 112)
+recursos_existentes: nenhum conferido em registro (VIGIAR citado por terceiros)
 evidencia_de_que_funciona: nenhuma avaliação de efeito achada
 ---
 O VIGIAR é o programa do Ministério da Saúde para vigiar a saúde de quem está exposto a poluição do ar, com a fumaça das queimadas entre as prioridades. Serve para detectar e registrar casos e organizar o atendimento, não protege diretamente. Não achamos plano de contingência para fumaça da SES-AM, da FVS-RCP ou da Semsa; a NT Conjunta 22/2026 talvez seja esse documento, mas não foi achada.
@@ -23,3 +23,6 @@ O VIGIAR é o programa do Ministério da Saúde para vigiar a saúde de quem est
 ## Evidências
 - [terceiros] Não achamos avaliação do efeito de protocolos como este.
 - [medido] O nosso dado só tem internação (SIH), e ela não subiu depois de dias com fumaça (rodada 5, confiança baixa). O atendimento em UBS e pronto-atendimento, que um protocolo veria, não está no nosso dado (pedido LAI em `plano/pedidos-lai.md`).
+
+## Classificação
+Especulativa: nenhuma avaliação achada do efeito desses protocolos. (critério v1, 2026-10-30, #117)

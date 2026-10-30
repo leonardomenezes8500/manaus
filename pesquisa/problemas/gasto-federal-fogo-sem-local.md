@@ -20,4 +20,4 @@ Quem quer cobrar ou avaliar a política do fogo na Amazônia: o Congresso, os ó
 Os órgãos que executam as ações (MMA, IBAMA, ICMBio, Ministério da Defesa) e a lei orçamentária, que define o localizador de cada ação. Quem escolhe o localizador, e por qual norma, ainda não foi conferido.
 
 ## Soluções ligadas
-Nenhuma ainda (levantamento na #108).
+- `gasto-fogo-com-local` (sem classe, falta conferir, problema principal)

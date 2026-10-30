@@ -4,13 +4,13 @@ titulo: Proibição sazonal do uso do fogo, com fiscalização
 problemas: fumaca-seca-2026, fumaca-vem-de-fora-do-am
 proposta_por: Governo federal (decretos de 2019 a 2022); MMA (pedido a PA, AP, RR e RO em 2024); Governo do Pará (Decreto 4.151/2024); Governo do AM (Decreto 55.339/2026); IPAAM (Portaria 127/2010)
 fonte: https://www.planalto.gov.br/ccivil_03/_ato2019-2022/2019/decreto/D9992.htm
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus, se a proibição valer onde está o fogo que pesa na fumaça (o PA, mais que o AM)
-recursos_existentes: a conferir (#117): Decreto 2.661/1998 art. 14; Lei 14.944/2024 art. 37
+status: com-evidencia
+classificacao: especulativa
+atua_em: causa
+teste_local: proibicao-ipaam-2010
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus pela fumaça; uma proibição só no AM alcança no máximo 42% do peso da v1 de 2026 (modelado, issue 109)
+recursos_existentes: [registro] Decreto 2.661/1998 art. 14; Lei 14.944/2024 art. 37
 evidencia_de_que_funciona: só a moratória federal de 2019 trouxe os focos de volta ao esperado pela chuva; as de 2020 e 2021 não (Machado et al. 2024)
 ---
 Proibir o fogo no campo durante a seca. O AM proíbe desde 2010 e de novo em 09/09/2026; o Pará proibiu em 2024 e voltou atrás em 2025. O nosso dado não viu efeito da proibição de 2010 no AM.
@@ -29,3 +29,6 @@ Proibir o fogo no campo durante a seca. O AM proíbe desde 2010 e de novo em 09/
 - [medido] Depois da proibição do IPAAM de 2010, a fatia dos focos de agosto a outubro no AM subiu 7,1 pontos em relação a RO e AC (rodada 3, `proibicao-ipaam-2010`, confiança média).
 - [registro] Decreto 2.661/1998 art. 14: a autoridade pode suspender a queima quando o ar ou a visibilidade pioram; Lei 14.944/2024 art. 37, I, IV e V: a autorização de queima pode ser suspensa ou cancelada por clima desfavorável, ar acima do padrão ou fumaça sobre estradas e aeroportos (lido no site oficial em 2026-10-28 pelo agente de pesquisa; https://www.planalto.gov.br/ccivil_03/decreto/d2661.htm e https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/lei/l14944.htm).
 - [modelado] Teto: 58% do peso da v1 de 2026 vem de fora do AM; uma proibição só no AM alcança no máximo os outros 42% (`produtos/solucoes/teto-origem.md`, #109).
+
+## Classificação
+Especulativa pela terceira regra: o nosso dado contradiz o mecanismo com confiança média (depois da proibição do IPAAM de 2010, a fatia dos focos de agosto a outubro no AM subiu 7,1 pontos contra RO e AC). Fora, só a moratória federal de 2019 funcionou. (critério v1, 2026-10-30, #117)

@@ -45,4 +45,24 @@ Pela regra da #91 (`analise/fogo/responsavel.ts`), lida no texto oficial de cada
 A regra cobre só o AM. O fogo do PA, que pesa mais que o do AM na v1, fica com os órgãos do PA e da União, ainda sem regra escrita aqui.
 
 ## Soluções ligadas
-Nenhuma ainda (levantamento nas #106, #107 e #108).
+- `abrigos-ar-limpo` (paliativa, problema principal)
+- `ajustar-aula-atividade-ar-livre` (paliativa, problema principal)
+- `alerta-diario-fumaca` (paliativa, problema principal)
+- `alerta-satelite-resposta-rapida` (especulativa, problema principal)
+- `atualizar-niveis-episodio-critico` (especulativa, problema principal)
+- `brigadas-manejo-integrado-fogo` (prática, problema principal)
+- `comunicacao-risco-saude` (paliativa, problema principal)
+- `credito-compra-condicionados` (especulativa, problema principal)
+- `desapropriar-terra-queimada` (especulativa, problema principal)
+- `embargo-remoto-responsabilizacao` (especulativa, problema principal)
+- `mascara-pff2-dia-fumaca` (paliativa, problema principal)
+- `plano-episodios-criticos-am` (especulativa, problema principal)
+- `proibicao-sazonal-fogo` (especulativa, problema principal)
+- `protocolo-respiratorio-vigiar` (especulativa, problema principal)
+- `purificador-caseiro-caixa-filtro` (paliativa, problema principal)
+- `roca-sem-fogo-ater` (especulativa, problema principal)
+- `salas-ar-limpo-escolas-ubs` (paliativa, problema principal)
+- `cooperacao-interestadual-fogo` (especulativa)
+- `destinar-florestas-publicas` (prática)
+- `rede-oficial-medicao-ar` (sem classe, falta conferir)
+- `sensores-escolas-dado-aberto` (especulativa)

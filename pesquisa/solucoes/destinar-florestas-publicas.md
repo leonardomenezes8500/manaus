@@ -4,13 +4,13 @@ titulo: Destinar a floresta pública não destinada (unidade de conservação, t
 problemas: fogo-floresta-publica-nao-destinada, fumaca-seca-2026
 proposta_por: IPAM
 fonte: https://ipam.org.br/focos-de-calor-na-regiao-de-manaus-aumentaram-37-vezes-em-outubro/
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus pela fumaça, e comunidades que recebem a terra destinada
-recursos_existentes: a conferir (#117): Lei 11.284/2006 arts. 4º e 6º; Decreto 11.688/2023 (terra federal); no AM, a maior parte é terra estadual
+status: com-evidencia
+classificacao: pratica
+atua_em: causa
+teste_local: floresta-nao-destinada-focos
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus pela fumaça; no AM, 12,5% do peso da v1 de 2026 caiu em floresta pública não destinada (modelado, issue 109)
+recursos_existentes: [registro] Lei 11.284/2006 arts. 4º e 6º; Decreto 11.688/2023 arts. 11 e 12 (terra federal); Decreto 12.046/2024 art. 9º
 evidencia_de_que_funciona: na América Latina, áreas indígenas reduzem a incidência de fogo em ~16 pontos percentuais (Nelson e Chomitz 2011, com pareamento)
 ---
 Dar destino à floresta pública que ainda não tem: unidade de conservação, terra indígena, uso de comunidades ou concessão. É a terra mais exposta à grilagem e onde o fogo é 3,5 vezes mais denso que em TI e UC.
@@ -26,3 +26,6 @@ Dar destino à floresta pública que ainda não tem: unidade de conservação, t
 - [terceiros] Nelson e Chomitz (PLoS ONE 2011), com pareamento: áreas indígenas reduzem a incidência de fogo em ~16 pontos percentuais; UCs estritas, de 2,7 a 4,3 (https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0022722, acesso em 2026-10-28).
 - [terceiros] Ressalva: o viés de localização (área protegida criada onde já havia menos pressão) corta o efeito pela metade (Pfaff et al. 2015; https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0129460, acesso em 2026-10-28). Isso vale também para o "5 vezes menos focos dentro de TI e UC" da nossa rodada 3.
 - [modelado] Teto: no AM, 12,5% do peso da v1 de 2026 caiu em floresta pública não destinada; em toda a região das camadas, 20,3% (`produtos/solucoes/teto-origem.md`, #109).
+
+## Classificação
+Prática: age na causa, há evidência de fora (menos fogo em áreas indígenas, Nelson e Chomitz 2011) e local (3,5 vezes mais focos na não destinada, confiança alta), e a lei existe. Ressalva: vale para terra federal; no AM a maior parte é terra estadual, e nenhum órgão estadual de destinação foi conferido em registro. (critério v1, 2026-10-30, #117)

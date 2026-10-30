@@ -4,13 +4,13 @@ titulo: Rede oficial de medição do ar em Manaus, com método de referência
 problemas: manaus-sem-medicao-do-ar, fumaca-seca-2026
 proposta_por: Câmara Municipal de Manaus (Lei 3.699/2026, art. 3º II, PL da vereadora Thaysa Lippy e outros); MMA e Fiocruz (FioAres); Coalizão Respira Amazônia; deputado federal Amom Mandel (pedido de informação)
 fonte: https://sapl.cmm.am.gov.br/materia/53029
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus, com dado oficial para alerta e para cobrar o padrão do ar
-recursos_existentes: a conferir (#117): Lei 14.850/2024 arts. 7º e 18; Conama 506/2024 arts. 5º e 8º; Lei municipal 3.699/2026 art. 3º II; FioAres no MonitorAr
+status: com-evidencia
+classificacao: sem-classe
+atua_em: causa
+teste_local: sensores-cobertura
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus (2.063.689 pessoas no Censo 2022 (issue 63)); hoje 4,5% mora a até 2 km de um sensor no ar e ninguém perto de um de referência com 14 dias de dado nosso (issue 115)
+recursos_existentes: [registro] Lei 14.850/2024 art. 7º § 2º e art. 18; Conama 506/2024 arts. 5º e 8º; Lei municipal 3.699/2026 art. 3º II (veto derrubado); estação da FioAres no MonitorAr do MMA
 evidencia_de_que_funciona: nenhum estudo achado sobre o efeito de ter uma rede; a lei federal já pede a rede ao estado
 ---
 O estado (e, pela lei municipal, a Prefeitura) mede o ar de Manaus com estação de referência ou equivalente e publica o dado. É o que a Lei 14.850/2024 e a Conama 506/2024 pedem; o AM declarou ao MMA que não tem nenhuma estação desse tipo.
@@ -28,9 +28,13 @@ O estado (e, pela lei municipal, a Prefeitura) mede o ar de Manaus com estação
 - [registro] O Amazonas declarou ao MMA não ter estação de referência e operar só rede indicativa de sensores baratos: 64 estações indicativas e nenhuma de referência em 2024 (Relatório 2025 do MMA, p. 17 e Tabela 7; `bruto/monitorar-mma/2026/10/28/221834Z_c0ec80f5_relatorio-anual-qualidade-do-ar-2025.pdf.gz`).
 - [registro] Lei 14.850/2024 art. 7º § 2º e art. 18: rede, relatório anual e IQAr são do órgão ambiental estadual; Conama 506/2024 art. 5º: só método de referência ou equivalente serve para verificar o padrão e para informação de saúde (`bruto/dou-in/2026/10/28/215649Z_f743b031_index.php.gz`; a lei, ver o problema `manaus-sem-medicao-do-ar`).
 - [medido] Hoje há 1 estação de referência em Manaus (FioAres, Fiocruz, no MonitorAr desde ~jul/2026) e 69 sensores baratos da rede SELVA, 39 no ar em 28/10/2026 (problema `manaus-sem-medicao-do-ar`).
+- [registro] Cobertura em 29/10/2026 pela regra da #110: só o AirGradient do Centro estava "no ar" (leitura em 80% das horas de 14 dias); 92.905 pessoas (4,5% de Manaus) moram a até 2 km dele. A FioAres e o SELVA a cada 10 min entraram na nossa coleta há menos de 14 dias (`produtos/solucoes/sensores-cobertura.md`, #115).
 
 ## Como avaliar
 Escrito em 2026-10-28 (#110), antes de baixar o INEP e o CNES. É uma conta de cobertura, não um cruzamento: não tem hipótese nem p-valor.
 - Sensor "no ar": com leitura em 80% ou mais das horas dos últimos 14 dias. Entram a FioAres (referência), o AirGradient do Centro e os sensores da rede SELVA (indicativos, sem correção), contados à parte.
 - Cobertura: pessoas, crianças de 0 a 4 anos e idosos de 60 anos ou mais nos setores censitários cujo centro fica a até 2 km de um sensor no ar (Censo 2022, #63), separado entre referência e indicativo.
 - Onde pôr os próximos 10: escolhidos um a um entre as escolas públicas e as UBS do universo das salas de ar limpo, sempre o ponto que cobre mais pessoas ainda sem sensor a 2 km.
+
+## Classificação
+Sem classe até a conferência: age na causa e não é especulativa, mas o órgão estadual responsável (IPAAM ou SEMA-AM, falta ler a lei estadual) e a verba não foram conferidos em registro; a FioAres é da Fiocruz, não estrutura do estado. (critério v1, 2026-10-30, #117)

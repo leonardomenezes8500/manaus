@@ -4,13 +4,13 @@ titulo: Máscara PFF2/N95 para quem precisa sair em dia de fumaça
 problemas: fumaca-seca-2026
 proposta_por: Ministério da Saúde; SES-AM; Semsa Manaus; Defesa Civil de Manaus; Fiocruz Amazônia; UNICEF; OMS Europa
 fonte: https://www.gov.br/saude/pt-br/assuntos/saude-de-a-a-z/q/queimadas
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: quem precisa ficar ao ar livre nos dias de fumaça, sobretudo quem tem doença respiratória ou do coração
-recursos_existentes: a conferir (#117); só orientação achada, nenhuma distribuição
+status: com-evidencia
+classificacao: paliativa
+atua_em: efeito
+teste_local: nenhum: não há distribuição para medir
+classificada_em: 2026-10-30
+quem_se_beneficia: quem fica ao ar livre nos dias de fumaça; em Manaus, 199.781 idosos de 60+ (Censo 2022, issue 63)
+recursos_existentes: nenhum conferido em registro: só orientação achada, nenhuma distribuição
 evidencia_de_que_funciona: modelo para Washington (EUA): N95 bem ajustada reduz a exposição mais de 14 vezes (Kodros et al. 2021)
 ---
 Todos os órgãos de saúde orientam a PFF2/N95 para quem precisa sair, mas não achamos nenhuma distribuição pelo governo em Manaus.
@@ -25,3 +25,6 @@ Todos os órgãos de saúde orientam a PFF2/N95 para quem precisa sair, mas não
 
 ## Evidências
 - [terceiros] Modelo da temporada de fogo de 2012 em Washington: a N95 com 5% de vazamento reduz a exposição mais de 14 vezes; a cirúrgica, 1,7 a 1,9 vezes; a de pano, 1,4 a 1,9. Com uso por boa parte da população, cortaria de 22 a 39% das internações respiratórias atribuídas à fumaça. Depende de ajuste e adesão; não trata de crianças (Kodros et al., GeoHealth 2021; https://pmc.ncbi.nlm.nih.gov/articles/PMC8438762/, acesso em 2026-10-28).
+
+## Classificação
+Age no efeito: a PFF2 bem ajustada reduz a exposição de quem a usa. (critério v1, 2026-10-30, #117)

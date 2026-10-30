@@ -4,13 +4,13 @@ titulo: Embargo remoto e responsabilização do dono da área queimada
 problemas: fumaca-seca-2026
 proposta_por: Ibama (IN 15/2023); MPF (Amazônia Protege); Câmara dos Deputados (PL 2.564/2025, substitutivo)
 fonte: https://www.mpf.mp.br/atuacao/ccr4/coordenacao/notas-tecnicas/nota-tecnica-1_2026-asscor_4a-cam-pgr-00104466_2026.pdf
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus, se o embargo travar o uso do desmatamento recente, onde o fogo cai 18 vezes mais por km²
-recursos_existentes: a conferir (#117): Decreto 6.514/2008 arts. 16, 58, 58-A e 58-C; Lei 14.944/2024 art. 45
+status: com-evidencia
+classificacao: especulativa
+atua_em: causa
+teste_local: pendente: issue 86
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus pela fumaça (2.063.689 pessoas no Censo 2022 (issue 63)); 5,4% do peso da v1 de 2026 caiu em desmatamento de 1 a 3 anos (modelado, issue 109)
+recursos_existentes: [registro] Decreto 6.514/2008 arts. 16, 58, 58-A e 58-C; Lei 14.944/2024 art. 45
 evidencia_de_que_funciona: 86,9% das áreas embargadas seguiram com pasto ou lavoura (Silva et al. 2022); não achamos estudo do efeito do embargo sobre o fogo
 ---
 Embargar por satélite a área desmatada ou queimada e cobrar o dono. Depende do CAR para achar o dono, e o teste local deste projeto espera o CAR (pendente: issue 84).
@@ -27,3 +27,6 @@ Embargar por satélite a área desmatada ou queimada e cobrar o dono. Depende do
 - [terceiros] Silva et al. (ERL 2022): 86,9% das áreas embargadas seguiram com pasto ou lavoura; só 13,1% regeneraram (https://iopscience.iop.org/article/10.1088/1748-9326/ac6398, acesso em 2026-10-28).
 - [terceiros] A favor, para desmatamento e não para fogo: DETER com fiscalização reduziu o desmatamento sem vazamento (Assunção, Gandour e Rocha, CPI; https://www.climatepolicyinitiative.org/working-papers/deterring-deforestation-in-the-amazon-environmental-monitoring-and-law-enforcement/, acesso em 2026-10-28).
 - [medido] O fogo cai 18 vezes mais por km² no desmatamento de 1 a 3 anos antes do que no desmatamento até 2007 (rodada 3, `desmatamento-recente-focos`, confiança alta). Mas, em 2026, só 5,4% do peso da v1 caiu em desmatamento de 1 a 3 anos (`produtos/solucoes/teto-origem.md`, #109, modelado).
+
+## Classificação
+Especulativa: 86,9% das áreas embargadas seguiram em uso (Silva et al. 2022) e ninguém mediu o efeito do embargo no fogo. (critério v1, 2026-10-30, #117)

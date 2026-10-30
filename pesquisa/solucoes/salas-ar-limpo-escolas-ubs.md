@@ -4,13 +4,13 @@ titulo: Salas de ar limpo em escolas e unidades básicas de saúde
 problemas: fumaca-seca-2026
 proposta_por: US EPA; OMS Europa; Seduc-AM (orientação da NT Conjunta SES-AM/FVS-RCP 22/2026)
 fonte: https://www.epa.gov/emergencies-iaq/wildfires-and-indoor-air-quality-schools-and-commercial-buildings
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: alunos, crianças pequenas e idosos atendidos nas escolas e UBS escolhidas (número na issue 114)
-recursos_existentes: a conferir (#117): salas climatizadas do Censo Escolar (#111), UBS do CNES (#112), compras no PNCP
+status: com-evidencia
+classificacao: paliativa
+atua_em: efeito
+teste_local: salas-ar-limpo
+classificada_em: 2026-10-30
+quem_se_beneficia: as 100 primeiras escolas públicas cobrem 105.813 matrículas de 0 a 14 anos (27% de Manaus) e as 30 primeiras UBS, 26% das crianças de 0 a 4 e 33% dos idosos de 60+ (issue 114)
+recursos_existentes: [registro] 206 UBS municipais (CNES, set/2026, issue 112); salas climatizadas em 1.001 escolas (INEP 2024, issue 111); 7 compras de climatização em escola de 2024 a 2026 no PNCP (issue 114)
 evidencia_de_que_funciona: purificador HEPA reduz o PM2,5 dentro da sala em 48 a 78% em dia de fumaça (Seattle, 2020); efeito na saúde com pouca evidência
 ---
 Uma sala por escola ou UBS, fechada, com purificador HEPA (ou filtro no ar-condicionado), para onde vão os mais sensíveis nos dias de fumaça. Em Manaus não achamos proposta de compra de equipamento, só a orientação de manter os alunos em sala fechada e climatizada.
@@ -27,6 +27,8 @@ Uma sala por escola ou UBS, fechada, com purificador HEPA (ou filtro no ar-condi
 - [terceiros] Aprendizagem: filtro de ar em sala de aula subiu as notas em 0,1 a 0,2 desvio-padrão, num caso de vazamento de gás, não de fumaça (Gilraine, J. Human Resources 2025; https://jhr.uwpress.org/content/60/5/1469, acesso em 2026-10-28).
 - [medido] No nosso dado, as internações respiratórias de moradores de Manaus não subiram depois de dias com fumaça (rodada 5, confiança baixa; problema `fumaca-seca-2026`). O ganho de saúde só tem evidência de fora.
 - [terceiros] Limite: ar-condicionado split, comum nas escolas, recircula o ar mas filtra pouco. A queda de ~70% medida com climatização é de um prédio com sistema central (Wheeler et al. 2021, ver `abrigos-ar-limpo`).
+- [registro] Ordem e cobertura (#114): 676 escolas públicas com infantil ou fundamental (320.405 matrículas de 0 a 14 anos); as 10, 50 e 100 primeiras cobrem 4,4%, 16,1% e 27,3% das matrículas de 0 a 14 anos de Manaus. 206 UBS municipais; as 10 e 30 primeiras cobrem 11,8% e 26,0% das crianças de 0 a 4 e 15,4% e 32,6% dos idosos de 60+ a até 1 km (`produtos/solucoes/salas-ar-limpo.md`).
+- [medido] Horas-aluno em dias letivos com média acima de 50 µg/m³ no sensor do Centro: 12,8 milhões em 2026 (10 dias) e nenhuma em 2025 (desde julho); acima de 15 µg/m³, 43 dias em 2026 e 13 em 2025 (#114).
 
 ## Como avaliar
 Escrito em 2026-10-28 (#110), antes de baixar o INEP e o CNES. É uma conta de cobertura, não um cruzamento: não tem hipótese nem p-valor.
@@ -37,3 +39,6 @@ Escrito em 2026-10-28 (#110), antes de baixar o INEP e o CNES. É uma conta de c
 - Horas-aluno em dias de fumaça, 2025–2026: dias letivos com PM2,5 médio do sensor do Centro (AirGradient) acima do limiar do dia de fumaça, vezes as matrículas.
 - Limiar do dia de fumaça (Em aberto, provisório): 50 µg/m³ na média de 24 h, o padrão diário em vigor da Conama 506/2024 (PI-2); a conta sai também com 15 µg/m³, o valor da OMS e padrão final da mesma resolução. Na temporada de 2026, 15 dias passaram de 50 e 61 passaram de 15 (já visto em #105, antes desta escolha).
 - O quanto a sala reduz o PM2,5 dentro entra como faixa `[terceiros]` (48 a 78%), nunca como medido.
+
+## Classificação
+Age no efeito: reduz o PM2,5 dentro da sala (48 a 78%, Xiang et al. 2021) para quem está nela. (critério v1, 2026-10-30, #117)

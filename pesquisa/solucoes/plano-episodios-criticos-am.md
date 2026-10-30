@@ -4,13 +4,13 @@ titulo: Plano para Episódios Críticos de Poluição do Ar no Amazonas
 problemas: fumaca-seca-2026, manaus-sem-medicao-do-ar
 proposta_por: MPC-AM (representação ao TCE-AM, 2023); MPF (caso de São Luís, 2026); Instituto Alana e Instituto Ar
 fonte: https://portalamazonia.com/meio-ambiente/orgaos-de-fiscalizacao-cobram-informacoes-sobre-fumaca-que-encobriu-manaus/
-status: rascunho
-classificacao:
-atua_em:
-teste_local:
-classificada_em:
-quem_se_beneficia: a população de Manaus nos dias de fumaça forte, com regra escrita de quem declara o episódio e o que muda
-recursos_existentes: a conferir (#117): Conama 491/2018 arts. 10 e 11 e Anexo III; Lei 14.850/2024 art. 13, III
+status: com-evidencia
+classificacao: especulativa
+atua_em: efeito
+teste_local: nenhum: o AM não tem plano para avaliar
+classificada_em: 2026-10-30
+quem_se_beneficia: a população de Manaus (2.063.689 pessoas no Censo 2022 (issue 63)); em 2026 o pior dia (197 µg/m³) passou do nível de atenção
+recursos_existentes: [registro] Conama 491/2018 arts. 10 e 11 e Anexo III; Lei 14.850/2024 art. 13, III
 evidencia_de_que_funciona: nenhuma avaliação de efeito achada
 ---
 O plano que diz quem declara atenção, alerta e emergência e o que cada nível obriga a fazer. A Conama 491/2018 cobra esse plano do órgão ambiental estadual desde 2018; não achamos o do Amazonas.
@@ -25,3 +25,6 @@ O plano que diz quem declara atenção, alerta e emergência e o que cada nível
 - [registro] Lei 14.850/2024 art. 13, III: o Plano para Episódios Críticos é um dos planos de gestão da qualidade do ar (ver `manaus-sem-medicao-do-ar`).
 - [medido] Em 2026, o pior dia do sensor do Centro teve média de 197 µg/m³ (17/10): passou do nível de atenção (125), não do de alerta (210) (problema `fumaca-seca-2026`).
 - [terceiros] Não achamos avaliação do efeito desses planos. O estudo de Toronto (ver `alerta-diario-fumaca`) sugere que o aviso sem medida obrigatória rende pouco, e o plano é onde ficam as medidas obrigatórias.
+
+## Classificação
+Especulativa: a obrigação legal existe, mas ninguém mostrou que esses planos reduzem a exposição ou o dano. (critério v1, 2026-10-30, #117)

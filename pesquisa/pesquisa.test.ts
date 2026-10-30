@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { checkFields, lerCatalogo, lerFrontMatter } from '../fontes/catalogo.ts';
 import { semHipotese, validarHipotese } from './hipoteses.ts';
-import { evidenciasSemRotulo, validarSolucao } from './solucoes.ts';
+import { evidenciasSemRotulo, tabelaResumo, validarSolucao } from './solucoes.ts';
 
 const STATUS = ['rascunho', 'com-evidencia', 'revisado'];
 const RULES = {
@@ -111,6 +111,39 @@ describe('soluções', () => {
 
   test('the criterion has a date', () => expect(criterioEm).toMatch(/^\d{4}-\d{2}-\d{2}$/));
 
+  // #117: every solution classified, and the summary table up to date (node pesquisa/solucoes.ts rewrites it).
+  test('every solution has a class and the summary table is current', () => {
+    expect(sols.filter((d) => !d.card.classificacao).map((d) => d.arquivo)).toEqual([]);
+    expect(ler('solucoes-resumo.md')).toBe(tabelaResumo(sols.map((d) => d.card)));
+  });
+
+  test('summary: practical first, own proposals marked, a pipe in a field does not break the row', () => {
+    const t = tabelaResumo([
+      {
+        id: 'b',
+        titulo: 'B',
+        classificacao: 'especulativa',
+        atua_em: 'causa',
+        proposta_por: 'MPF',
+        quem_se_beneficia: 'x | y',
+        teste_local: 'nenhum: z',
+      },
+      {
+        id: 'a',
+        titulo: 'A',
+        classificacao: 'pratica',
+        atua_em: 'causa',
+        proposta_por: 'este projeto',
+        quem_se_beneficia: 'todos',
+        teste_local: 'h',
+      },
+    ]);
+    expect(t.split('\n').filter((l) => l.startsWith('| ['))).toEqual([
+      '| [A](solucoes/a.md) (proposta deste projeto) | prática | causa | todos | h |',
+      '| [B](solucoes/b.md) | especulativa | causa | x / y | nenhum: z |',
+    ]);
+  });
+
   if (sols.length)
     test.each(sols.map((d) => [d.arquivo, d] as const))('solucoes/%s follows the criterion', (_, d) => {
       expect(validarSolucao(d.card, d.texto, d.arquivo, criterioEm)).toEqual([]);
@@ -155,6 +188,11 @@ describe('soluções', () => {
     expect(v({ ...classificada, classificacao: 'paliativa', atua_em: 'efeito' })).toEqual([]);
     expect(v({ ...classificada, classificacao: 'especulativa' })).toEqual([]);
     expect(v({ ...classificada, classificacao: 'especulativa', atua_em: 'efeito' })).toEqual([]);
+  });
+
+  test('sem-classe (causa, not speculative, body, law or budget not checked yet) only goes with causa', () => {
+    expect(v({ ...classificada, classificacao: 'sem-classe' })).toEqual([]);
+    expect(v({ ...classificada, classificacao: 'sem-classe', atua_em: 'efeito' })).toEqual(['sem-classe com atua_em efeito']);
   });
 
   test('an issue number with # in the front matter fails (the reader would cut the value there)', () => {

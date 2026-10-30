@@ -5,7 +5,7 @@ problemas: exemplo-problema     # ids em pesquisa/problemas/, separados por vír
 proposta_por: Quem propôs (órgão, pessoa pública, ONG, academia ou "este projeto")
 fonte: https://exemplo.org      # onde a proposta aparece
 status: rascunho                # rascunho | com-evidencia | revisado
-classificacao:                  # vazia até a classificação: pratica | paliativa | especulativa (pesquisa/criterio-solucoes.md)
+classificacao:                  # vazia até a classificação: pratica | paliativa | especulativa | sem-classe (causa ainda sem órgão, lei ou verba conferidos) (pesquisa/criterio-solucoes.md)
 atua_em:                        # causa | efeito (obrigatório com classificacao)
 teste_local:                    # id do produto ou da hipótese; "pendente: issue N"; ou "nenhum: motivo" (obrigatório com classificacao)
 classificada_em:                # AAAA-MM-DD, nunca antes do escrito_em do critério (obrigatório com classificacao)
