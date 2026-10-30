@@ -25,7 +25,7 @@ Plano B, se o plano A não andar: a previsão do CAMS guardada pelo Open-Meteo d
 Exploratório (e diz isso): a mesma conta com 48 h de antecedência; acertos e alarmes falsos no limiar do dia de fumaça (para a solução do alerta, #116).
 
 ## Resultado
-AUC da previsão do CAMS para o dia seguinte 0.76 contra 0.75 de repetir as horas com FU de hoje, 1342 dias de agosto a novembro, 11 temporadas (2015–2025), só pares de dias da mesma temporada; diferença +0.01 (importa a partir de 0,05); p = 0.7603, p ajustado (BH da rodada 6) = 0.7603, não passa na correção. Confiança baixa: não passa na correção. Previsão do CAMS modelada contra FU medido no METAR; 9999 permutações, semente 64, banco manaus_m5 em 2026-10-30. Números em produtos/contexto/rodada-6.csv.
+AUC da previsão do CAMS para o dia seguinte 0.76 contra 0.75 de repetir as horas com FU de hoje, 1342 dias de agosto a novembro, 11 temporadas (2015–2025), só pares de dias da mesma temporada; diferença +0.01 (importa a partir de 0,05); p = 0.7603, p ajustado (BH da rodada 6) = 0.7603, não passa na correção. Confiança baixa: não passa na correção. Previsão do CAMS modelada contra FU medido no METAR; 9999 permutações, semente 64, banco manaus em 2026-10-30. Números em produtos/contexto/rodada-6.csv.
 
 Correção de método (2026-10-30, segunda visão do Codex no PR do M5): a primeira conta punha os postos dentro da temporada, mas a AUC comparava dias de temporadas diferentes. Isso não media o que o teste diz, e prejudicava repetir hoje: quase todos os dias têm zero hora com FU, e o posto desse empate muda de uma temporada para outra. Com a primeira conta saiu 0,72 contra 0,63 (diferença +0,09, p 0,019). Vale a conta corrigida, acima.
 

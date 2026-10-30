@@ -24,6 +24,8 @@ test('ci-deploy: manda SEGREDO_<NOME> como NOME=valor, pula vazios, sha e hash d
   expect(r.stderr).toBe('');
   expect(r.status).toBe(0);
   expect(readFileSync(join(dir, 'stdin'), 'utf8')).toBe('FIRMS_MAP_KEY=a$b c\n');
-  expect(readFileSync(join(dir, 'args'), 'utf8')).toMatch(new RegExp(`^-i ${dir}/\\.ssh/deploy u@h ${sha} [0-9a-f]{64}\\n$`));
+  expect(readFileSync(join(dir, 'args'), 'utf8')).toMatch(
+    new RegExp(`^-o ServerAliveInterval=30 -o ServerAliveCountMax=10 -i ${dir}/\\.ssh/deploy u@h ${sha} [0-9a-f]{64}\\n$`),
+  );
   expect(readFileSync(join(dir, '.ssh/deploy'), 'utf8')).toBe('chave\n');
 });

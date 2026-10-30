@@ -15,6 +15,7 @@ import { createGzip } from 'node:zlib';
 import pg from 'pg';
 import { casador, loadEscolas, parseEscola } from './carga/inep.ts';
 import { registrar } from './carga/lib.ts';
+import { registerSource } from './carga/registrar.ts';
 import { guardar, listKeys, openRaw } from './lib/baixar.ts';
 import { tentar } from './lib/tentar.ts';
 
@@ -60,6 +61,7 @@ async function cortar() {
 const db = new pg.Client();
 await db.connect();
 try {
+  await registerSource(db, fonte, true); // the cut may be in the R2 but not yet in this database (production after the merge)
   const ja = (await listKeys(`bruto/${fonte}/`)).find((k) => k.key.endsWith(`Z_${NOME}`));
   const r = await db.query('SELECT id FROM bruto.arquivo WHERE chave = $1', [ja?.key ?? '']);
   const arquivo = r.rowCount ? Number(r.rows[0].id) : await registrar(db, await cortar());
