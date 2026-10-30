@@ -129,6 +129,31 @@ test('paired AUC: a score that splits beats one that does not; equal scores give
   expect(aucPareadoBlocos(bom, bom, fu)).toEqual({ efeito: 0, p: 1 });
 });
 
+test('AUC inside groups: only pairs of the same group (e.g. season) count', () => {
+  // Pooled, 11 (true, group B) is compared with 10 (false, group A): pooled 0.75, inside each group 1.
+  const s = [1, 2, 10, 11];
+  const g = [false, true, false, true];
+  expect(auc(s, g)).toBe(0.75);
+  expect(auc(s, g, ['A', 'A', 'B', 'B'])).toBe(1);
+  expect(auc(s, g, ['A', 'B', 'A', 'B'])).toBeNaN(); // no group has both labels
+  // A group with one label only adds no pair.
+  expect(auc([1, 2, 5, 6], [false, true, true, true], ['A', 'A', 'B', 'B'])).toBe(1);
+});
+
+test('paired AUC inside groups: the effect is the difference of the AUCs inside the groups', () => {
+  const r = sorteio(3);
+  const grupo = Array.from({ length: 140 }, (_, i) => Math.floor(i / 70));
+  const fu = grupo.map((_, i) => Math.floor(i / 10) % 2 === 0);
+  // Score a carries a level shift between groups that pooled ranks would mix in.
+  const a = fu.map((f, i) => (f ? 1 : 0) + r() + grupo[i] * 5);
+  const b = fu.map(() => r());
+  const d = aucPareadoBlocos(a, b, fu, { grupo });
+  expect(d.efeito).toBeCloseTo(auc(a, fu, grupo) - auc(b, fu, grupo), 12);
+  expect(auc(a, fu, grupo)).toBe(1);
+  expect(auc(a, fu)).toBeLessThan(0.9);
+  expect(aucPareadoBlocos(a, a, fu, { grupo })).toEqual({ efeito: 0, p: 1 });
+});
+
 test('ranks inside each group (e.g. each season), ties averaged; nulls stay null', () => {
   expect(postosDentro([5, 1, 9, 30, 10, null], [2015, 2015, 2015, 2016, 2016, 2016])).toEqual([2, 1, 3, 2, 1, null]);
   expect(postosDentro([1, 1, 2], [0, 0, 0])).toEqual([1.5, 1.5, 3]);

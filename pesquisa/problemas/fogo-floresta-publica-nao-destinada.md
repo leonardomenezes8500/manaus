@@ -22,4 +22,4 @@ A população de Manaus, pela fumaça (ver `fumaca-seca-2026`), e quem vive dent
 - Quem decide a destinação (União ou estado, conforme a dona da terra) ainda não está escrito aqui com a lei.
 
 ## Soluções ligadas
-- `destinar-florestas-publicas` (prática, problema principal)
+- `destinar-florestas-publicas` (sem classe, problema principal)

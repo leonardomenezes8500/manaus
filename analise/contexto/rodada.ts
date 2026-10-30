@@ -22,7 +22,6 @@ import {
   spearman,
   auc,
   aucPareadoBlocos,
-  postosDentro,
 } from '../cruzar.ts';
 import { MANAUS } from '../../coleta/regiao.ts';
 
@@ -996,15 +995,9 @@ Object.assign(TESTES, {
     ).filter((x) => x.prev !== null && x.ontem !== null);
     const ano = d.map((r) => r.dia.slice(0, 4));
     const fu = d.map((r) => r.horas_fu >= 1);
-    const a = postosDentro(
-      d.map((r) => r.prev),
-      ano,
-    );
-    const b = postosDentro(
-      d.map((r) => r.ontem),
-      ano,
-    );
-    const t = aucPareadoBlocos(a, b, fu, { bloco: 7, n: N, semente: SEMENTE });
+    const a = d.map((r) => r.prev);
+    const b = d.map((r) => r.ontem);
+    const t = aucPareadoBlocos(a, b, fu, { bloco: 7, n: N, semente: SEMENTE, grupo: ano });
     const anos = new Set(ano).size;
     return {
       efeito: t.efeito,
@@ -1015,7 +1008,7 @@ Object.assign(TESTES, {
       espera: 1,
       dado: 'Previsão do CAMS modelada contra FU medido no METAR',
       texto: (e) =>
-        `AUC da previsão do CAMS para o dia seguinte ${auc(a, fu).toFixed(2)} contra ${auc(b, fu).toFixed(2)} de repetir as horas com FU de hoje, ${d.length} dias de agosto a novembro, ${anos} temporadas (2015–2025), postos dentro de cada temporada; diferença ${e >= 0 ? '+' : ''}${e.toFixed(2)} (importa a partir de 0,05)`,
+        `AUC da previsão do CAMS para o dia seguinte ${auc(a, fu, ano).toFixed(2)} contra ${auc(b, fu, ano).toFixed(2)} de repetir as horas com FU de hoje, ${d.length} dias de agosto a novembro, ${anos} temporadas (2015–2025), só pares de dias da mesma temporada; diferença ${e >= 0 ? '+' : ''}${e.toFixed(2)} (importa a partir de 0,05)`,
     };
   },
 });

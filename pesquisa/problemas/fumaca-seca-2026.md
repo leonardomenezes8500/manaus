@@ -63,6 +63,6 @@ A regra cobre só o AM. O fogo do PA, que pesa mais que o do AM na v1, fica com 
 - `roca-sem-fogo-ater` (especulativa, problema principal)
 - `salas-ar-limpo-escolas-ubs` (paliativa, problema principal)
 - `cooperacao-interestadual-fogo` (especulativa)
-- `destinar-florestas-publicas` (prática)
+- `destinar-florestas-publicas` (sem classe, falta conferir o estado)
 - `rede-oficial-medicao-ar` (sem classe, falta conferir)
 - `sensores-escolas-dado-aberto` (especulativa)

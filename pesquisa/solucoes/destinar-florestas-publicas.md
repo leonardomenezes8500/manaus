@@ -5,7 +5,7 @@ problemas: fogo-floresta-publica-nao-destinada, fumaca-seca-2026
 proposta_por: IPAM
 fonte: https://ipam.org.br/focos-de-calor-na-regiao-de-manaus-aumentaram-37-vezes-em-outubro/
 status: com-evidencia
-classificacao: pratica
+classificacao: sem-classe
 atua_em: causa
 teste_local: floresta-nao-destinada-focos
 classificada_em: 2026-10-30
@@ -28,4 +28,4 @@ Dar destino à floresta pública que ainda não tem: unidade de conservação, t
 - [modelado] Teto: no AM, 12,5% do peso da v1 de 2026 caiu em floresta pública não destinada; em toda a região das camadas, 20,3% (`produtos/solucoes/teto-origem.md`, #109).
 
 ## Classificação
-Prática: age na causa, há evidência de fora (menos fogo em áreas indígenas, Nelson e Chomitz 2011) e local (3,5 vezes mais focos na não destinada, confiança alta), e a lei existe. Ressalva: vale para terra federal; no AM a maior parte é terra estadual, e nenhum órgão estadual de destinação foi conferido em registro. (critério v1, 2026-10-30, #117)
+Sem classe até a conferência: age na causa, há evidência de fora (menos fogo em áreas indígenas, Nelson e Chomitz 2011) e local (3,5 vezes mais focos na não destinada, confiança alta), e a lei federal existe. Mas o decreto da destinação vale só para terra federal, e no AM 29,9 dos 39,8 milhões de hectares são estaduais: o órgão estadual de destinação, a lei estadual e a verba não foram conferidos em registro. (critério v1, 2026-10-30, #117; mudada de prática no mesmo dia, segunda visão do Codex)
